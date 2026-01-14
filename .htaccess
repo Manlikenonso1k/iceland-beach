@@ -1,0 +1,74 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # -----------------------------------------------------
+    # 0. ALLOW STATIC FILES (VIDEOS, IMAGES, CSS, JS)
+    #    Add this BEFORE other rewrite rules to prevent conflicts
+    # -----------------------------------------------------
+    
+    # Don't rewrite requests for static files in these directories
+    RewriteCond %{REQUEST_URI} ^/static/ [OR]
+    RewriteCond %{REQUEST_URI} \.(mp4|webm|ogg|avi|mov|jpg|jpeg|png|gif|svg|css|js|woff|woff2|ttf|eot)$ [NC]
+    RewriteRule ^ - [L]
+
+    # -----------------------------------------------------
+    # 1. ENFORCE CLEAN URLs WITH 301 REDIRECTS (HIGH PRIORITY)
+    #    This prevents users and search engines from using old links.
+    # -----------------------------------------------------
+
+    # Redirect /index.php to the root /
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.php\ HTTP/
+    RewriteRule ^index\.php$ / [R=301,L]
+
+    # Redirect any /file.php to /file
+    # This rule is a major source of lag if poorly written. We simplify it.
+    RewriteCond %{THE_REQUEST} \.php
+    # Only redirect if the request is NOT an existing file or directory
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*?)\.php$ /$1 [R=301,L]
+
+    # -----------------------------------------------------
+    # 2. INTERNAL REWRITING (MAPPING CLEAN URLs TO FILES)
+    #    These are the rules that run on every clean URL request.
+    # -----------------------------------------------------
+
+    # Stop rewriting if the request is for a real file (CSS, JS, images) or directory
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Handle TWO-PART URLs (e.g., /products/item1 -> products.php?id=item1)
+    RewriteRule ^([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/?$ $1.php?id=$2 [QSA,L]
+
+    # Handle SINGLE-PART URLs (e.g., /menu -> menu.php)
+    # Also catches the root / if the above rules failed for some reason
+    RewriteRule ^([^/]+)/?$ $1.php [L]
+
+    # Handle the ROOT / request separately for performance
+    RewriteRule ^$ index.php [L]
+    
+    # -----------------------------------------------------
+    # 3. CUSTOM 404 ERROR DOCUMENT
+    # -----------------------------------------------------
+    ErrorDocument 404 /soon.php
+
+</IfModule>
+
+# -----------------------------------------------------
+# ENABLE VIDEO MIME TYPES AND HEADERS
+# -----------------------------------------------------
+<IfModule mod_mime.c>
+    AddType video/mp4 .mp4
+    AddType video/webm .webm
+    AddType video/ogg .ogg
+</IfModule>
+
+# Allow cross-origin requests for media files (if needed)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(mp4|webm|ogg|mov|avi)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Cache-Control "public, max-age=31536000"
+    </FilesMatch>
+</IfModule>
