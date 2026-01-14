@@ -36,7 +36,7 @@
             <!-- Bottom Footer Section -->
             <div class="row">
                 <div class="col text-center">
-                    <p class="small mb-0">© 2025 Iceland Beach. All Rights Reserved.</p>
+                    <p class="small mb-0">© 2026 Iceland Beach. All Rights Reserved.</p>
                     <p>Website Designed & Developed by <a href="https://oluwadimu-adedeji.web.app" class="text-light">Oluwadimu Adedeji</a></p>
                 </div>
             </div>
