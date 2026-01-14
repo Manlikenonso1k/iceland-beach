@@ -1,0 +1,23 @@
+# Large Media (Optional: keep these if you want them on GitHub)
+# If you want to stop tracking videos, uncomment the next line:
+# *.mp4
+
+# Zips and Backups
+*.zip
+*.rar
+*.7z
+
+# PHP/Server specific
+error_log
+.htaccess
+node_modules/
+vendor/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Private Configs (IMPORTANT)
+# If you have a file with DB passwords, add it here:
+# config.php
