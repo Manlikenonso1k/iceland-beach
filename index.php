@@ -23,7 +23,8 @@
         <div class="media-item dark">
             <div class="media-item__content">
                 <video class="media-item__video loaded" 
-                       preload="metadata" 
+                       preload="metadata"
+                       loop 
                        muted 
                        playsinline 
                        autoplay 
