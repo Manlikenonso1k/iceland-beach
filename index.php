@@ -284,7 +284,11 @@
     </div>
     </div>
 </section>
+<script src="static/scripts/script.js"></script>
 
+<script src="static/scripts/validate.js"></script>
+
+<script src="bootstrap-5.3.2-dist/js/bootstrap.bundle.min.js"></script>
 <!-- footer -->
 <?php 
     include "includes/footer.php";
