@@ -137,7 +137,7 @@ git pull origin main
 *Interactive photo gallery showcasing resort features*
 
 ### Mobile View
-![Mobile Screenshot](https://icelandbeach.com/static/images/mobile.jpg)
+![Mobile Screenshot](https://icelandbeach.com/static/images/mobile.jpeg)
 *Fully responsive design on mobile devices*
 
 ## 🤝 Contributing
