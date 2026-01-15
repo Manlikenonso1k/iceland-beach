@@ -1,8 +1,9 @@
 # 🏖️ Iceland Beach Resort
 <div align="center">
-![Iceland Beach Resort Banner](https://icelandbeach.com/static/images/img%20(1).png)
-</div>
 
+![Iceland Beach Resort Banner](https://icelandbeach.com/static/images/img%20(1).png)
+
+</div>
 
 > A luxury beachfront escape offering serene views, sandy shorelines, and a vibrant coastal atmosphere in Lagos, Nigeria.
 
