@@ -129,15 +129,15 @@ git pull origin main
 ## 🖼️ Screenshots
 
 ### Homepage
-![Homepage Screenshot](./static/images/screenshot-home.jpg)
+![Homepage Screenshot](https://icelandbeach.com/static/images/hompage.jpg)
 *Stunning hero section with video background*
 
 ### Gallery
-![Gallery Screenshot](./static/images/screenshot-gallery.jpg)
+![Gallery Screenshot](https://icelandbeach.com/static/images/gallery.jpg)
 *Interactive photo gallery showcasing resort features*
 
 ### Mobile View
-![Mobile Screenshot](./static/images/screenshot-mobile.jpg)
+![Mobile Screenshot](https://icelandbeach.com/static/images/mobile.jpg)
 *Fully responsive design on mobile devices*
 
 ## 🤝 Contributing
