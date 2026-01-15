@@ -2,7 +2,7 @@
 
 > A luxury beachfront escape offering serene views, sandy shorelines, and a vibrant coastal atmosphere in Lagos, Nigeria.
 
-![Iceland Beach Resort Banner](./static/images/banner.jpg)
+![Iceland Beach Resort Banner](https://icelandbeach.com/static/images/img%20(1).png)
 
 ## 📋 Overview
 
@@ -71,7 +71,7 @@ Before you begin, ensure you have the following installed:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/iceland-beach-resort.git
+   git clone https://github.com/Manlikenonso1k/iceland-beach.git
    cd iceland-beach-resort
    ```
 
