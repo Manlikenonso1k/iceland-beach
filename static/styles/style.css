@@ -64,6 +64,33 @@
             opacity: 1;
         }
 
+        .hero__overlay {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 6;
+          padding: 40px 0;
+          background: linear-gradient(to top, rgba(0, 42, 52, 0.85) 0%, rgba(0, 42, 52, 0.55) 55%, transparent 100%);
+        }
+
+        .hero__overlay .hero__text {
+          margin: 0 0 16px 0;
+          color: #f6f1ed;
+          font-family: "Self Modern", serif;
+          font-size: 20px;
+          font-weight: 400;
+          line-height: 1.6;
+        }
+
+        .hero__btn {
+          position: relative;
+          width: auto;
+          height: auto;
+          background: transparent;
+          padding: 0;
+        }
+
         .media-item__label {
             position: absolute;
             bottom: 15px;
@@ -122,6 +149,10 @@
             .hero__content {
                 display: none; /* Completely hidden on mobile */
             }
+
+            .hero__overlay {
+              display: none; /* Hide overlay on mobile */
+            }
             
             .media-item__label {
                 bottom: 20px;
@@ -146,6 +177,10 @@
             .hero__content {
                 display: none; /* Hidden on tablet too */
             }
+
+            .hero__overlay {
+              display: none; /* Hide overlay on tablet */
+            }
         }
 
         /* Desktop View - Show content inside video */
@@ -165,6 +200,10 @@
                 background: linear-gradient(to top, rgba(0, 42, 52, 0.8) 0%, rgba(0, 42, 52, 0.5) 50%, transparent 100%);
                 padding: 40px 0;
             }
+
+            .hero__overlay {
+              display: block;
+            }
             
             .hero__col-2 .h4 {
                 font-size: 20px;
@@ -180,6 +219,10 @@
             .hero__col-2 .h4 {
                 font-size: 22px;
             }
+
+          .hero__overlay .hero__text {
+            font-size: 22px;
+          }
         }
 
 
