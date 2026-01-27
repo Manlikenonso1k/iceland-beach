@@ -29,11 +29,15 @@ jobs:
             set -e
             cd "${{ secrets.HOSTINGER_SSH_DEPLOY_PATH }}"
 
-            # 1. Setup SSH Agent to authenticate with GitHub
+            # 1. Setup SSH Agent using key already on server
             eval $(ssh-agent -s)
-            ssh-add ~/.ssh/id_rsa || ssh-add ~/.ssh/id_ed25519
+            ssh-add ~/.ssh/id_ed25519 2>/dev/null || ssh-add ~/.ssh/id_rsa 2>/dev/null || true
 
-            # 2. Sync files with GitHub using SSH
+            # 2. Configure GitHub SSH
+            mkdir -p ~/.ssh
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
+
+            # 3. Sync files with GitHub using SSH
             git remote set-url origin git@github.com:${{ github.repository }}.git
             git fetch origin main
             git reset --hard origin/main
