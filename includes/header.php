@@ -138,3 +138,5 @@ $users = new Dbquery();
          <?php endif; ?>
       </div>
    </div>
+
+   <main class="site-wrapper">

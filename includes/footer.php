@@ -1,4 +1,6 @@
 
+</main>
+
 <footer class="py-4">
         <div class="container">
             <div class="row justify-content-evenly align-items-center">
