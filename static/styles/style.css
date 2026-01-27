@@ -66,20 +66,12 @@
 
         .hero__overlay {
           position: absolute;
-          top: 0;
           left: 0;
           right: 0;
           bottom: 0;
           z-index: 6;
           padding: 40px 0;
           background: linear-gradient(to top, rgba(0, 42, 52, 0.85) 0%, rgba(0, 42, 52, 0.55) 55%, transparent 100%);
-          text-align: left;
-        }
-
-        .hero__overlay .container {
-          max-width: none;
-          padding-left: 20px;
-          padding-right: 20px;
         }
 
         .hero__overlay .hero__text {
@@ -89,7 +81,6 @@
           font-size: 20px;
           font-weight: 400;
           line-height: 1.6;
-          text-align: left;
         }
 
         .hero__btn {
