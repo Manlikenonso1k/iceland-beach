@@ -21,6 +21,9 @@
 - "Apply fix only to index.php; other pages OK." 
 - "Update prompts file with latest fixes."
 - "Card text overlaps; keep .card-text within cards across page."
+- "Add WhatsApp notification for contact form; use CallMeBot; store API key in config."
+- "How do I get the API key; is it free?"
+- "Confirm CallMeBot activation number."
 
 ## What We Did Different (Fix Summary)
 1. **Workflow update**: Switched deploy workflow to the Hostinger SSH method that initializes an SSH agent on the server and performs a clean `git fetch` + `git reset --hard` instead of `git pull`.
@@ -41,12 +44,24 @@
 ## UI/Text Overflow Fix (Global)
 - Added `.card-text` wrapping rules to prevent overflow and keep text inside cards across pages.
 
+## Contact Form WhatsApp Notification
+1. **Added WhatsApp notifier**: Implemented `send_whatsapp_notification()` using CallMeBot API.
+2. **Safe config**: Added `core/config/whatsapp.example.php` and ignored `core/config/whatsapp.php` in git.
+3. **Hooked to contact form**: Triggered WhatsApp notification only after email send success in `contact.php`.
+4. **Activation instructions**: Use CallMeBot number from their page, send "I allow callmebot to send me messages" to receive API key.
+
 ## Files Updated (Layout)
 - `index.php` (set `bodyClass = 'home-page'`)
 - `includes/header.php` (body class support, main wrapper start)
 - `includes/footer.php` (main wrapper close)
 - `static/styles/style.css` (home page overflow/width fix and hero overlay styles)
  - `static/styles/style.css` (card text wrap fix)
+
+## Files Updated (WhatsApp)
+- `core/controller/whatsapp.php`
+- `core/config/whatsapp.example.php`
+- `.gitignore` (ignore `core/config/whatsapp.php`)
+- `contact.php`
 
 ## Commands/Steps Actually Used
 - `ls -la ~/.ssh/`
