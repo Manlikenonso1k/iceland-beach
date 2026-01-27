@@ -190,6 +190,7 @@ When working with AI on this project, provide:
 - Bootstrap Docs: https://getbootstrap.com/docs/5.3/
 - FreeConvert Video Compressor: https://www.freeconvert.com/video-compressor
 - CloudConvert: https://cloudconvert.com/
+- Deployment fix prompts log: [TOOLS/prompts.md](TOOLS/prompts.md)
 
 ---
 
