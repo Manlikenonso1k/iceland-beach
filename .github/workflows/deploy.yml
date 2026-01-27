@@ -1,25 +1,39 @@
-name: Deploy to Hostinger
+name: Deploy to Hostinger via SSH
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@master
         with:
-          host: 92.112.197.130
-          username: u519226541
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 65002
-          script_stop: true
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
           script: |
-            cd domains/icelandbeach.com/public_html
-            git pull origin main
+            set -e
+            cd "${{ secrets.HOSTINGER_SSH_DEPLOY_PATH }}"
+
+            # 1. Setup SSH Agent to authenticate with GitHub
+            eval $(ssh-agent -s)
+            ssh-add ~/.ssh/id_rsa || ssh-add ~/.ssh/id_ed25519
+
+            # 2. Sync files with GitHub using SSH
+            git remote set-url origin git@github.com:${{ github.repository }}.git
+            git fetch origin main
+            git reset --hard origin/main
