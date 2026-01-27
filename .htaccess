@@ -21,6 +21,10 @@
     RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.php\ HTTP/
     RewriteRule ^index\.php$ / [R=301,L]
 
+    # Redirect /index to the root /
+    RewriteCond %{THE_REQUEST} \s/+index/?(\s|\?) [NC]
+    RewriteRule ^index/?$ / [R=301,L]
+
     # Redirect any /file.php to /file
     # This rule is a major source of lag if poorly written. We simplify it.
     RewriteCond %{THE_REQUEST} \.php
