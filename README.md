@@ -123,7 +123,7 @@ ssh user@your-hostinger-server.com
 
 # Navigate to project directory and pull latest changes
 cd /path/to/project
-git pull origin main
+git pull origin mainnn
 ```
 
 ## 🖼️ Screenshots
