@@ -23,7 +23,8 @@ jobs:
         with:
           host: ${{ secrets.HOSTINGER_SSH_HOST }}
           username: ${{ secrets.HOSTINGER_SSH_USER }}
-          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_BASE64 }}
+          key_base64: true
           port: ${{ secrets.HOSTINGER_SSH_PORT }}
           script: |
             set -e
