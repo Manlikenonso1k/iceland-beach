@@ -75,8 +75,10 @@
           text-align: left;
         }
 
-        .hero__overlay .container {
+        .hero__overlay.container {
           max-width: none;
+          width: 100%;
+          margin: 0;
           padding-left: 20px;
           padding-right: 20px;
         }
