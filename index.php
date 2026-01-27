@@ -1,4 +1,7 @@
-<?php require_once "includes/header.php"; ?>
+<?php
+$bodyClass = 'home-page';
+require_once "includes/header.php";
+?>
 
 <style>
 <?php include "static/styles/style.css"; ?>

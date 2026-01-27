@@ -51,7 +51,7 @@ $users = new Dbquery();
    <?php endif; ?>
 </head>
 
-<body>
+<body class="<?= isset($bodyClass) ? htmlspecialchars($bodyClass) : '' ?>">
    <!-- Page loader -->
    <div class="loading">
       <div class="loader"></div>
