@@ -2,6 +2,7 @@
     $title = "Contact Us";
     include_once "includes/header.php";
     require_once "core/controller/sendmail2.php";
+    require_once "core/controller/whatsapp.php";
 
     if(isset($_POST['send_message'])){
         $full_name = $_POST['full_name'];
@@ -26,6 +27,9 @@
         $a_format = $mail->message($a_message);
         $u_format = $mail->message($u_message);
         $send_mail = $mail->mailsender($_POST, $a_format, $u_format, $_POST['email_address']);
+        if ($send_mail) {
+            send_whatsapp_notification($full_name, $email, $message);
+        }
     }
 ?>
 

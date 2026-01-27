@@ -21,3 +21,4 @@ desktop.ini
 # Private Configs (IMPORTANT)
 # If you have a file with DB passwords, add it here:
 # config.php
+core/config/whatsapp.php
