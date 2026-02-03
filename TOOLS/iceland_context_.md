@@ -1,6 +1,6 @@
 # Iceland Beach Website - AI Context File
 
-**Last Updated:** January 27, 2026  
+**Last Updated:** February 3, 2026  
 **Project Status:** Hero Video Section - In Progress
 
 ---
@@ -103,6 +103,11 @@ File: `index.php` (after header include)
 - [x] Added poster image support
 - [x] Fixed .htaccess for video file access
 - [x] Changed file permissions to 755
+- [x] Built admin dashboard tabs (overview, bookings, inventory, waiters, tables, POS, reports, settings)
+- [x] Added inventory CRUD, waiter management, table assignment UI
+- [x] Added POS workflow with receipt printing
+- [x] Added reports with filters + print
+- [x] Added WhatsApp notification for contact form
 
 ---
 
@@ -120,6 +125,12 @@ File: `index.php` (after header include)
 - [ ] Optimize poster image (compress to <200KB)
 - [ ] Test video playback on Safari (iOS)
 - [ ] Add loading animation while video buffers
+
+### Admin System Next Steps
+- [ ] Import `TOOLS/admin_schema.sql` into production database
+- [ ] Create initial admin + waiter accounts
+- [ ] Verify POS flow and receipt printing
+- [ ] Verify reports filters and print layout
 
 ### Low Priority
 - [ ] Consider using WebM format for better compression

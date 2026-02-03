@@ -10,6 +10,10 @@
     $query = new Dbquery();
     $mail = new Sendmail();
 
+    function clean($value){
+        return htmlspecialchars(trim((string)$value));
+    }
+
     if(isset($_SESSION['username'])):
         $username = $_SESSION['username'];
         $selectuser = $query->select("admin", "*", "username = ?", [$username], "s");
@@ -19,6 +23,196 @@
     $selectmember = $query->select("membership", "*", "", [], "");
 
     $services = $query->select("services", "*", "", [], "");
+
+    $products = $query->select("products", "*", "", [], "");
+    $waiters = $query->select("waiters", "*", "", [], "");
+    $tables = $query->select("tables", "*", "", [], "");
+
+    $low_stock_count = 0;
+    $low_stock = $query->select("products", "COUNT(*) AS cnt", "stock_quantity <= low_stock_threshold", [], "");
+    if($low_stock && $low_stock->num_rows > 0){
+        $low_stock_count = (int)$low_stock->fetch_assoc()['cnt'];
+    }
+
+    $admin_alert = '';
+
+    if($_SERVER['REQUEST_METHOD'] === 'POST'){
+        // Inventory
+        if(isset($_POST['add_product'])){
+            $name = clean($_POST['name'] ?? '');
+            $category = clean($_POST['category'] ?? '');
+            $price = (float)($_POST['price'] ?? 0);
+            $stock = (int)($_POST['stock_quantity'] ?? 0);
+            $low_stock_threshold = (int)($_POST['low_stock_threshold'] ?? 5);
+
+            if($name !== '' && $category !== ''){
+                $query->insert("products", [
+                    'name' => $name,
+                    'category' => $category,
+                    'price' => $price,
+                    'stock_quantity' => $stock,
+                    'low_stock_threshold' => $low_stock_threshold,
+                ]);
+                $admin_alert = "<div class='alert alert-success'>Product added.</div>";
+            } else {
+                $admin_alert = "<div class='alert alert-danger'>Name and category are required.</div>";
+            }
+        }
+
+        if(isset($_POST['update_product'])){
+            $id = (int)($_POST['id'] ?? 0);
+            $name = clean($_POST['name'] ?? '');
+            $category = clean($_POST['category'] ?? '');
+            $price = (float)($_POST['price'] ?? 0);
+            $stock = (int)($_POST['stock_quantity'] ?? 0);
+            $low_stock_threshold = (int)($_POST['low_stock_threshold'] ?? 5);
+
+            if($id > 0){
+                $query->update("products", [
+                    'name' => $name,
+                    'category' => $category,
+                    'price' => $price,
+                    'stock_quantity' => $stock,
+                    'low_stock_threshold' => $low_stock_threshold,
+                ], "id = {$id}");
+                $admin_alert = "<div class='alert alert-success'>Product updated.</div>";
+            }
+        }
+
+        if(isset($_POST['delete_product'])){
+            $id = (int)($_POST['id'] ?? 0);
+            if($id > 0){
+                $query->delete("products", "id = ?", [$id], "i");
+                $admin_alert = "<div class='alert alert-success'>Product deleted.</div>";
+            }
+        }
+
+        // Waiters
+        if(isset($_POST['add_waiter'])){
+            $full_name = clean($_POST['full_name'] ?? '');
+            $username = clean($_POST['username'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $role = clean($_POST['role'] ?? 'waiter');
+
+            if($full_name !== '' && $username !== '' && $password !== ''){
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $query->insert("waiters", [
+                    'full_name' => $full_name,
+                    'username' => $username,
+                    'password_hash' => $hash,
+                    'role' => in_array($role, ['waiter','manager'], true) ? $role : 'waiter',
+                    'is_active' => 1,
+                ]);
+                $admin_alert = "<div class='alert alert-success'>Waiter created.</div>";
+            } else {
+                $admin_alert = "<div class='alert alert-danger'>All waiter fields are required.</div>";
+            }
+        }
+
+        if(isset($_POST['toggle_waiter'])){
+            $id = (int)($_POST['id'] ?? 0);
+            $is_active = (int)($_POST['is_active'] ?? 0);
+            if($id > 0){
+                $query->update("waiters", ['is_active' => $is_active], "id = {$id}");
+                $admin_alert = "<div class='alert alert-success'>Waiter status updated.</div>";
+            }
+        }
+
+        // Tables
+        if(isset($_POST['assign_table'])){
+            $table_id = (int)($_POST['table_id'] ?? 0);
+            $waiter_id = $_POST['assigned_waiter_id'] !== '' ? (int)$_POST['assigned_waiter_id'] : NULL;
+            $status = clean($_POST['status'] ?? 'available');
+
+            if($table_id > 0){
+                $assigned = $waiter_id ? $waiter_id : NULL;
+                $status = in_array($status, ['available','occupied','billing'], true) ? $status : 'available';
+
+                $data = ['assigned_waiter_id' => $assigned, 'status' => $status];
+                $query->update("tables", $data, "id = {$table_id}");
+                $admin_alert = "<div class='alert alert-success'>Table updated.</div>";
+            }
+        }
+    }
+
+    // Reports
+    $report_rows = [];
+    $report_products = [];
+    if(isset($_GET['report'])){
+        $date_from = $_GET['date_from'] ?? '';
+        $date_to = $_GET['date_to'] ?? '';
+        $waiter_id = (int)($_GET['waiter_id'] ?? 0);
+        $table_id = (int)($_GET['table_id'] ?? 0);
+        $product_id = (int)($_GET['product_id'] ?? 0);
+
+        $conditions = [];
+        $params = [];
+        $types = '';
+
+        if($date_from !== ''){
+            $conditions[] = "s.sale_date >= ?";
+            $params[] = $date_from;
+            $types .= 's';
+        }
+        if($date_to !== ''){
+            $conditions[] = "s.sale_date <= ?";
+            $params[] = $date_to;
+            $types .= 's';
+        }
+        if($waiter_id > 0){
+            $conditions[] = "s.waiter_id = ?";
+            $params[] = $waiter_id;
+            $types .= 'i';
+        }
+        if($table_id > 0){
+            $conditions[] = "s.table_id = ?";
+            $params[] = $table_id;
+            $types .= 'i';
+        }
+        if($product_id > 0){
+            $conditions[] = "si.product_id = ?";
+            $params[] = $product_id;
+            $types .= 'i';
+        }
+
+        $where = $conditions ? ("WHERE " . implode(" AND ", $conditions)) : '';
+
+        $sql = "SELECT s.id AS sale_id, s.sale_date, s.total_amount, w.full_name AS waiter_name, t.table_name
+                FROM sales s
+                JOIN waiters w ON w.id = s.waiter_id
+                JOIN tables t ON t.id = s.table_id
+                JOIN sale_items si ON si.sale_id = s.id
+                {$where}
+                GROUP BY s.id
+                ORDER BY s.created_at DESC";
+
+        $stmt = $query->conn->prepare($sql);
+        if($params){
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while($row = $result->fetch_assoc()){
+            $report_rows[] = $row;
+        }
+
+        $sql_products = "SELECT p.name, SUM(si.quantity) AS qty, SUM(si.quantity * si.price) AS total
+                        FROM sale_items si
+                        JOIN sales s ON s.id = si.sale_id
+                        JOIN products p ON p.id = si.product_id
+                        {$where}
+                        GROUP BY p.id
+                        ORDER BY qty DESC";
+        $stmt2 = $query->conn->prepare($sql_products);
+        if($params){
+            $stmt2->bind_param($types, ...$params);
+        }
+        $stmt2->execute();
+        $result2 = $stmt2->get_result();
+        while($row = $result2->fetch_assoc()){
+            $report_products[] = $row;
+        }
+    }
 ?>
 
 <!DOCTYPE html>
@@ -62,25 +256,85 @@
 
 
 <div class="container mt-5 py-5">
-    <!-- Navigation Tabs -->
-    <ul class="nav nav-tabs nav-pills" id="myTab" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab" aria-controls="basic" aria-selected="true">Rooms</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button" role="tab" aria-controls="services" aria-selected="false">Services</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="membership-tab" data-bs-toggle="tab" data-bs-target="#membership" type="button" role="tab" aria-controls="membership" aria-selected="false">Membership</button>
-      </li>
-    </ul>
-    
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs nav-pills" id="adminTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">Dashboard Overview</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings" type="button" role="tab" aria-controls="bookings" aria-selected="false">Room Bookings</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab" aria-controls="inventory" aria-selected="false">Product Inventory</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="waiters-tab" data-bs-toggle="tab" data-bs-target="#waiters" type="button" role="tab" aria-controls="waiters" aria-selected="false">Waiter Management</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tables-tab" data-bs-toggle="tab" data-bs-target="#tables" type="button" role="tab" aria-controls="tables" aria-selected="false">Table Management</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pos-tab" data-bs-toggle="tab" data-bs-target="#pos" type="button" role="tab" aria-controls="pos" aria-selected="false">POS Sales</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab" aria-controls="reports" aria-selected="false">Reports</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">Settings</button>
+            </li>
+        </ul>
 
-    <!-- Tab Content -->
-    <div class="tab-content mt-3" id="myTabContent">
+        <!-- Tab Content -->
+        <div class="tab-content mt-3" id="adminTabContent">
 
-      <!-- basic -->
-    <div class="tab-pane fade show active p-4" id="basic" role="tabpanel" aria-labelledby="basic-tab">
+            <!-- Dashboard Overview -->
+            <div class="tab-pane fade show active p-4" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="text-uppercase text-muted">Total Rooms</h6>
+                                <h3><?= $select_rooms->num_rows; ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="text-uppercase text-muted">Total Services</h6>
+                                <h3><?= $services->num_rows; ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="text-uppercase text-muted">Total Members</h6>
+                                <h3><?= $selectmember->num_rows; ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-4 mb-0">POS, Inventory, and Reports will populate after new tables are created.</div>
+            </div>
+
+            <!-- Room Bookings -->
+            <div class="tab-pane fade p-4" id="bookings" role="tabpanel" aria-labelledby="bookings-tab">
+                <ul class="nav nav-pills mb-3" id="bookingsTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="bookings-rooms-tab" data-bs-toggle="tab" data-bs-target="#bookings-rooms" type="button" role="tab" aria-controls="bookings-rooms" aria-selected="true">Rooms</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="bookings-services-tab" data-bs-toggle="tab" data-bs-target="#bookings-services" type="button" role="tab" aria-controls="bookings-services" aria-selected="false">Services</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="bookings-membership-tab" data-bs-toggle="tab" data-bs-target="#bookings-membership" type="button" role="tab" aria-controls="bookings-membership" aria-selected="false">Membership</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="bookingsTabContent">
+                    <!-- Rooms (existing logic) -->
+                    <div class="tab-pane fade show active" id="bookings-rooms" role="tabpanel" aria-labelledby="bookings-rooms-tab">
         <?php if($select_rooms->num_rows > 0): ?>
             <table class="table-bordered table-responsive table-stripped">
                 <thead>
@@ -166,11 +420,10 @@
         <?php else: ?>
             <p class="text-center">No Rooms Available</p>
         <?php endif; ?>
-    </div>
+          </div>
 
-
-    <!-- services -->
-    <div class="tab-pane fade p-4" id="services" role="tabpanel" aria-labelledby="services-tab">
+          <!-- Services (existing logic) -->
+          <div class="tab-pane fade" id="bookings-services" role="tabpanel" aria-labelledby="bookings-services-tab">
         <?php if($services->num_rows > 0): ?>
             <table class="table-bordered table-responsive table-striped-columns">
                 <thead>
@@ -258,10 +511,10 @@
         <?php else: ?>
             <p class="text-center">No Rooms Available</p>
         <?php endif; ?>
-    </div>
+          </div>
 
-    <!-- membership -->
-    <div class="tab-pane fade show p-4" id="membership" role="tabpane2" aria-labelledby="membership-tab">
+          <!-- Membership (existing logic) -->
+          <div class="tab-pane fade" id="bookings-membership" role="tabpanel" aria-labelledby="bookings-membership-tab">
 
     <?php if($selectmember->num_rows > 0): ?>
         <table class="table-bordered table-responsive table-stripped overflow-x-auto">
@@ -380,12 +633,350 @@
     <?php else: ?>
         <p class="text-center">No Rooms Available</p>
     <?php endif; ?>
-    </div>
+                    </div>
+                </div>
+            </div>
 
-    </div>
+            <!-- Product Inventory -->
+            <div class="tab-pane fade p-4" id="inventory" role="tabpanel" aria-labelledby="inventory-tab">
+                <?php if($admin_alert): ?>
+                    <?= $admin_alert; ?>
+                <?php endif; ?>
 
-    <!-- other services -->
-  </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Inventory</h5>
+                    <span class="badge bg-warning text-dark">Low stock: <?= $low_stock_count; ?></span>
+                </div>
+
+                <form method="post" class="row g-2 mb-4">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="name" placeholder="Product name" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" name="category" placeholder="Category" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" step="0.01" class="form-control" name="price" placeholder="Price" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" name="stock_quantity" placeholder="Stock" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" name="low_stock_threshold" placeholder="Low stock" value="5" required>
+                    </div>
+                    <div class="col-md-1 d-grid">
+                        <button class="btn btn-primary" type="submit" name="add_product">Add</button>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Low Stock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if($products->num_rows > 0): ?>
+                                <?php while($product = $products->fetch_assoc()): ?>
+                                    <tr>
+                                        <form method="post">
+                                            <td>
+                                                <input type="text" class="form-control" name="name" value="<?= htmlspecialchars($product['name']); ?>">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" name="category" value="<?= htmlspecialchars($product['category']); ?>">
+                                            </td>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control" name="price" value="<?= $product['price']; ?>">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control" name="stock_quantity" value="<?= $product['stock_quantity']; ?>">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control" name="low_stock_threshold" value="<?= $product['low_stock_threshold']; ?>">
+                                            </td>
+                                            <td class="d-flex gap-2">
+                                                <input type="hidden" name="id" value="<?= $product['id']; ?>">
+                                                <button class="btn btn-sm btn-success" type="submit" name="update_product">Save</button>
+                                                <button class="btn btn-sm btn-danger" type="submit" name="delete_product" onclick="return confirm('Delete this product?')">Delete</button>
+                                            </td>
+                                        </form>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr><td colspan="6" class="text-center">No products found.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Waiter Management -->
+            <div class="tab-pane fade p-4" id="waiters" role="tabpanel" aria-labelledby="waiters-tab">
+                <?php if($admin_alert): ?>
+                    <?= $admin_alert; ?>
+                <?php endif; ?>
+
+                <form method="post" class="row g-2 mb-4">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="full_name" placeholder="Full name" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="username" placeholder="Username" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="password" class="form-control" name="password" placeholder="Password" required>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" name="role">
+                            <option value="waiter">Waiter</option>
+                            <option value="manager">Manager</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-grid">
+                        <button class="btn btn-primary" type="submit" name="add_waiter">Add</button>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if($waiters->num_rows > 0): ?>
+                                <?php while($waiter = $waiters->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($waiter['full_name']); ?></td>
+                                        <td><?= htmlspecialchars($waiter['username']); ?></td>
+                                        <td><?= htmlspecialchars($waiter['role']); ?></td>
+                                        <td>
+                                            <?= $waiter['is_active'] ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'; ?>
+                                        </td>
+                                        <td>
+                                            <form method="post">
+                                                <input type="hidden" name="id" value="<?= $waiter['id']; ?>">
+                                                <input type="hidden" name="is_active" value="<?= $waiter['is_active'] ? 0 : 1; ?>">
+                                                <button class="btn btn-sm btn-outline-primary" type="submit" name="toggle_waiter">
+                                                    <?= $waiter['is_active'] ? 'Disable' : 'Enable'; ?>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr><td colspan="5" class="text-center">No waiters found.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Table Management -->
+            <div class="tab-pane fade p-4" id="tables" role="tabpanel" aria-labelledby="tables-tab">
+                <?php if($admin_alert): ?>
+                    <?= $admin_alert; ?>
+                <?php endif; ?>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>Table</th>
+                                <th>Assigned Waiter</th>
+                                <th>Status</th>
+                                <th>Update</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if($tables->num_rows > 0): ?>
+                                <?php while($table = $tables->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($table['table_name']); ?></td>
+                                        <td>
+                                            <form method="post" class="d-flex gap-2">
+                                                <input type="hidden" name="table_id" value="<?= $table['id']; ?>">
+                                                <select name="assigned_waiter_id" class="form-select">
+                                                    <option value="">Unassigned</option>
+                                                    <?php
+                                                        $waiters_list = $query->select("waiters", "*", "is_active = 1", [], "");
+                                                        while($w = $waiters_list->fetch_assoc()):
+                                                    ?>
+                                                        <option value="<?= $w['id']; ?>" <?= $table['assigned_waiter_id'] == $w['id'] ? 'selected' : ''; ?>>
+                                                            <?= htmlspecialchars($w['full_name']); ?>
+                                                        </option>
+                                                    <?php endwhile; ?>
+                                                </select>
+                                        </td>
+                                        <td>
+                                                <select name="status" class="form-select">
+                                                    <option value="available" <?= $table['status'] === 'available' ? 'selected' : ''; ?>>Available</option>
+                                                    <option value="occupied" <?= $table['status'] === 'occupied' ? 'selected' : ''; ?>>Occupied</option>
+                                                    <option value="billing" <?= $table['status'] === 'billing' ? 'selected' : ''; ?>>Billing</option>
+                                                </select>
+                                        </td>
+                                        <td>
+                                                <button class="btn btn-sm btn-primary" type="submit" name="assign_table">Save</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr><td colspan="4" class="text-center">No tables found.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- POS Sales -->
+            <div class="tab-pane fade p-4" id="pos" role="tabpanel" aria-labelledby="pos-tab">
+                <div class="alert alert-info">Use the POS screen to punch orders and print receipts.</div>
+                <a href="pos.php" class="btn btn-primary">Open POS</a>
+            </div>
+
+            <!-- Reports -->
+            <div class="tab-pane fade p-4" id="reports" role="tabpanel" aria-labelledby="reports-tab">
+                <form method="get" class="row g-2 align-items-end mb-4">
+                    <input type="hidden" name="report" value="1">
+                    <div class="col-md-2">
+                        <label class="form-label">From</label>
+                        <input type="date" class="form-control" name="date_from" value="<?= htmlspecialchars($_GET['date_from'] ?? '') ?>">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">To</label>
+                        <input type="date" class="form-control" name="date_to" value="<?= htmlspecialchars($_GET['date_to'] ?? '') ?>">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Waiter</label>
+                        <select class="form-select" name="waiter_id">
+                            <option value="">All</option>
+                            <?php
+                                $waiters_list = $query->select("waiters", "*", "", [], "");
+                                while($w = $waiters_list->fetch_assoc()):
+                            ?>
+                                <option value="<?= $w['id']; ?>" <?= (int)($_GET['waiter_id'] ?? 0) === (int)$w['id'] ? 'selected' : ''; ?>>
+                                    <?= htmlspecialchars($w['full_name']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Table</label>
+                        <select class="form-select" name="table_id">
+                            <option value="">All</option>
+                            <?php
+                                $tables_list = $query->select("tables", "*", "", [], "");
+                                while($t = $tables_list->fetch_assoc()):
+                            ?>
+                                <option value="<?= $t['id']; ?>" <?= (int)($_GET['table_id'] ?? 0) === (int)$t['id'] ? 'selected' : ''; ?>>
+                                    <?= htmlspecialchars($t['table_name']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Product</label>
+                        <select class="form-select" name="product_id">
+                            <option value="">All</option>
+                            <?php
+                                $products_list = $query->select("products", "*", "", [], "");
+                                while($p = $products_list->fetch_assoc()):
+                            ?>
+                                <option value="<?= $p['id']; ?>" <?= (int)($_GET['product_id'] ?? 0) === (int)$p['id'] ? 'selected' : ''; ?>>
+                                    <?= htmlspecialchars($p['name']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button class="btn btn-primary" type="submit">Filter</button>
+                    </div>
+                </form>
+
+                <?php if(isset($_GET['report'])): ?>
+                    <div class="d-flex justify-content-end mb-3">
+                        <a class="btn btn-outline-secondary" target="_blank" href="report_print.php?date_from=<?= urlencode($_GET['date_from'] ?? '') ?>&date_to=<?= urlencode($_GET['date_to'] ?? '') ?>&waiter_id=<?= urlencode($_GET['waiter_id'] ?? '') ?>">Print Daily Report</a>
+                    </div>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Sale ID</th>
+                                    <th>Date</th>
+                                    <th>Waiter</th>
+                                    <th>Table</th>
+                                    <th>Total</th>
+                                    <th>Receipt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if(count($report_rows) > 0): ?>
+                                    <?php foreach($report_rows as $row): ?>
+                                        <tr>
+                                            <td><?= $row['sale_id']; ?></td>
+                                            <td><?= htmlspecialchars($row['sale_date']); ?></td>
+                                            <td><?= htmlspecialchars($row['waiter_name']); ?></td>
+                                            <td><?= htmlspecialchars($row['table_name']); ?></td>
+                                            <td>₦<?= number_format($row['total_amount'], 2); ?></td>
+                                            <td><a href="receipt.php?sale_id=<?= $row['sale_id']; ?>" target="_blank" class="btn btn-sm btn-outline-secondary">Print</a></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr><td colspan="6" class="text-center">No sales found for this filter.</td></tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="text-uppercase">Top Selling Products</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if(count($report_products) > 0): ?>
+                                    <?php foreach($report_products as $row): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($row['name']); ?></td>
+                                            <td><?= (int)$row['qty']; ?></td>
+                                            <td>₦<?= number_format($row['total'], 2); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr><td colspan="3" class="text-center">No product data.</td></tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-secondary">Use the filters above to generate reports.</div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Settings -->
+            <div class="tab-pane fade p-4" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                <div class="alert alert-secondary">Settings coming soon.</div>
+            </div>
+
+        </div>
 
 
 

@@ -24,6 +24,8 @@
 - "Add WhatsApp notification for contact form; use CallMeBot; store API key in config."
 - "How do I get the API key; is it free?"
 - "Confirm CallMeBot activation number."
+- "Build a structured admin system with dashboard, inventory, waiters, tables, POS, reports, settings."
+- "Proceed with Phase 2: CRUD + POS + receipts + reports."
 
 ## What We Did Different (Fix Summary)
 1. **Workflow update**: Switched deploy workflow to the Hostinger SSH method that initializes an SSH agent on the server and performs a clean `git fetch` + `git reset --hard` instead of `git pull`.
@@ -62,6 +64,24 @@
 - `core/config/whatsapp.example.php`
 - `.gitignore` (ignore `core/config/whatsapp.php`)
 - `contact.php`
+
+## Admin System Phase 1–2 (New)
+1. **Admin dashboard tabs**: Added top-level tabs for Dashboard, Room Bookings, Inventory, Waiters, Tables, POS, Reports, Settings.
+2. **Preserved booking logic**: Existing Rooms/Services/Membership logic moved under Room Bookings tab.
+3. **Inventory CRUD**: Add/edit/delete products with low stock alerts.
+4. **Waiter management**: Create waiters, enable/disable access, role stored.
+5. **Table management**: Assign tables to waiters and set status.
+6. **POS flow**: Waiter login → select table → add items → confirm order; stock auto-reduced; anti-duplicate safeguard.
+7. **Receipts & reports**: 80mm receipt print; daily report print with filters.
+8. **DB helpers**: Added `insertGetId()` and `delete()` helpers for DB operations.
+
+## Files Updated (Admin System)
+- `admin/index.php` (new tabs, inventory/waiter/table/report logic)
+- `admin/pos.php` (POS workflow)
+- `admin/receipt.php` (print receipt)
+- `admin/report_print.php` (print report)
+- `core/config/dbquery.php` (insertGetId, delete)
+- `TOOLS/admin_schema.sql` (new tables and seed)
 
 ## Commands/Steps Actually Used
 - `ls -la ~/.ssh/`
