@@ -10,24 +10,24 @@ function clean($value){
 }
 
 if(isset($_POST['waiter_login'])){
-    $username = clean($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $pin = preg_replace('/\D+/', '', $_POST['pin'] ?? '');
 
-    if($username === '' || $password === ''){
-        $alert = "<div class='alert alert-danger'>Username and password required.</div>";
+    if($pin === ''){
+        $alert = "<div class='alert alert-danger'>PIN is required.</div>";
     } else {
-        $waiter = $query->select("waiters", "*", "username = ? AND is_active = 1", [$username], "s");
-        if($waiter->num_rows > 0){
-            $w = $waiter->fetch_assoc();
-            if(password_verify($password, $w['password_hash'])){
+        $waiter = $query->select("waiters", "*", "is_active = 1 AND pin_hash IS NOT NULL", [], "");
+        $found = false;
+        while($w = $waiter->fetch_assoc()){
+            if(password_verify($pin, $w['pin_hash'])){
                 $_SESSION['waiter_id'] = $w['id'];
                 $_SESSION['waiter_name'] = $w['full_name'];
                 $_SESSION['waiter_role'] = $w['role'];
-            } else {
-                $alert = "<div class='alert alert-danger'>Invalid credentials.</div>";
+                $found = true;
+                break;
             }
-        } else {
-            $alert = "<div class='alert alert-danger'>Waiter not found.</div>";
+        }
+        if(!$found){
+            $alert = "<div class='alert alert-danger'>Invalid PIN.</div>";
         }
     }
 }
@@ -173,6 +173,24 @@ $tables = $query->select("tables", "*", "", [], "");
             border-radius: 14px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.15);
         }
+
+        .pin-input {
+            text-align: center;
+            font-size: 1.5rem;
+            letter-spacing: 8px;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .keypad button {
+            padding: 14px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
@@ -191,8 +209,21 @@ $tables = $query->select("tables", "*", "", [], "");
                 <h3 class="text-center mb-2">POS Sales</h3>
                 <h6 class="card-title text-center text-muted mb-4">Waiter Login</h6>
                 <form method="post" class="d-grid gap-3" autocomplete="off">
-                    <input type="text" class="form-control" name="username" placeholder="Username" required autocomplete="off">
-                    <input type="password" class="form-control" name="password" placeholder="Password" required autocomplete="new-password">
+                    <input type="password" class="form-control pin-input" name="pin" id="pinInput" placeholder="Enter PIN" inputmode="numeric" pattern="\d{4,6}" required autocomplete="off">
+                    <div class="keypad">
+                        <button type="button" class="btn btn-outline-primary" data-key="1">1</button>
+                        <button type="button" class="btn btn-outline-primary" data-key="2">2</button>
+                        <button type="button" class="btn btn-outline-primary" data-key="3">3</button>
+                        <button type="button" class="btn btn-outline-primary" data-key="4">4</button>
+                        <button type="button" class="btn btn-outline-primary" data-key="5">5</button>
+                        <button type="button" class="btn btn-outline-primary" data-key="6">6</button>
+                        <button type="button" class="btn btn-outline-primary" data-key="7">7</button>
+                        <button type="button" class="btn btn-outline-primary" data-key="8">8</button>
+                        <button type="button" class="btn btn-outline-primary" data-key="9">9</button>
+                        <button type="button" class="btn btn-outline-secondary" data-key="clear">Clear</button>
+                        <button type="button" class="btn btn-outline-primary" data-key="0">0</button>
+                        <button type="button" class="btn btn-outline-secondary" data-key="back">Back</button>
+                    </div>
                     <button class="btn btn-primary" type="submit" name="waiter_login">Login</button>
                 </form>
             </div>
@@ -256,5 +287,26 @@ $tables = $query->select("tables", "*", "", [], "");
         </div>
     <?php endif; ?>
 </div>
+<script>
+    const pinInput = document.getElementById('pinInput');
+    if (pinInput) {
+        document.querySelectorAll('.keypad button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const key = btn.getAttribute('data-key');
+                if (key === 'clear') {
+                    pinInput.value = '';
+                    return;
+                }
+                if (key === 'back') {
+                    pinInput.value = pinInput.value.slice(0, -1);
+                    return;
+                }
+                if (pinInput.value.length < 6) {
+                    pinInput.value += key;
+                }
+            });
+        });
+    }
+</script>
 </body>
 </html>

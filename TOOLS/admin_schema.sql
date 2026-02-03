@@ -16,11 +16,14 @@ CREATE TABLE IF NOT EXISTS waiters (
   full_name VARCHAR(150) NOT NULL,
   username VARCHAR(80) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
+  pin_hash VARCHAR(255) NULL,
   role ENUM('waiter','manager') NOT NULL DEFAULT 'waiter',
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL DEFAULT NULL
 ) ENGINE=InnoDB;
+
+CREATE INDEX idx_waiters_pin ON waiters (pin_hash(10));
 
 CREATE TABLE IF NOT EXISTS tables (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -80,3 +83,7 @@ SELECT * FROM (
   SELECT 'T12', 'available'
 ) AS seed
 WHERE NOT EXISTS (SELECT 1 FROM tables WHERE table_name = seed.table_name);
+
+-- If waiters table already exists, run:
+-- ALTER TABLE waiters ADD COLUMN pin_hash VARCHAR(255) NULL;
+-- CREATE INDEX idx_waiters_pin ON waiters (pin_hash(10));

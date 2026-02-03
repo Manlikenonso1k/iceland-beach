@@ -92,18 +92,25 @@
             $full_name = clean($_POST['full_name'] ?? '');
             $username = clean($_POST['username'] ?? '');
             $password = $_POST['password'] ?? '';
+            $pin = preg_replace('/\D+/', '', $_POST['pin'] ?? '');
             $role = clean($_POST['role'] ?? 'waiter');
 
-            if($full_name !== '' && $username !== '' && $password !== ''){
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                $query->insert("waiters", [
-                    'full_name' => $full_name,
-                    'username' => $username,
-                    'password_hash' => $hash,
-                    'role' => in_array($role, ['waiter','manager'], true) ? $role : 'waiter',
-                    'is_active' => 1,
-                ]);
-                $admin_alert = "<div class='alert alert-success'>Waiter created.</div>";
+            if($full_name !== '' && $username !== '' && $password !== '' && $pin !== ''){
+                if(strlen($pin) < 4 || strlen($pin) > 6){
+                    $admin_alert = "<div class='alert alert-danger'>PIN must be 4–6 digits.</div>";
+                } else {
+                    $hash = password_hash($password, PASSWORD_DEFAULT);
+                    $pin_hash = password_hash($pin, PASSWORD_DEFAULT);
+                    $query->insert("waiters", [
+                        'full_name' => $full_name,
+                        'username' => $username,
+                        'password_hash' => $hash,
+                        'pin_hash' => $pin_hash,
+                        'role' => in_array($role, ['waiter','manager'], true) ? $role : 'waiter',
+                        'is_active' => 1,
+                    ]);
+                    $admin_alert = "<div class='alert alert-success'>Waiter created.</div>";
+                }
             } else {
                 $admin_alert = "<div class='alert alert-danger'>All waiter fields are required.</div>";
             }
@@ -732,6 +739,9 @@
                     </div>
                     <div class="col-md-3">
                         <input type="password" class="form-control" name="password" placeholder="Password" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="password" class="form-control" name="pin" placeholder="PIN (4–6 digits)" inputmode="numeric" pattern="\d{4,6}" required>
                     </div>
                     <div class="col-md-2">
                         <select class="form-select" name="role">
