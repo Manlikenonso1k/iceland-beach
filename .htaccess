@@ -47,6 +47,9 @@
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
+    # Handle admin clean URLs
+    RewriteRule ^admin/pos/?$ admin/pos.php [L]
+
     # Handle TWO-PART URLs (e.g., /products/item1 -> products.php?id=item1)
     RewriteRule ^([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/?$ $1.php?id=$2 [QSA,L]
 
@@ -54,8 +57,6 @@
     # Also catches the root / if the above rules failed for some reason
     RewriteRule ^([^/]+)/?$ $1.php [L]
 
-    # Handle admin clean URLs
-    RewriteRule ^admin/pos/?$ admin/pos.php [L]
 
     # Handle the ROOT / request separately for performance
     RewriteRule ^$ index.php [L]
