@@ -162,6 +162,10 @@ $tables = $query->select("tables", "*", "", [], "");
         .pos-wrap {
             position: relative;
             z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .login-card {
@@ -173,23 +177,19 @@ $tables = $query->select("tables", "*", "", [], "");
 </head>
 <body>
 <div class="container py-4 pos-wrap">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">POS Sales</h3>
-        <?php if(isset($_SESSION['waiter_id'])): ?>
-            <form method="post">
-                <button class="btn btn-outline-danger" name="waiter_logout">Logout</button>
-            </form>
-        <?php endif; ?>
-    </div>
 
     <?php if($alert): ?>
         <?= $alert; ?>
     <?php endif; ?>
 
     <?php if(!isset($_SESSION['waiter_id'])): ?>
-        <div class="card login-card mx-auto" style="max-width: 420px;">
+        <div class="card login-card mx-auto" style="max-width: 420px; width: 100%;">
             <div class="card-body">
-                <h5 class="card-title text-center mb-4">Waiter Login</h5>
+                <div class="text-center mb-3">
+                    <img src="../static/images/img (1).png" alt="Iceland Logo" width="60" height="60">
+                </div>
+                <h3 class="text-center mb-2">POS Sales</h3>
+                <h6 class="card-title text-center text-muted mb-4">Waiter Login</h6>
                 <form method="post" class="d-grid gap-3">
                     <input type="text" class="form-control" name="username" placeholder="Username" required>
                     <input type="password" class="form-control" name="password" placeholder="Password" required>
@@ -198,6 +198,13 @@ $tables = $query->select("tables", "*", "", [], "");
             </div>
         </div>
     <?php else: ?>
+        <div class="w-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0 text-center flex-grow-1">POS Sales</h3>
+                <form method="post">
+                    <button class="btn btn-outline-danger" name="waiter_logout">Logout</button>
+                </form>
+            </div>
         <form method="post" class="card">
             <div class="card-body">
                 <div class="mb-3">
@@ -246,6 +253,7 @@ $tables = $query->select("tables", "*", "", [], "");
                 <button class="btn btn-success" type="submit" name="create_sale">Confirm Order</button>
             </div>
         </form>
+        </div>
     <?php endif; ?>
 </div>
 </body>
