@@ -384,6 +384,9 @@ $view = $_GET['view'] ?? 'dashboard';
         <?php else: ?>
         <form method="post" class="pos-layout w-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex gap-2">
+                    <a href="pos.php" class="btn btn-outline-secondary">Dashboard</a>
+                </div>
                 <h3 class="mb-0 text-center flex-grow-1">POS Sales</h3>
                 <button class="btn btn-outline-danger" name="waiter_logout" formmethod="post" formaction="">Logout</button>
             </div>
