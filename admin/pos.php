@@ -136,9 +136,43 @@ $tables = $query->select("tables", "*", "", [], "");
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <title>POS - Iceland Beach</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background: url('../static/Iceland-beach-resort.jpeg') no-repeat center center/cover;
+            animation: pan 30s infinite alternate ease-in-out;
+            background-attachment: fixed;
+        }
+
+        @keyframes pan {
+            0% { background-position: left center; }
+            100% { background-position: right center; }
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.75);
+            z-index: 0;
+        }
+
+        .pos-wrap {
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-card {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container py-4">
+<body>
+<div class="container py-4 pos-wrap">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">POS Sales</h3>
         <?php if(isset($_SESSION['waiter_id'])): ?>
@@ -153,19 +187,13 @@ $tables = $query->select("tables", "*", "", [], "");
     <?php endif; ?>
 
     <?php if(!isset($_SESSION['waiter_id'])): ?>
-        <div class="card">
+        <div class="card login-card mx-auto" style="max-width: 420px;">
             <div class="card-body">
-                <h5 class="card-title">Waiter Login</h5>
-                <form method="post" class="row g-2">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" name="username" placeholder="Username" required>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="password" class="form-control" name="password" placeholder="Password" required>
-                    </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-primary w-100" type="submit" name="waiter_login">Login</button>
-                    </div>
+                <h5 class="card-title text-center mb-4">Waiter Login</h5>
+                <form method="post" class="d-grid gap-3">
+                    <input type="text" class="form-control" name="username" placeholder="Username" required>
+                    <input type="password" class="form-control" name="password" placeholder="Password" required>
+                    <button class="btn btn-primary" type="submit" name="waiter_login">Login</button>
                 </form>
             </div>
         </div>
