@@ -125,6 +125,47 @@
             }
         }
 
+        if(isset($_POST['update_waiter'])){
+            $id = (int)($_POST['id'] ?? 0);
+            $full_name = clean($_POST['full_name'] ?? '');
+            $username = clean($_POST['username'] ?? '');
+            $role = clean($_POST['role'] ?? 'waiter');
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            $password = $_POST['password'] ?? '';
+            $pin = preg_replace('/\D+/', '', $_POST['pin'] ?? '');
+
+            if($id > 0 && $full_name !== '' && $username !== ''){
+                $data = [
+                    'full_name' => $full_name,
+                    'username' => $username,
+                    'role' => in_array($role, ['waiter','manager'], true) ? $role : 'waiter',
+                    'is_active' => $is_active,
+                ];
+                if($password !== ''){
+                    $data['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
+                }
+                if($pin !== ''){
+                    if(strlen($pin) < 4 || strlen($pin) > 6){
+                        $admin_alert = "<div class='alert alert-danger'>PIN must be 4–6 digits.</div>";
+                    } else {
+                        $data['pin_hash'] = password_hash($pin, PASSWORD_DEFAULT);
+                    }
+                }
+                $query->update("waiters", $data, "id = {$id}");
+                $admin_alert = "<div class='alert alert-success'>Waiter updated.</div>";
+            } else {
+                $admin_alert = "<div class='alert alert-danger'>Full name and username are required.</div>";
+            }
+        }
+
+        if(isset($_POST['delete_waiter'])){
+            $id = (int)($_POST['id'] ?? 0);
+            if($id > 0){
+                $query->delete("waiters", "id = ?", [$id], "i");
+                $admin_alert = "<div class='alert alert-success'>Waiter deleted.</div>";
+            }
+        }
+
         // Tables
         if(isset($_POST['assign_table'])){
             $table_id = (int)($_POST['table_id'] ?? 0);
@@ -762,32 +803,47 @@
                                 <th>Username</th>
                                 <th>Role</th>
                                 <th>Status</th>
-                                <th>Action</th>
+                                <th>New Password</th>
+                                <th>New PIN</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if($waiters->num_rows > 0): ?>
                                 <?php while($waiter = $waiters->fetch_assoc()): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($waiter['full_name']); ?></td>
-                                        <td><?= htmlspecialchars($waiter['username']); ?></td>
-                                        <td><?= htmlspecialchars($waiter['role']); ?></td>
-                                        <td>
-                                            <?= $waiter['is_active'] ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'; ?>
-                                        </td>
-                                        <td>
-                                            <form method="post">
+                                        <form method="post">
+                                            <td>
+                                                <input type="text" class="form-control" name="full_name" value="<?= htmlspecialchars($waiter['full_name']); ?>" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" name="username" value="<?= htmlspecialchars($waiter['username']); ?>" required>
+                                            </td>
+                                            <td>
+                                                <select class="form-select" name="role">
+                                                    <option value="waiter" <?= $waiter['role'] === 'waiter' ? 'selected' : ''; ?>>Waiter</option>
+                                                    <option value="manager" <?= $waiter['role'] === 'manager' ? 'selected' : ''; ?>>Manager</option>
+                                                </select>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" name="is_active" <?= $waiter['is_active'] ? 'checked' : ''; ?>>
+                                            </td>
+                                            <td>
+                                                <input type="password" class="form-control" name="password" placeholder="Leave blank">
+                                            </td>
+                                            <td>
+                                                <input type="password" class="form-control" name="pin" placeholder="4–6 digits" inputmode="numeric" pattern="\d{4,6}">
+                                            </td>
+                                            <td class="d-flex gap-2">
                                                 <input type="hidden" name="id" value="<?= $waiter['id']; ?>">
-                                                <input type="hidden" name="is_active" value="<?= $waiter['is_active'] ? 0 : 1; ?>">
-                                                <button class="btn btn-sm btn-outline-primary" type="submit" name="toggle_waiter">
-                                                    <?= $waiter['is_active'] ? 'Disable' : 'Enable'; ?>
-                                                </button>
-                                            </form>
-                                        </td>
+                                                <button class="btn btn-sm btn-success" type="submit" name="update_waiter">Save</button>
+                                                <button class="btn btn-sm btn-danger" type="submit" name="delete_waiter" onclick="return confirm('Delete this waiter?')">Delete</button>
+                                            </td>
+                                        </form>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
-                                <tr><td colspan="5" class="text-center">No waiters found.</td></tr>
+                                <tr><td colspan="7" class="text-center">No waiters found.</td></tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
