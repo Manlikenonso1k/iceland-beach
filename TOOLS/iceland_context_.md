@@ -108,6 +108,8 @@ File: `index.php` (after header include)
 - [x] Added POS workflow with receipt printing
 - [x] Added reports with filters + print
 - [x] Added WhatsApp notification for contact form
+- [x] Updated POS login UI (centered, logo, animated beach background)
+- [x] Disabled browser credential saving on POS login
 
 ---
 

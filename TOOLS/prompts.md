@@ -84,6 +84,11 @@
 - **Error**: `Table 'u519226541_iceland.products' doesn't exist` when loading admin.
 - **Fix**: Import `TOOLS/admin_schema.sql` into the production database to create required tables.
 
+## POS Login Security Update (2026-02-03 12:00)
+- **Problem**: POS login page prompted browsers to save credentials.
+- **Solution**: Disabled autocomplete on the login form and inputs (`autocomplete="off"` and `autocomplete="new-password"`).
+- **File**: `admin/pos.php`
+
 ## Files Updated (Admin System)
 - `admin/index.php` (new tabs, inventory/waiter/table/report logic)
 - `admin/pos.php` (POS workflow)

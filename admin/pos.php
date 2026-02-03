@@ -190,9 +190,9 @@ $tables = $query->select("tables", "*", "", [], "");
                 </div>
                 <h3 class="text-center mb-2">POS Sales</h3>
                 <h6 class="card-title text-center text-muted mb-4">Waiter Login</h6>
-                <form method="post" class="d-grid gap-3">
-                    <input type="text" class="form-control" name="username" placeholder="Username" required>
-                    <input type="password" class="form-control" name="password" placeholder="Password" required>
+                <form method="post" class="d-grid gap-3" autocomplete="off">
+                    <input type="text" class="form-control" name="username" placeholder="Username" required autocomplete="off">
+                    <input type="password" class="form-control" name="password" placeholder="Password" required autocomplete="new-password">
                     <button class="btn btn-primary" type="submit" name="waiter_login">Login</button>
                 </form>
             </div>
