@@ -35,6 +35,10 @@
     }
 
     $admin_alert = '';
+    if(isset($_SESSION['admin_alert'])){
+        $admin_alert = $_SESSION['admin_alert'];
+        unset($_SESSION['admin_alert']);
+    }
 
     if($_SERVER['REQUEST_METHOD'] === 'POST'){
         // Inventory
@@ -135,6 +139,25 @@
             $pin = preg_replace('/\D+/', '', $_POST['pin'] ?? '');
 
             if($id > 0 && $full_name !== '' && $username !== ''){
+                $current = $query->select("waiters", "*", "id = ?", [$id], "i");
+                $current_row = $current->num_rows > 0 ? $current->fetch_assoc() : null;
+                $changes = [];
+
+                if($current_row){
+                    if($current_row['full_name'] !== $full_name){
+                        $changes[] = "name changed";
+                    }
+                    if($current_row['username'] !== $username){
+                        $changes[] = "username changed";
+                    }
+                    if($current_row['role'] !== $role){
+                        $changes[] = "role changed";
+                    }
+                    if((int)$current_row['is_active'] !== (int)$is_active){
+                        $changes[] = "status changed";
+                    }
+                }
+
                 $data = [
                     'full_name' => $full_name,
                     'username' => $username,
@@ -143,18 +166,23 @@
                 ];
                 if($password !== ''){
                     $data['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
+                    $changes[] = "password changed";
                 }
                 if($pin !== ''){
                     if(strlen($pin) < 4 || strlen($pin) > 6){
                         $admin_alert = "<div class='alert alert-danger'>PIN must be 4–6 digits.</div>";
                     } else {
                         $data['pin_hash'] = password_hash($pin, PASSWORD_DEFAULT);
+                        $changes[] = "PIN changed";
                     }
                 }
                 $query->update("waiters", $data, "id = {$id}");
-                $admin_alert = "<div class='alert alert-success'>Waiter updated.</div>";
+                if($admin_alert === ''){
+                    $message = count($changes) > 0 ? implode(', ', array_unique($changes)) : "no changes";
+                    $_SESSION['admin_alert'] = "<div class='alert alert-success'>User info changed: {$message} ✔</div>";
+                }
             } else {
-                $admin_alert = "<div class='alert alert-danger'>Full name and username are required.</div>";
+                $_SESSION['admin_alert'] = "<div class='alert alert-danger'>Full name and username are required.</div>";
             }
         }
 
@@ -166,6 +194,11 @@
             }
         }
 
+
+    if($admin_alert && !headers_sent() && $_SERVER['REQUEST_METHOD'] === 'POST'){
+        header("Location: index.php");
+        exit();
+    }
         // Tables
         if(isset($_POST['assign_table'])){
             $table_id = (int)($_POST['table_id'] ?? 0);
