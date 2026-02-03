@@ -18,7 +18,7 @@ $waiter = $query->select("waiters", "*", "id = ?", [$s['waiter_id']], "i")->fetc
 $table = $query->select("tables", "*", "id = ?", [$s['table_id']], "i")->fetch_assoc();
 
 $items = $query->conn->query(
-    "SELECT p.name, si.quantity, si.price FROM sale_items si JOIN products p ON p.id = si.product_id WHERE si.sale_id = {$sale_id}"
+  "SELECT p.name, si.quantity, si.price, si.is_voided FROM sale_items si JOIN products p ON p.id = si.product_id WHERE si.sale_id = {$sale_id}"
 );
 
 $date = date('Y-m-d', strtotime($s['created_at']));
@@ -49,6 +49,7 @@ $time = date('H:i', strtotime($s['created_at']));
     <div>Time: <?= $time; ?></div>
     <div>Waiter: <?= htmlspecialchars($waiter['full_name'] ?? ''); ?></div>
     <div>Table: <?= htmlspecialchars($table['table_name'] ?? ''); ?></div>
+    <div>Payment: <?= htmlspecialchars($s['payment_method']); ?></div>
   </div>
 
   <div class="line"></div>
@@ -64,7 +65,7 @@ $time = date('H:i', strtotime($s['created_at']));
     <tbody>
       <?php while($item = $items->fetch_assoc()): ?>
       <tr>
-        <td><?= htmlspecialchars($item['name']); ?></td>
+        <td><?= $item['is_voided'] ? 'VOIDED: ' : '' ?><?= htmlspecialchars($item['name']); ?></td>
         <td><?= (int)$item['quantity']; ?></td>
         <td><?= number_format($item['price'] * $item['quantity'], 2); ?></td>
       </tr>

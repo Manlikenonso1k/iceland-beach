@@ -225,6 +225,7 @@
         $waiter_id = (int)($_GET['waiter_id'] ?? 0);
         $table_id = (int)($_GET['table_id'] ?? 0);
         $product_id = (int)($_GET['product_id'] ?? 0);
+        $payment_method = $_GET['payment_method'] ?? '';
 
         $conditions = [];
         $params = [];
@@ -254,6 +255,11 @@
             $conditions[] = "si.product_id = ?";
             $params[] = $product_id;
             $types .= 'i';
+        }
+        if(in_array($payment_method, ['cash','transfer','card'], true)){
+            $conditions[] = "s.payment_method = ?";
+            $params[] = $payment_method;
+            $types .= 's';
         }
 
         $where = $conditions ? ("WHERE " . implode(" AND ", $conditions)) : '';
@@ -292,6 +298,26 @@
         $result2 = $stmt2->get_result();
         while($row = $result2->fetch_assoc()){
             $report_products[] = $row;
+        }
+
+        $payment_totals = [
+            'cash' => 0,
+            'transfer' => 0,
+            'card' => 0,
+        ];
+        $sql_payments = "SELECT payment_method, SUM(total_amount) AS total
+                        FROM sales s
+                        JOIN sale_items si ON si.sale_id = s.id
+                        {$where}
+                        GROUP BY payment_method";
+        $stmt3 = $query->conn->prepare($sql_payments);
+        if($params){
+            $stmt3->bind_param($types, ...$params);
+        }
+        $stmt3->execute();
+        $result3 = $stmt3->get_result();
+        while($row = $result3->fetch_assoc()){
+            $payment_totals[$row['payment_method']] = (float)$row['total'];
         }
     }
 ?>
@@ -1000,6 +1026,15 @@
                             <?php endwhile; ?>
                         </select>
                     </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Payment</label>
+                        <select class="form-select" name="payment_method">
+                            <option value="">All</option>
+                            <option value="cash" <?= (($_GET['payment_method'] ?? '') === 'cash') ? 'selected' : ''; ?>>Cash</option>
+                            <option value="transfer" <?= (($_GET['payment_method'] ?? '') === 'transfer') ? 'selected' : ''; ?>>Transfer</option>
+                            <option value="card" <?= (($_GET['payment_method'] ?? '') === 'card') ? 'selected' : ''; ?>>Card</option>
+                        </select>
+                    </div>
                     <div class="col-md-2 d-grid">
                         <button class="btn btn-primary" type="submit">Filter</button>
                     </div>
@@ -1038,6 +1073,33 @@
                                 <?php endif; ?>
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="text-uppercase text-muted">Cash Total</h6>
+                                    <h4>₦<?= number_format($payment_totals['cash'] ?? 0, 2); ?></h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="text-uppercase text-muted">Transfer Total</h6>
+                                    <h4>₦<?= number_format($payment_totals['transfer'] ?? 0, 2); ?></h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="text-uppercase text-muted">Card Total</h6>
+                                    <h4>₦<?= number_format($payment_totals['card'] ?? 0, 2); ?></h4>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <h6 class="text-uppercase">Top Selling Products</h6>

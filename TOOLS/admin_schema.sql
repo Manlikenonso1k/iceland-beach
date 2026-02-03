@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS sales (
   waiter_id INT UNSIGNED NOT NULL,
   table_id INT UNSIGNED NOT NULL,
   total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  payment_method ENUM('cash','transfer','card') NOT NULL DEFAULT 'cash',
   sale_date DATE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_sales_waiter FOREIGN KEY (waiter_id) REFERENCES waiters(id)
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS sale_items (
   product_id INT UNSIGNED NOT NULL,
   quantity INT NOT NULL DEFAULT 1,
   price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  is_voided TINYINT(1) NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_sale_items_sale FOREIGN KEY (sale_id) REFERENCES sales(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
@@ -64,6 +66,19 @@ CREATE TABLE IF NOT EXISTS sale_items (
     ON DELETE RESTRICT ON UPDATE CASCADE,
   UNIQUE KEY uniq_sale_product (sale_id, product_id),
   INDEX idx_sale_items_product (product_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS void_logs (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  sale_item_id INT UNSIGNED NOT NULL,
+  voided_by INT UNSIGNED NOT NULL,
+  reason VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_void_logs_item FOREIGN KEY (sale_item_id) REFERENCES sale_items(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_void_logs_waiter FOREIGN KEY (voided_by) REFERENCES waiters(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  INDEX idx_void_logs_created_at (created_at)
 ) ENGINE=InnoDB;
 
 -- Seed tables T1-T12
@@ -87,3 +102,8 @@ WHERE NOT EXISTS (SELECT 1 FROM tables WHERE table_name = seed.table_name);
 -- If waiters table already exists, run:
 -- ALTER TABLE waiters ADD COLUMN pin_hash VARCHAR(255) NULL;
 -- CREATE INDEX idx_waiters_pin ON waiters (pin_hash(10));
+
+-- If sales table already exists, run:
+-- ALTER TABLE sales ADD COLUMN payment_method ENUM('cash','transfer','card') NOT NULL DEFAULT 'cash';
+-- ALTER TABLE sale_items ADD COLUMN is_voided TINYINT(1) NOT NULL DEFAULT 0;
+-- CREATE TABLE void_logs (...)

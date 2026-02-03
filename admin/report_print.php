@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once "../core/config/dbquery.php";
 
 $query = new Dbquery();
@@ -6,6 +7,10 @@ $query = new Dbquery();
 $date_from = $_GET['date_from'] ?? '';
 $date_to = $_GET['date_to'] ?? '';
 $waiter_id = (int)($_GET['waiter_id'] ?? 0);
+
+if(isset($_SESSION['waiter_id']) && ($_SESSION['waiter_role'] ?? '') !== 'manager'){
+  $waiter_id = (int)$_SESSION['waiter_id'];
+}
 
 $conditions = [];
 $params = [];
@@ -54,6 +59,26 @@ if($params){
 }
 $stmt2->execute();
 $items = $stmt2->get_result();
+
+$payment_totals = [
+  'cash' => 0,
+  'transfer' => 0,
+  'card' => 0,
+];
+$pay_sql = "SELECT payment_method, SUM(total_amount) AS total
+      FROM sales s
+      JOIN sale_items si ON si.sale_id = s.id
+      {$where}
+      GROUP BY payment_method";
+$stmt3 = $query->conn->prepare($pay_sql);
+if($params){
+  $stmt3->bind_param($types, ...$params);
+}
+$stmt3->execute();
+$pay = $stmt3->get_result();
+while($row = $pay->fetch_assoc()){
+  $payment_totals[$row['payment_method']] = (float)$row['total'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,6 +121,12 @@ $items = $stmt2->get_result();
       <?php endwhile; ?>
     </tbody>
   </table>
+
+  <div class="line"></div>
+  <div><strong>Payment Breakdown</strong></div>
+  <div>Cash: ₦<?= number_format($payment_totals['cash'] ?? 0, 2); ?></div>
+  <div>Transfer: ₦<?= number_format($payment_totals['transfer'] ?? 0, 2); ?></div>
+  <div>Card: ₦<?= number_format($payment_totals['card'] ?? 0, 2); ?></div>
 
   <div class="line"></div>
   <div><strong>Item Breakdown</strong></div>
