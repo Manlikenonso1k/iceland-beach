@@ -127,7 +127,7 @@ File: `index.php` (after header include)
 - [ ] Add loading animation while video buffers
 
 ### Admin System Next Steps
-- [ ] Import `TOOLS/admin_schema.sql` into production database
+- [x] Import `TOOLS/admin_schema.sql` into production database (fixes missing products table)
 - [ ] Create initial admin + waiter accounts
 - [ ] Verify POS flow and receipt printing
 - [ ] Verify reports filters and print layout

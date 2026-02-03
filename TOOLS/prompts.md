@@ -1,5 +1,8 @@
 # Deployment Fix Prompts and Changes
 
+## Logging Rule (Always Follow)
+- Every new entry must include **date + time** and **both** the problem and solution (not just one).
+
 ## Prompts Used (condensed)
 - "Use the same method with my other project; it works well in the flow."
 - "How do I get my SSH private key?"
@@ -26,6 +29,8 @@
 - "Confirm CallMeBot activation number."
 - "Build a structured admin system with dashboard, inventory, waiters, tables, POS, reports, settings."
 - "Proceed with Phase 2: CRUD + POS + receipts + reports."
+- "Fatal error: products table doesn't exist."
+- "Code works; update prompts and context with problem + fix."
 
 ## What We Did Different (Fix Summary)
 1. **Workflow update**: Switched deploy workflow to the Hostinger SSH method that initializes an SSH agent on the server and performs a clean `git fetch` + `git reset --hard` instead of `git pull`.
@@ -74,6 +79,10 @@
 6. **POS flow**: Waiter login → select table → add items → confirm order; stock auto-reduced; anti-duplicate safeguard.
 7. **Receipts & reports**: 80mm receipt print; daily report print with filters.
 8. **DB helpers**: Added `insertGetId()` and `delete()` helpers for DB operations.
+
+## Admin Error + Fix
+- **Error**: `Table 'u519226541_iceland.products' doesn't exist` when loading admin.
+- **Fix**: Import `TOOLS/admin_schema.sql` into the production database to create required tables.
 
 ## Files Updated (Admin System)
 - `admin/index.php` (new tabs, inventory/waiter/table/report logic)
