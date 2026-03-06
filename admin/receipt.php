@@ -31,24 +31,30 @@ $time = date('H:i', strtotime($s['created_at']));
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Receipt</title>
 <style>
-  body{font-family: Arial, sans-serif; margin:0; padding:0;}
-  .receipt{width:80mm; padding:10px; color:#000;}
+  html, body{margin:0; padding:0; color:#000; width:80mm;}
+  body{font-family: Arial, sans-serif;}
+  .receipt{width:72mm; padding:6px;}
   .center{text-align:center;}
-  .line{border-top:1px dashed #000; margin:8px 0;}
-  table{width:100%; border-collapse:collapse; font-size:12px;}
-  th,td{text-align:left; padding:2px 0;}
+  .line{border-top:1px dashed #000; margin:5px 0;}
+  table{width:100%; border-collapse:collapse; font-size:11px;}
+  th,td{text-align:left; padding:1px 0; vertical-align:top;}
+  th:nth-child(2), th:nth-child(3), td:nth-child(2), td:nth-child(3){white-space:nowrap;}
+  .item-name{max-width:40mm; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-block;}
   .total{font-weight:bold;}
-  @media print{.print-btn{display:none;}}
+  @media print{
+    @page{size:80mm auto; margin:0;}
+    .print-btn{display:none;}
+    html, body{width:80mm; height:auto !important; overflow:hidden;}
+    .receipt{width:76mm; padding:2mm; display:block;}
+  }
 </style>
 </head>
 <body>
 <div class="receipt">
   <div class="center">
     <div><strong>New Iceland Beach Resort</strong></div>
-    <div>Date: <?= $date; ?></div>
-    <div>Time: <?= $time; ?></div>
-    <div>Waiter: <?= htmlspecialchars($waiter['full_name'] ?? ''); ?></div>
-    <div>Table: <?= htmlspecialchars($table['table_name'] ?? ''); ?></div>
+    <div>Date: <?= $date; ?> | Time: <?= $time; ?></div>
+    <div>Waiter: <?= htmlspecialchars($waiter['full_name'] ?? ''); ?> | Table: <?= htmlspecialchars($table['table_name'] ?? ''); ?></div>
     <div>Payment: <?= htmlspecialchars($s['payment_method']); ?></div>
   </div>
 
@@ -65,7 +71,7 @@ $time = date('H:i', strtotime($s['created_at']));
     <tbody>
       <?php while($item = $items->fetch_assoc()): ?>
       <tr>
-        <td><?= $item['is_voided'] ? 'VOIDED: ' : '' ?><?= htmlspecialchars($item['name']); ?></td>
+        <td><span class="item-name"><?= $item['is_voided'] ? 'VOIDED: ' : '' ?><?= htmlspecialchars($item['name']); ?></span></td>
         <td><?= (int)$item['quantity']; ?></td>
         <td><?= number_format($item['price'] * $item['quantity'], 2); ?></td>
       </tr>
@@ -75,9 +81,25 @@ $time = date('H:i', strtotime($s['created_at']));
 
   <div class="line"></div>
   <div class="total">TOTAL: ₦<?= number_format($s['total_amount'], 2); ?></div>
-  <div class="center" style="margin-top:8px;">Thank you for visiting!</div>
+  <div class="center" style="margin-top:5px;">Thank you for visiting!</div>
 
-  <button class="print-btn" onclick="window.print()">Print</button>
+  <button class="print-btn" onclick="printAndReturn()">Print</button>
 </div>
+
+<script>
+function printAndReturn(){
+  let redirected = false;
+
+  function goBackToPosLogin(){
+    if(redirected) return;
+    redirected = true;
+    window.location.href = 'pos.php?force_login=1';
+  }
+
+  window.addEventListener('afterprint', goBackToPosLogin, { once: true });
+  window.print();
+  setTimeout(goBackToPosLogin, 1200);
+}
+</script>
 </body>
 </html>

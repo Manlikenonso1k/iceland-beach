@@ -36,6 +36,10 @@ if(isset($_POST['waiter_logout'])){
     unset($_SESSION['waiter_id'], $_SESSION['waiter_name'], $_SESSION['waiter_role']);
 }
 
+if(isset($_GET['force_login']) && $_GET['force_login'] === '1'){
+    unset($_SESSION['waiter_id'], $_SESSION['waiter_name'], $_SESSION['waiter_role']);
+}
+
 if(isset($_POST['create_sale']) && isset($_SESSION['waiter_id'])){
     $waiter_id = (int)$_SESSION['waiter_id'];
     $table_id = (int)($_POST['table_id'] ?? 0);
