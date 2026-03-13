@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\Room;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class BookingCustomerConfirmationMail extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(
+        public Room $room,
+        public ?string $phone = null,
+        public ?int $guests = null,
+    ) {}
+
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'Booking Received - Iceland Beach Resort',
+        );
+    }
+
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'mail.booking-customer-confirmation',
+            with: [
+                'room' => $this->room,
+                'phone' => $this->phone,
+                'guests' => $this->guests,
+            ],
+        );
+    }
+}
