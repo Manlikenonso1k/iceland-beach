@@ -7,4 +7,16 @@ return [
         env('BOOKING_ADMIN_EMAIL', 'akapo@icelandbeach.com'),
         env('BOOKING_INFO_EMAIL', 'info@icelandbeach.com'),
     ],
+
+    // Legacy app path used by data bridge seeders on local and production.
+    'legacy_app_path' => env('LEGACY_APP_PATH', base_path('..')),
+
+    // Optional legacy DB connection used by LegacyRoomsSeeder.
+    'legacy_db' => [
+        'host' => env('LEGACY_DB_HOST'),
+        'port' => (int) env('LEGACY_DB_PORT', 3306),
+        'database' => env('LEGACY_DB_DATABASE'),
+        'username' => env('LEGACY_DB_USERNAME'),
+        'password' => env('LEGACY_DB_PASSWORD'),
+    ],
 ];

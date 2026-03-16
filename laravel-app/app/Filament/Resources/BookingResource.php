@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Room;
 use App\Services\ReservationService;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -32,7 +33,10 @@ class BookingResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('room_name')->required()->maxLength(255),
+                Select::make('room_name')
+                    ->options(fn () => Room::query()->orderBy('room_name')->pluck('room_name', 'room_name'))
+                    ->searchable()
+                    ->required(),
                 TextInput::make('room_category')->maxLength(255),
                 TextInput::make('room_price')->numeric()->prefix('NGN'),
                 Select::make('is_booked')
@@ -78,6 +82,54 @@ class BookingResource extends Resource
                     ]),
             ])
             ->actions([
+                Action::make('confirmBooking')
+                    ->label('Confirm')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(function (): bool {
+                        /** @var \App\Models\User|null $user */
+                        $user = Filament::auth()->user();
+
+                        return $user !== null
+                            && method_exists($user, 'hasAnyRole')
+                            && $user->hasAnyRole(['Super Admin', 'Manager']);
+                    })
+                    ->action(function (Room $record): void {
+                        $record->update(['is_booked' => 'booked']);
+
+                        Notification::make()
+                            ->title('Booking confirmed')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('rejectBooking')
+                    ->label('Reject')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(function (): bool {
+                        /** @var \App\Models\User|null $user */
+                        $user = Filament::auth()->user();
+
+                        return $user !== null
+                            && method_exists($user, 'hasAnyRole')
+                            && $user->hasAnyRole(['Super Admin', 'Manager']);
+                    })
+                    ->action(function (Room $record): void {
+                        $record->update([
+                            'is_booked' => 'no',
+                            'customer_name' => null,
+                            'email' => null,
+                            'start_date' => null,
+                            'end_date' => null,
+                            'total_price' => null,
+                            'mailsent' => false,
+                        ]);
+
+                        Notification::make()
+                            ->title('Booking rejected')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('sendBookingMail')
                     ->label('Send Booking Mail')
                     ->icon('heroicon-o-envelope')
@@ -106,7 +158,8 @@ class BookingResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListBookings::route('/'),
+            'index' => Pages\BookingCalendar::route('/'),
+            'list' => Pages\ListBookings::route('/list'),
             'create' => Pages\CreateBooking::route('/create'),
             'edit' => Pages\EditBooking::route('/{record}/edit'),
         ];

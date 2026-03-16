@@ -1,33 +1,25 @@
-Role: You are a Lead Laravel & Filament 3 Developer.
-Task: Migrate the "Iceland Beach Resort" legacy PHP system to Laravel 11/12 with a Filament 3 Admin Panel.
+Task: Fix Filament Calendar UI and Migrate Legacy Room Data.
 
-Context:
-The legacy system is procedural PHP. It handles:
-
-Room Bookings: Date management, availability checks, and guest records.
-
-Inventory: Tracking supplies and resort assets.
-
-POS Sales & Reporting: Transaction logs and financial summaries.
-
-Emailing: Notification system for bookings and receipts.
+Current Issue: The Booking page is empty ("no rooms") and lacks the Google Calendar-style UI.
 
 Instructions:
 
-Code Analysis: Read the provided legacy PHP files to identify database schemas, raw SQL queries, and business logic.
+Data Bridge: Read the legacy rooms.php and core/ files. Create a Laravel Seeder that extracts the room types and pricing from the legacy PHP arrays/DB and inserts them into the new Laravel rooms table.
 
-Database: Generate Laravel Migrations and Eloquent Models that mirror the legacy structure but use Laravel conventions (timestamps, soft deletes).
+Calendar Fix: >    - Install saade/filament-fullcalendar.
 
-Filament Resources: Create Resources for Booking, InventoryItem, Sale, and Report. Use php artisan make:filament-resource --generate as a baseline.
+Create a BookingCalendarWidget.
 
-Logic Migration:
+Ensure the BookingResource is configured to use this widget as the default view instead of a standard table list.
 
-Move procedural emailing logic into Laravel Mailables.
+Role Management:
 
-Implement these as Filament Actions (e.g., a "Send Receipt" button in the Sale Resource).
+Set up Spatie Permission or Filament Shield.
 
-Migrate POS reporting into Filament Widgets for the dashboard.
+Create roles: Super Admin, Manager, Front Desk, and Waiter.
 
-Maintainability: Refactor any complex procedural calculations into Service Classes (app/Services) so they are reusable and easy to test.
+Restrict the "Confirm/Reject" booking actions to only Super Admin and Manager.
 
-Strict Rule: Do not miss any functional edge cases found in the legacy code. Prioritize Filament's built-in Notifications and Infolists for the UI.
+Room Selection: In the Booking form, create a Select component that fetches options dynamically from the Room model.
+
+Local to Production Safety: Ensure all file paths and DB connections use .env variables so the code works on localhost now and the production server later without manual edits.
