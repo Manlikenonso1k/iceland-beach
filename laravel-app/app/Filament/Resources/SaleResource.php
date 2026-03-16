@@ -5,13 +5,16 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\SaleResource\Pages;
 use App\Mail\SaleReceiptMail;
 use App\Models\DiningTable;
+use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Waiter;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -44,7 +47,7 @@ class SaleResource extends Resource
                     ->label('Table')
                     ->options(DiningTable::query()->pluck('table_name', 'id'))
                     ->required(),
-                TextInput::make('total_amount')->required()->numeric()->prefix('NGN'),
+                TextInput::make('total_amount')->numeric()->prefix('NGN')->hiddenOn('create'),
                 Select::make('payment_method')
                     ->options([
                         'cash' => 'Cash',
@@ -52,7 +55,31 @@ class SaleResource extends Resource
                         'card' => 'Card',
                     ])
                     ->required(),
-                DatePicker::make('sale_date')->required(),
+                DatePicker::make('sale_date')->hiddenOn('create'),
+                TextInput::make('void_reason')
+                    ->label('Void reason (required if any item is voided)')
+                    ->maxLength(500)
+                    ->visibleOn('create'),
+                Repeater::make('items')
+                    ->label('Order items')
+                    ->schema([
+                        Select::make('product_id')
+                            ->label('Product')
+                            ->options(Product::query()->pluck('name', 'id'))
+                            ->required()
+                            ->searchable(),
+                        TextInput::make('quantity')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(1)
+                            ->required(),
+                        Toggle::make('is_voided')
+                            ->label('Void')
+                            ->default(false),
+                    ])
+                    ->columns(3)
+                    ->minItems(1)
+                    ->visibleOn('create'),
             ]);
     }
 

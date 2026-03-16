@@ -19,29 +19,24 @@ class EditBooking extends EditRecord
         ];
     }
 
-    protected function afterSave(): void
+    protected function mutateFormDataBeforeSave(array $data): array
     {
-        $record = $this->record;
-
         if (
-            $record->is_booked !== 'booked'
-            || empty($record->customer_name)
-            || empty($record->email)
-            || empty($record->start_date)
-            || empty($record->end_date)
+            ($data['is_booked'] ?? null) !== 'booked'
+            || empty($data['room_name'])
+            || empty($data['start_date'])
+            || empty($data['end_date'])
         ) {
-            return;
+            return $data;
         }
 
-        app(ReservationService::class)->reserveRoom(
-            room: $record,
-            customerName: $record->customer_name,
-            customerEmail: $record->email,
-            phone: null,
-            guests: null,
-            start: Carbon::parse($record->start_date),
-            end: Carbon::parse($record->end_date),
-            sendEmails: false,
+        app(ReservationService::class)->assertNotOverlapping(
+            excludeId: $this->record->id,
+            roomName: $data['room_name'],
+            start: Carbon::parse($data['start_date']),
+            end: Carbon::parse($data['end_date']),
         );
+
+        return $data;
     }
 }

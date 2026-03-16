@@ -11,6 +11,27 @@ class CreateBooking extends CreateRecord
 {
     protected static string $resource = BookingResource::class;
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        if (
+            ($data['is_booked'] ?? null) !== 'booked'
+            || empty($data['room_name'])
+            || empty($data['start_date'])
+            || empty($data['end_date'])
+        ) {
+            return $data;
+        }
+
+        app(ReservationService::class)->assertNotOverlapping(
+            excludeId: null,
+            roomName: $data['room_name'],
+            start: Carbon::parse($data['start_date']),
+            end: Carbon::parse($data['end_date']),
+        );
+
+        return $data;
+    }
+
     protected function afterCreate(): void
     {
         $record = $this->record;
@@ -25,15 +46,6 @@ class CreateBooking extends CreateRecord
             return;
         }
 
-        app(ReservationService::class)->reserveRoom(
-            room: $record,
-            customerName: $record->customer_name,
-            customerEmail: $record->email,
-            phone: null,
-            guests: null,
-            start: Carbon::parse($record->start_date),
-            end: Carbon::parse($record->end_date),
-            sendEmails: true,
-        );
+        app(ReservationService::class)->sendBookingEmails($record);
     }
 }

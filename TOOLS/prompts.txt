@@ -1,0 +1,39 @@
+Role: Expert Laravel 11 & Filament 3 Developer.
+Task: Build a professional Room/Service Booking System for the "Iceland Beach Resort" project.
+
+Core Requirements:
+
+Database Schema: >    - Create a Booking model with fields: room_id, user_id, starts_at, ends_at, status (enum: pending, confirmed, rejected), and rejection_reason (text).
+
+Calendar Integration:
+
+Install and configure a calendar plugin (e.g., filament/spatie-laravel-google-calendar or saade/filament-fullcalendar).
+
+Implement a "Bird's Eye View" monthly calendar.
+
+Navigation Logic: Clicking a day should drill down to show all occupied rooms and booking details for that specific date. Include a "Back to Month" navigation link.
+
+Admin Actions (Confirm/Deny):
+
+In the BookingResource, create two custom header/record actions: Confirm and Reject.
+
+The Reject action must open a Modal with a required textarea for the rejection_reason.
+
+Both actions must update the status in the database.
+
+Email Notifications:
+
+Create two Laravel Mailables: BookingConfirmedMail and BookingRejectedMail.
+
+Trigger these emails automatically when the Admin confirms or rejects a booking. The rejection email must include the rejection_reason.
+
+UI/UX:
+
+The dashboard must look like the Google Calendar Android app—clean, color-coded status (e.g., Green for confirmed, Yellow for pending, Red for rejected).
+
+Instructions: Use Filament Actions, Infolists, and Widgets. Ensure the code is modular and follows Laravel best practices for maintainability.
+
+
+Recommended Tech Stack for this FeatureTo save time, agent  use these specific tools:FeatureRecommended ToolCalendar Viewsaade/filament-fullcalendar (Best for Filament 3)Email LogicLaravel Mailables + Queue (so the UI doesn't lag when sending)State ManagementFilament Actions (for the pop-up reason box)Pro-Tip for the MigrationSince you are coming from legacy PHP where you only had a "toggle," your old database might not even have a bookings table with start_date and end_date. 
+
+ agent to "generate the migration file for the bookings table first" before it starts writing the Filament code.

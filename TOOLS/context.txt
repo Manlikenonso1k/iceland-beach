@@ -1,0 +1,33 @@
+Role: You are a Lead Laravel & Filament 3 Developer.
+Task: Migrate the "Iceland Beach Resort" legacy PHP system to Laravel 11/12 with a Filament 3 Admin Panel.
+
+Context:
+The legacy system is procedural PHP. It handles:
+
+Room Bookings: Date management, availability checks, and guest records.
+
+Inventory: Tracking supplies and resort assets.
+
+POS Sales & Reporting: Transaction logs and financial summaries.
+
+Emailing: Notification system for bookings and receipts.
+
+Instructions:
+
+Code Analysis: Read the provided legacy PHP files to identify database schemas, raw SQL queries, and business logic.
+
+Database: Generate Laravel Migrations and Eloquent Models that mirror the legacy structure but use Laravel conventions (timestamps, soft deletes).
+
+Filament Resources: Create Resources for Booking, InventoryItem, Sale, and Report. Use php artisan make:filament-resource --generate as a baseline.
+
+Logic Migration:
+
+Move procedural emailing logic into Laravel Mailables.
+
+Implement these as Filament Actions (e.g., a "Send Receipt" button in the Sale Resource).
+
+Migrate POS reporting into Filament Widgets for the dashboard.
+
+Maintainability: Refactor any complex procedural calculations into Service Classes (app/Services) so they are reusable and easy to test.
+
+Strict Rule: Do not miss any functional edge cases found in the legacy code. Prioritize Filament's built-in Notifications and Infolists for the UI.
