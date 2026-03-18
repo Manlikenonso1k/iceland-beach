@@ -169,9 +169,8 @@ $beach  = $rooms->select("room", "*", "room_category = ? AND is_booked = ?", ['B
               <sub>ADVANTAGES:</sub>
               <p>
                 - Complimentary Breakfast For 1<br>
-                - Drinks in room | Pack of juice <br>
                 - 2 Bottles of water | Ice tea <br>
-                - Air dryer | Free laundry <br>
+                -  Free laundry <br>
                 - Larger room | Free Swimming
               </p><br>
 

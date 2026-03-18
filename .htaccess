@@ -3,6 +3,14 @@
     RewriteBase /
 
     # -----------------------------------------------------
+    # LARAVEL ADMIN BRIDGE (HIGH PRIORITY)
+    # -----------------------------------------------------
+    # Route Filament admin URLs into Laravel before legacy rules.
+    RewriteRule ^admin(?:/.*)?$ laravel-app/public/index.php [L,QSA]
+    RewriteRule ^livewire(?:/.*)?$ laravel-app/public/index.php [L,QSA]
+    RewriteRule ^(css|js|build|storage)/filament(?:/.*)?$ laravel-app/public/$0 [L,QSA]
+
+    # -----------------------------------------------------
     # 0. ALLOW STATIC FILES (VIDEOS, IMAGES, CSS, JS)
     #    Add this BEFORE other rewrite rules to prevent conflicts
     # -----------------------------------------------------

@@ -1,25 +1,44 @@
-Task: Fix Filament Calendar UI and Migrate Legacy Room Data.
 
-Current Issue: The Booking page is empty ("no rooms") and lacks the Google Calendar-style UI.
+[u519226541@us-phx-web940 public_html]$ git fetch origin
+[u519226541@us-phx-web940 public_html]$ git checkout main
+Already on 'main'
+Your branch is up to date with 'origin/main'.
+[u519226541@us-phx-web940 public_html]$ git pull origin main
+From github.com:Manlikenonso1k/iceland-beach
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+[u519226541@us-phx-web940 public_html]$ 
+[u519226541@us-phx-web940 public_html]$ cd laravel-app
+[u519226541@us-phx-web940 laravel-app]$ composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+Installing dependencies from lock file
+Verifying lock file contents can be installed on current platform.
+Your lock file does not contain a compatible set of packages. Please run composer update.
 
-Instructions:
+  Problem 1
+    - spatie/laravel-permission is locked to version 7.2.3 and an update of this package was not requested.
+    - spatie/laravel-permission 7.2.3 requires php ^8.4 -> your php version (8.3.19) does not satisfy that requirement.
+  Problem 2
+    - symfony/clock is locked to version v8.0.0 and an update of this package was not requested.
+    - symfony/clock v8.0.0 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
+  Problem 3
+    - symfony/css-selector is locked to version v8.0.6 and an update of this package was not requested.
+    - symfony/css-selector v8.0.6 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
+  Problem 4
+    - symfony/event-dispatcher is locked to version v8.0.4 and an update of this package was not requested.
+    - symfony/event-dispatcher v8.0.4 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
+  Problem 5
+    - symfony/string is locked to version v8.0.6 and an update of this package was not requested.
+    - symfony/string v8.0.6 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
+  Problem 6
+    - symfony/translation is locked to version v8.0.6 and an update of this package was not requested.
+    - symfony/translation v8.0.6 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
+  Problem 7
+    - nesbot/carbon is locked to version 3.11.3 and an update of this package was not requested.
+    - nesbot/carbon 3.11.3 requires symfony/clock ^6.3.12 || ^7.0 || ^8.0 -> satisfiable by symfony/clock[v8.0.0].
+    - symfony/clock v8.0.0 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
 
-Data Bridge: Read the legacy rooms.php and core/ files. Create a Laravel Seeder that extracts the room types and pricing from the legacy PHP arrays/DB and inserts them into the new Laravel rooms table.
-
-Calendar Fix: >    - Install saade/filament-fullcalendar.
-
-Create a BookingCalendarWidget.
-
-Ensure the BookingResource is configured to use this widget as the default view instead of a standard table list.
-
-Role Management:
-
-Set up Spatie Permission or Filament Shield.
-
-Create roles: Super Admin, Manager, Front Desk, and Waiter.
-
-Restrict the "Confirm/Reject" booking actions to only Super Admin and Manager.
-
-Room Selection: In the Booking form, create a Select component that fetches options dynamically from the Room model.
-
-Local to Production Safety: Ensure all file paths and DB connections use .env variables so the code works on localhost now and the production server later without manual edits.
+[u519226541@us-phx-web940 laravel-app]$ php artisan optimize:clear
+[u519226541@us-phx-web940 laravel-app]$ php artisan config:cache
+[u519226541@us-phx-web940 laravel-app]$ php artisan route:cache
+[u519226541@us-phx-web940 laravel-app]$ php artisan view:cache
+[u519226541@us-phx-web940 laravel-app]$ 
