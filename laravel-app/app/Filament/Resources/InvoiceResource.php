@@ -164,7 +164,10 @@ class InvoiceResource extends Resource
                 TextColumn::make('invoice_date')->label('Date')->date('Y-m-d')->sortable(),
                 TextColumn::make('customer_name')->label('Customer')->searchable(),
                 TextColumn::make('telephone')->label('Telephone')->toggleable(),
-                TextColumn::make('total_amount')->money('NGN', divideBy: 1)->sortable(),
+                TextColumn::make('total_amount')
+                    ->label('Total Amount')
+                    ->formatStateUsing(fn ($state) => '₦' . number_format($state, 2))
+                    ->sortable(),
                 TextColumn::make('total_in_words')->label('Total in Words')->limit(50)->toggleable(),
             ])
             ->actions([
