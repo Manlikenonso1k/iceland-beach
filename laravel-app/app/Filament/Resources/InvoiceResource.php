@@ -13,6 +13,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
@@ -174,7 +175,25 @@ class InvoiceResource extends Resource
                 Action::make('downloadPdf')
                     ->label('Download PDF')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->action(fn (Invoice $record) => static::downloadPdf($record)),
+                    ->action(function (Invoice $record) {
+                        try {
+                            return static::downloadPdf($record);
+                        } catch (\Illuminate\Contracts\Container\BindingResolutionException $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('PDF Service Unavailable')
+                                ->body('DOMPDF package not installed. On production, run: composer require barryvdh/laravel-dompdf:^2.1')
+                                ->send();
+                            return null;
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Error Generating PDF')
+                                ->body($e->getMessage())
+                                ->send();
+                            return null;
+                        }
+                    }),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
@@ -202,14 +221,10 @@ class InvoiceResource extends Resource
     {
         $invoice->loadMissing('items');
 
-        try {
-            $pdf = app('dompdf.wrapper');
-        } catch (\Illuminate\Contracts\Container\BindingResolutionException $e) {
-            abort(500, 'PDF service not available. Install DOMPDF: composer require barryvdh/laravel-dompdf:^2.1');
-        }
+        $pdf = app('dompdf.wrapper');
 
         if (! is_object($pdf)) {
-            abort(500, 'PDF service is not available. Please run composer install.');
+            throw new \RuntimeException('PDF service is not available.');
         }
 
         call_user_func([$pdf, 'loadView'], 'pdf.invoice', [

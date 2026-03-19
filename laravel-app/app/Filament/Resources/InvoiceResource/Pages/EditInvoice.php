@@ -4,6 +4,7 @@ namespace App\Filament\Resources\InvoiceResource\Pages;
 
 use App\Filament\Resources\InvoiceResource;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
 class EditInvoice extends EditRecord
@@ -16,7 +17,25 @@ class EditInvoice extends EditRecord
             Actions\Action::make('downloadPdf')
                 ->label('Download PDF')
                 ->icon('heroicon-o-arrow-down-tray')
-                ->action(fn () => InvoiceResource::downloadPdf($this->record)),
+                ->action(function () {
+                    try {
+                        return InvoiceResource::downloadPdf($this->record);
+                    } catch (\Illuminate\Contracts\Container\BindingResolutionException $e) {
+                        Notification::make()
+                            ->danger()
+                            ->title('PDF Service Unavailable')
+                            ->body('DOMPDF package not installed. On production, run: composer require barryvdh/laravel-dompdf:^2.1')
+                            ->send();
+                        return null;
+                    } catch (\Exception $e) {
+                        Notification::make()
+                            ->danger()
+                            ->title('Error Generating PDF')
+                            ->body($e->getMessage())
+                            ->send();
+                        return null;
+                    }
+                }),
             Actions\DeleteAction::make(),
         ];
     }
