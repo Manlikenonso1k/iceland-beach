@@ -198,7 +198,11 @@ class InvoiceResource extends Resource
     {
         $invoice->loadMissing('items');
 
-        $pdf = app('dompdf.wrapper');
+        try {
+            $pdf = app('dompdf.wrapper');
+        } catch (\Illuminate\Contracts\Container\BindingResolutionException $e) {
+            abort(500, 'PDF service not available. Install DOMPDF: composer require barryvdh/laravel-dompdf:^2.1');
+        }
 
         if (! is_object($pdf)) {
             abort(500, 'PDF service is not available. Please run composer install.');

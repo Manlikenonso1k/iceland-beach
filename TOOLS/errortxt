@@ -102,7 +102,7 @@ POST /livewire/update
 * **referer**: http://127.0.0.1:8000/admin/invoices/1/edit
 * **accept-encoding**: gzip, deflate, br, zstd
 * **accept-language**: en-US,en;q=0.9
-* **cookie**: PHPSESSID=v9kgo7j6qbrvfn62ja23c2f0s6; XSRF-TOKEN=eyJpdiI6InN5V0haQjJNMXFYd3VyK2xDL28zdUE9PSIsInZhbHVlIjoiaVhVNW1zVStNWitYSFZnS01BejJ4bGxPZ1JQeVVWWCt4VWZadXdjbDRQUGZqOHlpM0JHVVBNMm1yOVMwQi9CdEJDME55UktOVjAzczIwc0w3eXlGUTIxWFdmYmc1NzVmenNMTURvL1FXcm94dVVRQ0ExbkVVMDdlWHZMK2YydmYiLCJtYWMiOiI1NjdlYzA2MjhlMjBkYTYyMjg3NWUzN2ViYTAzMmZlMTBhZDk0OWQ0Njc5MmI3ODk4NGEzNTkxZjQ3YTMzMTRkIiwidGFnIjoiIn0%3D; laravel-session=eyJpdiI6IkR4cVkra0N6STFvZzlqY1NPckZjclE9PSIsInZhbHVlIjoienRIeVpxM2I3QzEwVytYZ2RNYndQVUdEKzBZMis4ZmxKUU5wcjRsdFArdklzUkRjNGVuUHlZLzFBMVppZjRvVmdMWllOVkV3RnRvRm5WVVk4QmFWd0c4ampybTR0WVh1ZEVYMnMwdzZBSXNlT1ZWczBQeTZwMDBCdnlIeUQ1ZWoiLCJtYWMiOiJmMDllNjY1NDllZjg5MWE2Y2ZlM2E5OTAzZDRiYzgwYmJjMzY2NjMzN2Q1NGQ1ZTA0MDU1YTg5MWNiMjI0N2RkIiwidGFnIjoiIn0%3D
+* **cookie**: PHPSESSID=v9kgo7j6qbrvfn62ja23c2f0s6; XSRF-TOKEN=eyJpdiI6IlVOSG5yTlBmV3ZEM1F6NGhNN1FhZVE9PSIsInZhbHVlIjoickhZeGlOUWNTajRmeUVuODM5K1NNb3VrWmVvd2UwOXVqTzVXVllEOVVtOHZoa0N2SzV1akZEanRubVZLL1VsakRyN1RGZVl0UlI0VEpzZWIycFptdlFQaENPNk5yWWw3WXRXdUFObVFVRzJmWmQ5OUtEYXBSTDNDNmprcG8vdmgiLCJtYWMiOiI2YjA1MzI5YjM5NzQ1N2E1MzgxYzA5NjVmZTI5ZDc0NGJjODc5M2NmYWM2OTU2YTdiN2M5MDIwZmMwMmIwYzYzIiwidGFnIjoiIn0%3D; laravel-session=eyJpdiI6ImVjTlNZaGdPWVFWZlFBSURDQzIxTEE9PSIsInZhbHVlIjoic3VtT1hiU2xwa0tKYmhsaWJBbVpZQTM2ZEVpUnJ3UFhYVC9wTVN3eEhuNWVqUnk4M25tTUh2UHQxcmtFcG5Sa0tOOHBUSXEvejZlRGl6M3dXdUhXTVNUbE0zVW9xa0E0RE5hdnBQcnNmQzJvS3o2SlA2N1RWcVJVZG8vMTU2R1oiLCJtYWMiOiI2YzQ2ZGVhOGY5MzhjZmU5NGZmNjk4MjgxMGZlY2M0ZDg5YWJhY2VmNjQzZWFhMDQyYzFjOTkwMmYwYzU4NDdjIiwidGFnIjoiIn0%3D
 
 ## Route Context
 
@@ -116,8 +116,8 @@ No route parameter data available.
 
 ## Database Queries
 
-* sqlite - select * from "sessions" where "id" = 'LjbSw5nX7vxU8r8H1PVryyn5W5sn0U5tWbm0H2jk' limit 1 (2.04 ms)
-* sqlite - select * from "users" where "id" = 1 limit 1 (0.27 ms)
-* sqlite - select * from "invoices" where "invoices"."id" = 1 limit 1 (0.37 ms)
-* sqlite - select * from "cache" where "key" in ('laravel-cache-spatie.permission.cache') (0.39 ms)
-* sqlite - select * from "invoice_items" where "invoice_items"."invoice_id" in (1) and "invoice_items"."deleted_at" is null (0.31 ms)
+* sqlite - select * from "sessions" where "id" = 'LjbSw5nX7vxU8r8H1PVryyn5W5sn0U5tWbm0H2jk' limit 1 (2.2 ms)
+* sqlite - select * from "users" where "id" = 1 limit 1 (0.26 ms)
+* sqlite - select * from "invoices" where "invoices"."id" = 1 limit 1 (0.2 ms)
+* sqlite - select * from "cache" where "key" in ('laravel-cache-spatie.permission.cache') (0.25 ms)
+* sqlite - select * from "invoice_items" where "invoice_items"."invoice_id" in (1) and "invoice_items"."deleted_at" is null (0.27 ms)
