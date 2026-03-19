@@ -4,10 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Room;
+use App\Services\BookingWorkflowService;
 use App\Services\ReservationService;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -41,11 +43,16 @@ class BookingResource extends Resource
                 TextInput::make('room_price')->numeric()->prefix('NGN'),
                 Select::make('is_booked')
                     ->options([
-                        'no' => 'Available',
-                        'booked' => 'Booked',
+                        'rejected' => 'Rejected',
+                        'no' => 'Pending',
+                        'booked' => 'Confirmed',
                         'expired' => 'Expired',
                     ])
                     ->required(),
+                Textarea::make('rejection_reason')
+                    ->label('Rejection Reason')
+                    ->rows(3)
+                    ->maxLength(1000),
                 TextInput::make('customer_name')->maxLength(255),
                 TextInput::make('email')->email()->maxLength(255),
                 DateTimePicker::make('start_date')->seconds(false),
@@ -63,21 +70,30 @@ class BookingResource extends Resource
                 TextColumn::make('is_booked')
                     ->badge()
                     ->colors([
-                        'success' => 'no',
-                        'warning' => 'booked',
+                        'warning' => 'no',
+                        'success' => 'booked',
+                        'gray' => 'rejected',
                         'danger' => 'expired',
                     ])
-                    ->formatStateUsing(fn (string $state) => ucfirst($state)),
+                    ->formatStateUsing(fn (string $state) => match ($state) {
+                        'no' => 'Pending',
+                        'booked' => 'Confirmed',
+                        'rejected' => 'Rejected',
+                        'expired' => 'Expired',
+                        default => ucfirst($state),
+                    }),
                 TextColumn::make('customer_name')->searchable()->placeholder('-'),
                 TextColumn::make('email')->searchable()->placeholder('-'),
                 TextColumn::make('start_date')->dateTime('Y-m-d H:i')->placeholder('-'),
                 TextColumn::make('end_date')->dateTime('Y-m-d H:i')->placeholder('-'),
+                TextColumn::make('rejection_reason')->label('Reason')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('is_booked')
                     ->options([
-                        'no' => 'Available',
-                        'booked' => 'Booked',
+                        'rejected' => 'Rejected',
+                        'no' => 'Pending',
+                        'booked' => 'Confirmed',
                         'expired' => 'Expired',
                     ]),
             ])
@@ -86,19 +102,22 @@ class BookingResource extends Resource
                     ->label('Confirm')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(function (): bool {
+                    ->requiresConfirmation()
+                    ->visible(function (Room $record): bool {
                         /** @var \App\Models\User|null $user */
                         $user = Filament::auth()->user();
 
-                        return $user !== null
+                        return $record->is_booked === 'no'
+                            && $user !== null
                             && method_exists($user, 'hasAnyRole')
                             && $user->hasAnyRole(['Super Admin', 'Manager']);
                     })
-                    ->action(function (Room $record): void {
-                        $record->update(['is_booked' => 'booked']);
+                    ->action(function (Room $record, BookingWorkflowService $bookingWorkflow): void {
+                        $bookingWorkflow->confirm($record);
 
                         Notification::make()
                             ->title('Booking confirmed')
+                            ->body('Status updated and confirmation email processed.')
                             ->success()
                             ->send();
                     }),
@@ -106,27 +125,28 @@ class BookingResource extends Resource
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(function (): bool {
+                    ->form([
+                        Textarea::make('reason')
+                            ->label('Reason (optional)')
+                            ->rows(3)
+                            ->maxLength(1000),
+                    ])
+                    ->visible(function (Room $record): bool {
                         /** @var \App\Models\User|null $user */
                         $user = Filament::auth()->user();
 
-                        return $user !== null
+                        return $record->is_booked === 'no'
+                            && $user !== null
                             && method_exists($user, 'hasAnyRole')
                             && $user->hasAnyRole(['Super Admin', 'Manager']);
                     })
-                    ->action(function (Room $record): void {
-                        $record->update([
-                            'is_booked' => 'no',
-                            'customer_name' => null,
-                            'email' => null,
-                            'start_date' => null,
-                            'end_date' => null,
-                            'total_price' => null,
-                            'mailsent' => false,
-                        ]);
+                    ->action(function (Room $record, array $data, BookingWorkflowService $bookingWorkflow): void {
+                        $reason = isset($data['reason']) ? trim((string) $data['reason']) : null;
+                        $bookingWorkflow->reject($record, $reason);
 
                         Notification::make()
                             ->title('Booking rejected')
+                            ->body('Status updated and decline email processed.')
                             ->success()
                             ->send();
                     }),

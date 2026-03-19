@@ -1,44 +1,35 @@
+Role: Senior Laravel & Filament Developer
 
-[u519226541@us-phx-web940 public_html]$ git fetch origin
-[u519226541@us-phx-web940 public_html]$ git checkout main
-Already on 'main'
-Your branch is up to date with 'origin/main'.
-[u519226541@us-phx-web940 public_html]$ git pull origin main
-From github.com:Manlikenonso1k/iceland-beach
- * branch            main       -> FETCH_HEAD
-Already up to date.
-[u519226541@us-phx-web940 public_html]$ 
-[u519226541@us-phx-web940 public_html]$ cd laravel-app
-[u519226541@us-phx-web940 laravel-app]$ composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-Installing dependencies from lock file
-Verifying lock file contents can be installed on current platform.
-Your lock file does not contain a compatible set of packages. Please run composer update.
+Task: Refactor the "icelandbeach" Filament admin dashboard (/admin/bookings) to improve booking management and legacy data integration.
 
-  Problem 1
-    - spatie/laravel-permission is locked to version 7.2.3 and an update of this package was not requested.
-    - spatie/laravel-permission 7.2.3 requires php ^8.4 -> your php version (8.3.19) does not satisfy that requirement.
-  Problem 2
-    - symfony/clock is locked to version v8.0.0 and an update of this package was not requested.
-    - symfony/clock v8.0.0 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
-  Problem 3
-    - symfony/css-selector is locked to version v8.0.6 and an update of this package was not requested.
-    - symfony/css-selector v8.0.6 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
-  Problem 4
-    - symfony/event-dispatcher is locked to version v8.0.4 and an update of this package was not requested.
-    - symfony/event-dispatcher v8.0.4 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
-  Problem 5
-    - symfony/string is locked to version v8.0.6 and an update of this package was not requested.
-    - symfony/string v8.0.6 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
-  Problem 6
-    - symfony/translation is locked to version v8.0.6 and an update of this package was not requested.
-    - symfony/translation v8.0.6 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
-  Problem 7
-    - nesbot/carbon is locked to version 3.11.3 and an update of this package was not requested.
-    - nesbot/carbon 3.11.3 requires symfony/clock ^6.3.12 || ^7.0 || ^8.0 -> satisfiable by symfony/clock[v8.0.0].
-    - symfony/clock v8.0.0 requires php >=8.4 -> your php version (8.3.19) does not satisfy that requirement.
+Current Setup: > * Filament Admin Panel with two Google-style calendar widgets.
 
-[u519226541@us-phx-web940 laravel-app]$ php artisan optimize:clear
-[u519226541@us-phx-web940 laravel-app]$ php artisan config:cache
-[u519226541@us-phx-web940 laravel-app]$ php artisan route:cache
-[u519226541@us-phx-web940 laravel-app]$ php artisan view:cache
-[u519226541@us-phx-web940 laravel-app]$ 
+A legacy rooms.php file/system that handles date and time bookings.
+
+Requirements:
+
+1. Dashboard Layout Change:
+
+Replace one of the two calendar widgets with a "Pending Bookings" Notification Widget.
+
+This widget should list recent booking requests with two primary actions: Confirm and Reject.
+
+2. Interactive Actions & Email:
+
+When the "Confirm" button is clicked: Update the booking status to 'confirmed' and trigger an automated "Booking Confirmed" email to the user.
+
+When the "Reject" button is clicked: Open a modal for an optional reason, update the status to 'rejected', and send a "Booking Declined" email.
+
+3. Legacy Integration (rooms.php):
+
+The remaining Calendar widget must now pull data from the tables associated with the legacy rooms.php.
+
+Ensure the calendar displays these bookings using color-coding based on room type (e.g., Deluxe = Blue, Suite = Gold).
+
+Use abbreviations for room names (e.g., "Deluxe Room 101" becomes "DR-101") to keep the calendar view clean.
+
+4. Visual Logic:
+
+Only "Confirmed" bookings should show as solid color blocks on the calendar.
+
+Provide the code for the Filament Resource, the Custom Widget, and the Mailables required.

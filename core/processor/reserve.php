@@ -4,6 +4,35 @@ require_once "../controller/sendmail.php";
 
 $mail = new Sendmail();
 $query = new Dbquery();
+$alert = "";
+
+if (! function_exists('normalizeDateTimeInput')) {
+    function normalizeDateTimeInput(?string $value): ?string
+    {
+        $raw = trim((string) $value);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        $date = DateTime::createFromFormat('Y-m-d\TH:i', $raw);
+        if ($date instanceof DateTime) {
+            return $date->format('Y-m-d H:i:s');
+        }
+
+        $timestamp = strtotime($raw);
+
+        return $timestamp !== false ? date('Y-m-d H:i:s', $timestamp) : null;
+    }
+}
+
+if (! function_exists('hasDateOverlap')) {
+    function hasDateOverlap(string $newStart, string $newEnd, string $existingStart, string $existingEnd): bool
+    {
+        return strtotime($newStart) < strtotime($existingEnd)
+            && strtotime($newEnd) > strtotime($existingStart);
+    }
+}
 
 // --- PROCESS SERVICE RESERVATION FORM SUBMISSION ---
 if(isset($_POST['reserve'])) {
@@ -45,7 +74,6 @@ if(isset($_POST['reserve'])) {
     $u_format = $mail->message($u_message);
     
     $sendmail = $mail->mailsender($_POST, $a_format, $u_format, $email);
-    $alert = "";
     if($sendmail){
         header("Location: bookedsuccess.php");
         exit();
@@ -56,13 +84,63 @@ if(isset($_POST['reserve'])) {
 
 // --- PROCESS ROOM RESERVATION FORM SUBMISSION ---
 if(isset($_POST['reserveroom'])) {
-    $room_name = $_POST['room_id']; 
-    $customer_name = $_POST['full_name'];
-    $email = $_POST['email'];
-    $phone_number = $_POST['tel'];
-    $noofpeople = $_POST['noofv'];
-    $startdate = $_POST['signin'];
-    $enddate = $_POST['signout'];
+    $room_name = trim((string) ($_POST['room_id'] ?? ''));
+    $customer_name = trim((string) ($_POST['full_name'] ?? ''));
+    $email = trim((string) ($_POST['email'] ?? ''));
+    $phone_number = trim((string) ($_POST['tel'] ?? ''));
+    $noofpeople = trim((string) ($_POST['noofv'] ?? ''));
+    $startdate = normalizeDateTimeInput($_POST['signin'] ?? null);
+    $enddate = normalizeDateTimeInput($_POST['signout'] ?? null);
+
+    if ($room_name === '' || $customer_name === '' || $email === '' || $startdate === null || $enddate === null) {
+        $alert = "<div class='alert alert-danger'><b>Error!</b> Please fill all required fields with valid details.</div>";
+    } elseif (strtotime($startdate) >= strtotime($enddate)) {
+        $alert = "<div class='alert alert-danger'><b>Error!</b> Check-out date must be after check-in date.</div>";
+    } else {
+        $room_details = $query->select("room", "room_name, room_price, is_booked, start_date, end_date", "room_name = ?", [$room_name], "s");
+
+        if ($room_details->num_rows === 0) {
+            $alert = "<div class='alert alert-danger'><b>Error!</b> Selected room was not found.</div>";
+        } else {
+            $room = $room_details->fetch_assoc();
+            $existingStart = $room['start_date'] ?? null;
+            $existingEnd = $room['end_date'] ?? null;
+
+            if (($room['is_booked'] ?? 'no') !== 'no') {
+                $alert = "<div class='alert alert-danger'><b>Unavailable!</b> This room has already been confirmed for another guest.</div>";
+            } elseif (! empty($existingStart) && ! empty($existingEnd)) {
+                if (hasDateOverlap($startdate, $enddate, $existingStart, $existingEnd)) {
+                    $alert = "<div class='alert alert-warning'><b>Pending Conflict:</b> This room already has a pending request for overlapping dates. Please choose a different room or date.</div>";
+                } else {
+                    $alert = "<div class='alert alert-warning'><b>Pending Request Exists:</b> This room already has another pending request. Please try again later.</div>";
+                }
+            } else {
+                $durationInDays = (int) ceil((strtotime($enddate) - strtotime($startdate)) / 86400);
+                $durationInDays = $durationInDays > 0 ? $durationInDays : 1;
+                $totalPrice = ((float) ($room['room_price'] ?? 0)) * $durationInDays;
+
+                $safeRoomName = $query->conn->real_escape_string($room_name);
+                $pendingSaved = $query->update(
+                    "room",
+                    [
+                        'customer_name' => $customer_name,
+                        'email' => $email,
+                        'is_booked' => 'no',
+                        'start_date' => $startdate,
+                        'end_date' => $enddate,
+                        'total_price' => $totalPrice,
+                    ],
+                    "room_name = '$safeRoomName' AND is_booked = 'no'"
+                );
+
+                if (! $pendingSaved) {
+                    $alert = "<div class='alert alert-danger'><b>Error!</b> Could not save booking request. Please try again.</div>";
+                }
+            }
+        }
+    }
+
+    if ($alert === '') {
 
     $a_message = "
         <h1>New Iceland Room Booking</h1>
@@ -93,13 +171,13 @@ if(isset($_POST['reserveroom'])) {
 
     $u_format = $mail->message($u_message);
     
-    $sendmail = $mail->mailsender($_POST, $a_format, $u_format, $email);
-    $alert = "";
-    if($sendmail){
-        header("Location: bookedsuccess.php");
-        exit();
-    }else{
-        $alert = "<div class='alert alert-danger'><b>Error!</b> Message Could not be sent</div>";
+        $sendmail = $mail->mailsender($_POST, $a_format, $u_format, $email);
+        if($sendmail){
+            header("Location: bookedsuccess.php");
+            exit();
+        }else{
+            $alert = "<div class='alert alert-danger'><b>Error!</b> Message Could not be sent</div>";
+        }
     }
 }
 ?>

@@ -5,10 +5,10 @@ include_once "includes/header.php";
 // require "core/config/dbquery.php";
 $rooms = new Dbquery();
 
-$basic  = $rooms->select("room", "*", "room_category = ? AND is_booked = ?", ['Basic', 'no'], "ss");
-$premium = $rooms->select("room", "*", "room_category = ? AND is_booked = ?", ['Premium', 'no'], "ss");
-$gold   = $rooms->select("room", "*", "room_category = ? AND is_booked = ?", ['Gold', 'no'], "ss");
-$beach  = $rooms->select("room", "*", "room_category = ? AND is_booked = ?", ['Beach Apartment', 'no'], "ss");
+$basic  = $rooms->select("room", "*", "room_category = ? AND is_booked = ? AND customer_name IS NULL AND email IS NULL", ['Basic', 'no'], "ss");
+$premium = $rooms->select("room", "*", "room_category = ? AND is_booked = ? AND customer_name IS NULL AND email IS NULL", ['Premium', 'no'], "ss");
+$gold   = $rooms->select("room", "*", "room_category = ? AND is_booked = ? AND customer_name IS NULL AND email IS NULL", ['Gold', 'no'], "ss");
+$beach  = $rooms->select("room", "*", "room_category = ? AND is_booked = ? AND customer_name IS NULL AND email IS NULL", ['Beach Apartment', 'no'], "ss");
 ?>
 
 <link rel="stylesheet" href="static/styles/rooms.css">

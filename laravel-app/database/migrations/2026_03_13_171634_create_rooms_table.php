@@ -17,12 +17,13 @@ return new class extends Migration
             $table->string('room_category')->nullable();
             $table->decimal('room_price', 12, 2)->default(0);
             $table->string('room_image')->nullable();
-            $table->enum('is_booked', ['no', 'booked', 'expired'])->default('no');
+            $table->enum('is_booked', ['no', 'booked', 'rejected', 'expired'])->default('no');
             $table->string('customer_name')->nullable();
             $table->string('email')->nullable();
             $table->dateTime('start_date')->nullable();
             $table->dateTime('end_date')->nullable();
             $table->decimal('total_price', 12, 2)->nullable();
+            $table->text('rejection_reason')->nullable();
             $table->boolean('mailsent')->default(false);
             $table->timestamps();
             $table->softDeletes();
