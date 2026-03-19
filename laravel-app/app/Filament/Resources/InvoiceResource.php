@@ -172,6 +172,11 @@ class InvoiceResource extends Resource
                 TextColumn::make('total_in_words')->label('Total in Words')->limit(50)->toggleable(),
             ])
             ->actions([
+                Action::make('viewInvoice')
+                    ->label('View Invoice')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (Invoice $record) => route('invoices.view', $record->id))
+                    ->openUrlInNewTab(),
                 Action::make('downloadPdf')
                     ->label('Download PDF')
                     ->icon('heroicon-o-arrow-down-tray')

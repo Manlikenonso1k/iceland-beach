@@ -14,6 +14,11 @@ class EditInvoice extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('viewInvoice')
+                ->label('View Invoice')
+                ->icon('heroicon-o-eye')
+                ->url(route('invoices.view', $this->record->id))
+                ->openUrlInNewTab(),
             Actions\Action::make('downloadPdf')
                 ->label('Download PDF')
                 ->icon('heroicon-o-arrow-down-tray')
