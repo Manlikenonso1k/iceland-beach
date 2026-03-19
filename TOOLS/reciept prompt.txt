@@ -1,0 +1,39 @@
+Role: Senior Laravel Developer & Filament Expert
+
+Task: Create a "Receipt/Invoice Generator" for the Iceland Beach Resort admin panel.
+
+1. Database & Models:
+
+Create an Invoice model and an InvoiceItem model (HasMany relationship).
+
+Invoice Fields: Invoice Number (e.g., #181125), Date, Customer Name, Address, Telephone, Total Amount, and Total in Words (e.g., "One Hundred & Eighty Three Thousand Naira Only").
+
+InvoiceItem Fields: Description (e.g., Adult Gate Fee, Stretcher Cabana), Quantity, Unit Price, and Sub-total.
+
+2. Filament Resource UI:
+
+Create a InvoiceResource with a Repeater Field for items so the admin can add multiple rows (Description, QTY, Price).
+
+The form should automatically calculate the Total Amount as items are added.
+
+Include a "Bank Details" section prepopulated with: Bank: MONIEPOINT | Account: 5029208012 | Name: NEW ICELAND BEACH RESORT.
+
+3. PDF Generation:
+
+Integrate barryvdh/laravel-dompdf or spatie/browsershot.
+
+Add a "Download PDF" action to the Filament table and form.
+
+PDF Layout Requirements:
+
+Header: "ICELAND BEACH RESORT" in bold with address (Okun-Ajah, Ajah, Lagos) and contact info (+2348028227526).
+
+Style: Clean, professional table format.
+
+Currency: Ensure the Naira (₦) symbol or "N" is used correctly.
+
+Footer: Include the "THANK YOU" message and the "Grand Total in Words" line.
+
+4. Example Data to Support Logic:
+
+Please ensure the system can handle common resort items: Adult/Children Gate Fee, Adult/Children Corkage, Stretcher Cabana, Double Bed Cabana, and Swimming Fees.

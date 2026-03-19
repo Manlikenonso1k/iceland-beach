@@ -1,0 +1,123 @@
+# Illuminate\Contracts\Container\BindingResolutionException - Internal Server Error
+
+Target class [dompdf.wrapper] does not exist.
+
+PHP 8.5.1
+Laravel 12.54.1
+127.0.0.1:8000
+
+## Stack Trace
+
+0 - vendor\laravel\framework\src\Illuminate\Container\Container.php:1124
+1 - vendor\laravel\framework\src\Illuminate\Container\Container.php:933
+2 - vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1078
+3 - vendor\laravel\framework\src\Illuminate\Container\Container.php:864
+4 - vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1058
+5 - vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:138
+6 - app\Filament\Resources\InvoiceResource.php:201
+7 - app\Filament\Resources\InvoiceResource\Pages\EditInvoice.php:19
+8 - vendor\filament\support\src\Concerns\EvaluatesClosures.php:35
+9 - vendor\filament\actions\src\MountableAction.php:41
+10 - vendor\filament\actions\src\Concerns\InteractsWithActions.php:98
+11 - vendor\filament\actions\src\Concerns\InteractsWithActions.php:204
+12 - vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:36
+13 - vendor\laravel\framework\src\Illuminate\Container\Util.php:43
+14 - vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:96
+15 - vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php:35
+16 - vendor\livewire\livewire\src\Wrapped.php:23
+17 - vendor\livewire\livewire\src\Mechanisms\HandleComponents\HandleComponents.php:492
+18 - vendor\livewire\livewire\src\Mechanisms\HandleComponents\HandleComponents.php:101
+19 - vendor\livewire\livewire\src\LivewireManager.php:102
+20 - vendor\livewire\livewire\src\Mechanisms\HandleRequests\HandleRequests.php:131
+21 - vendor\laravel\framework\src\Illuminate\Routing\ControllerDispatcher.php:46
+22 - vendor\laravel\framework\src\Illuminate\Routing\Route.php:265
+23 - vendor\laravel\framework\src\Illuminate\Routing\Route.php:211
+24 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:822
+25 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:180
+26 - vendor\laravel\framework\src\Illuminate\Routing\Middleware\SubstituteBindings.php:50
+27 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+28 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken.php:87
+29 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+30 - vendor\laravel\framework\src\Illuminate\View\Middleware\ShareErrorsFromSession.php:48
+31 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+32 - vendor\laravel\framework\src\Illuminate\Session\Middleware\StartSession.php:120
+33 - vendor\laravel\framework\src\Illuminate\Session\Middleware\StartSession.php:63
+34 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+35 - vendor\laravel\framework\src\Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse.php:36
+36 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+37 - vendor\laravel\framework\src\Illuminate\Cookie\Middleware\EncryptCookies.php:74
+38 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+39 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:137
+40 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:821
+41 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:800
+42 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:764
+43 - vendor\laravel\framework\src\Illuminate\Routing\Router.php:753
+44 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php:200
+45 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:180
+46 - vendor\livewire\livewire\src\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware.php:19
+47 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+48 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull.php:27
+49 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+50 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TrimStrings.php:47
+51 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+52 - vendor\laravel\framework\src\Illuminate\Http\Middleware\ValidatePostSize.php:27
+53 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+54 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance.php:109
+55 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+56 - vendor\laravel\framework\src\Illuminate\Http\Middleware\HandleCors.php:61
+57 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+58 - vendor\laravel\framework\src\Illuminate\Http\Middleware\TrustProxies.php:58
+59 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+60 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks.php:22
+61 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+62 - vendor\laravel\framework\src\Illuminate\Http\Middleware\ValidatePathEncoding.php:26
+63 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:219
+64 - vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php:137
+65 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php:175
+66 - vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php:144
+67 - vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1220
+68 - public\index.php:20
+69 - vendor\laravel\framework\src\Illuminate\Foundation\resources\server.php:23
+
+## Request
+
+POST /livewire/update
+
+## Headers
+
+* **host**: 127.0.0.1:8000
+* **connection**: keep-alive
+* **content-length**: 2551
+* **sec-ch-ua-platform**: "Windows"
+* **user-agent**: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+* **sec-ch-ua**: "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+* **content-type**: application/json
+* **x-livewire**: 
+* **sec-ch-ua-mobile**: ?0
+* **accept**: */*
+* **origin**: http://127.0.0.1:8000
+* **sec-fetch-site**: same-origin
+* **sec-fetch-mode**: cors
+* **sec-fetch-dest**: empty
+* **referer**: http://127.0.0.1:8000/admin/invoices/1/edit
+* **accept-encoding**: gzip, deflate, br, zstd
+* **accept-language**: en-US,en;q=0.9
+* **cookie**: PHPSESSID=v9kgo7j6qbrvfn62ja23c2f0s6; XSRF-TOKEN=eyJpdiI6InN5V0haQjJNMXFYd3VyK2xDL28zdUE9PSIsInZhbHVlIjoiaVhVNW1zVStNWitYSFZnS01BejJ4bGxPZ1JQeVVWWCt4VWZadXdjbDRQUGZqOHlpM0JHVVBNMm1yOVMwQi9CdEJDME55UktOVjAzczIwc0w3eXlGUTIxWFdmYmc1NzVmenNMTURvL1FXcm94dVVRQ0ExbkVVMDdlWHZMK2YydmYiLCJtYWMiOiI1NjdlYzA2MjhlMjBkYTYyMjg3NWUzN2ViYTAzMmZlMTBhZDk0OWQ0Njc5MmI3ODk4NGEzNTkxZjQ3YTMzMTRkIiwidGFnIjoiIn0%3D; laravel-session=eyJpdiI6IkR4cVkra0N6STFvZzlqY1NPckZjclE9PSIsInZhbHVlIjoienRIeVpxM2I3QzEwVytYZ2RNYndQVUdEKzBZMis4ZmxKUU5wcjRsdFArdklzUkRjNGVuUHlZLzFBMVppZjRvVmdMWllOVkV3RnRvRm5WVVk4QmFWd0c4ampybTR0WVh1ZEVYMnMwdzZBSXNlT1ZWczBQeTZwMDBCdnlIeUQ1ZWoiLCJtYWMiOiJmMDllNjY1NDllZjg5MWE2Y2ZlM2E5OTAzZDRiYzgwYmJjMzY2NjMzN2Q1NGQ1ZTA0MDU1YTg5MWNiMjI0N2RkIiwidGFnIjoiIn0%3D
+
+## Route Context
+
+controller: Livewire\Mechanisms\HandleRequests\HandleRequests@handleUpdate
+route name: default.livewire.update
+middleware: web
+
+## Route Parameters
+
+No route parameter data available.
+
+## Database Queries
+
+* sqlite - select * from "sessions" where "id" = 'LjbSw5nX7vxU8r8H1PVryyn5W5sn0U5tWbm0H2jk' limit 1 (2.04 ms)
+* sqlite - select * from "users" where "id" = 1 limit 1 (0.27 ms)
+* sqlite - select * from "invoices" where "invoices"."id" = 1 limit 1 (0.37 ms)
+* sqlite - select * from "cache" where "key" in ('laravel-cache-spatie.permission.cache') (0.39 ms)
+* sqlite - select * from "invoice_items" where "invoice_items"."invoice_id" in (1) and "invoice_items"."deleted_at" is null (0.31 ms)

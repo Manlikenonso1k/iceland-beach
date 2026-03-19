@@ -19,4 +19,10 @@ return [
         'username' => env('LEGACY_DB_USERNAME'),
         'password' => env('LEGACY_DB_PASSWORD'),
     ],
+
+    'invoice' => [
+        'bank_name' => env('INVOICE_BANK_NAME', 'MONIEPOINT'),
+        'bank_account_number' => env('INVOICE_BANK_ACCOUNT_NUMBER', '5029208012'),
+        'bank_account_name' => env('INVOICE_BANK_ACCOUNT_NAME', 'NEW ICELAND BEACH RESORT'),
+    ],
 ];
