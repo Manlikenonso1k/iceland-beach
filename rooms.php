@@ -5,10 +5,10 @@ include_once "includes/header.php";
 // require "core/config/dbquery.php";
 $rooms = new Dbquery();
 
-$basic  = $rooms->select("room", "*", "room_category = ? AND is_booked = ? AND customer_name IS NULL AND email IS NULL", ['Basic', 'no'], "ss");
-$premium = $rooms->select("room", "*", "room_category = ? AND is_booked = ? AND customer_name IS NULL AND email IS NULL", ['Premium', 'no'], "ss");
-$gold   = $rooms->select("room", "*", "room_category = ? AND is_booked = ? AND customer_name IS NULL AND email IS NULL", ['Gold', 'no'], "ss");
-$beach  = $rooms->select("room", "*", "room_category = ? AND is_booked = ? AND customer_name IS NULL AND email IS NULL", ['Beach Apartment', 'no'], "ss");
+$basic  = $rooms->select("room", "*", "room_category = ?", ['Basic'], "s");
+$premium = $rooms->select("room", "*", "room_category = ?", ['Premium'], "s");
+$gold   = $rooms->select("room", "*", "room_category = ?", ['Gold'], "s");
+$beach  = $rooms->select("room", "*", "room_category = ?", ['Beach Apartment'], "s");
 ?>
 
 <link rel="stylesheet" href="static/styles/rooms.css">
