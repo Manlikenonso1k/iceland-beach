@@ -52,7 +52,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        // Allow authenticated app users to access the Filament admin panel.
-        return true;
+        return $this->email === 'victorynonso9@gmail.com'
+            || $this->hasAnyRole(['super_admin', 'frontdesk']);
     }
 }
