@@ -110,7 +110,7 @@ class BookingResource extends Resource
                         return $record->is_booked === 'no'
                             && $user !== null
                             && method_exists($user, 'hasAnyRole')
-                            && $user->hasAnyRole(['Super Admin', 'Manager']);
+                            && $user->hasAnyRole(['super_admin', 'frontdesk']);
                     })
                     ->action(function (Room $record, BookingWorkflowService $bookingWorkflow): void {
                         $bookingWorkflow->confirm($record);
@@ -138,7 +138,7 @@ class BookingResource extends Resource
                         return $record->is_booked === 'no'
                             && $user !== null
                             && method_exists($user, 'hasAnyRole')
-                            && $user->hasAnyRole(['Super Admin', 'Manager']);
+                            && $user->hasAnyRole(['super_admin', 'frontdesk']);
                     })
                     ->action(function (Room $record, array $data, BookingWorkflowService $bookingWorkflow): void {
                         $reason = isset($data['reason']) ? trim((string) $data['reason']) : null;
