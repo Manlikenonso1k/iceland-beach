@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --ink: #1e2a32;
+            --accent: #0a5f7a;
+            --gold: #c7a252;
+            --light: #f7f3ec;
+            --line: #2b3a42;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: "Garamond", "Times New Roman", serif;
+            line-height: 1.35;
+            font-size: 13px;
+            color: var(--ink);
+            margin: 0;
+            padding: 16px;
+            background: #fff;
+        }
+        .container {
+            width: 700px;
+            margin: auto;
+            border: 1px solid var(--line);
+            padding: 24px 60px 28px;
+            position: relative;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 5px;
+        }
+        .brand img {
+            width: 90px;
+            height: auto;
+        }
+        .brand-text {
+            text-align: center;
+            line-height: 1.1;
+            flex: 1;
+        }
+        .brand-text .brand-title {
+            font-size: 16px;
+            letter-spacing: 3px;
+            color: #6b7b85;
+        }
+        .brand-text .brand-subtitle {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #9a7c3d;
+            text-transform: uppercase;
+        }
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--line);
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 2px;
+            color: var(--accent);
+        }
+        h2 {
+            margin: 6px 0 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--ink);
+        }
+        .fine-rule {
+            height: 1px;
+            background: var(--gold);
+            margin: 8px 0 0;
+        }
+        .checklist {
+            font-size: 11px;
+            background: var(--light);
+            padding: 10px 12px;
+            border: 1px solid var(--gold);
+            margin-bottom: 14px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px 18px;
+        }
+        .section-title {
+            background: #fff;
+            padding: 6px 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 12px;
+            border-left: 6px solid var(--accent);
+            border-top: 1px solid var(--gold);
+            border-bottom: 1px solid var(--gold);
+        }
+        .row { display: flex; margin: 6px 0; gap: 16px; align-items: flex-end; }
+        .field {
+            flex: 1;
+            border-bottom: 1px solid var(--line);
+            height: 24px;
+        }
+        .field-input {
+            width: 100%;
+            border: 1px solid var(--line);
+            height: 30px;
+            padding: 4px 8px;
+            font-family: inherit;
+            font-size: 12px;
+            color: var(--ink);
+            background: #fff;
+        }
+        .field-textarea {
+            width: 100%;
+            border: 1px solid var(--line);
+            min-height: 72px;
+            padding: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            resize: vertical;
+        }
+        .delay-result {
+            margin-top: 8px;
+            padding: 8px 10px;
+            border: 1px solid var(--gold);
+            background: var(--light);
+            font-size: 12px;
+        }
+        .delay-result.alert {
+            color: #b00020;
+            border-color: #b00020;
+            font-weight: bold;
+        }
+        .signature-line {
+            min-width: 180px;
+            border-bottom: 1px solid var(--line);
+            display: inline-block;
+            height: 20px;
+            vertical-align: bottom;
+            margin-left: 6px;
+        }
+        .btn-submit {
+            margin-top: 12px;
+            width: 100%;
+            border: 1px solid var(--line);
+            background: var(--accent);
+            color: #fff;
+            padding: 9px 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px 14px;
+            margin: 6px 0;
+            font-size: 12px;
+        }
+        .checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .box {
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid var(--line);
+            display: inline-block;
+        }
+        .box.round { border-radius: 3px; }
+        .text-box {
+            width: 100%;
+            border: 1px solid var(--line);
+            min-height: 38px;
+            margin-top: 6px;
+        }
+        .print-footer {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 11px;
+            letter-spacing: 1px;
+            color: #6b7b85;
+        }
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            gap: 16px;
+        }
+        .watermark {
+            position: absolute;
+            top: 18px;
+            right: 24px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: rgba(0,0,0,0.35);
+        }
+        @page { margin: 8mm; }
+        @media print {
+            body { padding: 0; font-size: 11px; }
+            .container { border: none; padding: 0 50px; width: 100%; }
+            .row { margin: 4px 0; }
+            .section-title { margin-top: 10px; }
+            .checklist { margin-bottom: 8px; }
+            .text-box { min-height: 34px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="watermark">CONFIDENTIAL</div>
+        <div class="brand">
+            <img src="../static/images/img%20(1).png" alt="Iceland Beach Resort Logo">
+            <div class="brand-text">
+                <div class="brand-title">ICELAND BEACH RESORT</div>
+                <div class="brand-subtitle">Meal Delay Incident Report</div>
+            </div>
+        </div>
+        <form id="delayIncidentForm" autocomplete="off">
+            <div class="section-title">Incident Details</div>
+            <div class="row">
+                <div style="flex: 1">
+                    Date (Today):
+                    <input id="reportDate" class="field-input" type="date" readonly>
+                </div>
+                <div style="flex: 1">
+                    Time of Order:
+                    <input id="timeOrder" class="field-input" type="time" required>
+                </div>
+                <div style="flex: 1">
+                    Time of Delivery:
+                    <input id="timeDelivery" class="field-input" type="time" required>
+                </div>
+            </div>
+
+            <div class="section-title">Staff Selection</div>
+            <div class="row">
+                <div style="flex: 1">
+                    The Chef:
+                    <input class="field-input" type="text" name="chef" maxlength="255">
+                </div>
+                <div style="flex: 1">
+                    The Waitress:
+                    <input class="field-input" type="text" name="waitress" maxlength="255">
+                </div>
+            </div>
+
+            <div class="section-title">Delay Analysis</div>
+            <div>
+                Reason for Delay:
+                <textarea class="field-textarea" name="delay_reason" required></textarea>
+            </div>
+            <div id="delayResult" class="delay-result">Delay check pending.</div>
+
+            <div class="section-title">Signatures</div>
+            <div class="footer-row">
+                <div>Staff <span class="signature-line"></span></div>
+                <div><strong>Supervisor Sign</strong> <span class="signature-line"></span></div>
+            </div>
+
+            <button type="submit" class="btn-submit no-print">Submit Report</button>
+        </form>
+
+        <div class="print-footer">Iceland Beach Resort - Meal Delay Incident Record</div>
+    </div>
+
+    <script>
+        (function () {
+            var dateInput = document.getElementById('reportDate');
+            var orderInput = document.getElementById('timeOrder');
+            var deliveryInput = document.getElementById('timeDelivery');
+            var result = document.getElementById('delayResult');
+
+            var today = new Date();
+            var yyyy = today.getFullYear();
+            var mm = String(today.getMonth() + 1).padStart(2, '0');
+            var dd = String(today.getDate()).padStart(2, '0');
+            dateInput.value = yyyy + '-' + mm + '-' + dd;
+
+            function calculateDelay() {
+                if (!orderInput.value || !deliveryInput.value) {
+                    result.classList.remove('alert');
+                    result.textContent = 'Delay check pending.';
+                    return;
+                }
+
+                var orderParts = orderInput.value.split(':');
+                var deliveryParts = deliveryInput.value.split(':');
+
+                var orderMinutes = parseInt(orderParts[0], 10) * 60 + parseInt(orderParts[1], 10);
+                var deliveryMinutes = parseInt(deliveryParts[0], 10) * 60 + parseInt(deliveryParts[1], 10);
+
+                if (deliveryMinutes < orderMinutes) {
+                    deliveryMinutes += 24 * 60;
+                }
+
+                var diff = deliveryMinutes - orderMinutes;
+
+                if (diff > 30) {
+                    result.classList.add('alert');
+                    result.textContent = 'Delay: ' + diff + ' minutes. This exceeds 30 minutes.';
+                } else {
+                    result.classList.remove('alert');
+                    result.textContent = 'Delay: ' + diff + ' minutes.';
+                }
+            }
+
+            orderInput.addEventListener('change', calculateDelay);
+            deliveryInput.addEventListener('change', calculateDelay);
+
+            document.getElementById('delayIncidentForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+                window.print();
+            });
+        })();
+    </script>
+</body>
+</html>
