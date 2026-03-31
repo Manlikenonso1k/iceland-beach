@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Room;
+use App\Models\Booking;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -14,7 +14,7 @@ class BookingDeclinedMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public Room $room,
+        public Booking $booking,
         public ?string $reason = null,
     ) {
     }
@@ -31,7 +31,7 @@ class BookingDeclinedMail extends Mailable
         return new Content(
             view: 'mail.booking-declined',
             with: [
-                'room' => $this->room,
+                'booking' => $this->booking,
                 'reason' => $this->reason,
             ],
         );

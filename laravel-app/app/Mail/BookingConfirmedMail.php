@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Room;
+use App\Models\Booking;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -13,7 +13,7 @@ class BookingConfirmedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Room $room)
+    public function __construct(public Booking $booking)
     {
     }
 
@@ -29,7 +29,7 @@ class BookingConfirmedMail extends Mailable
         return new Content(
             view: 'mail.booking-confirmed',
             with: [
-                'room' => $this->room,
+                'booking' => $this->booking,
             ],
         );
     }

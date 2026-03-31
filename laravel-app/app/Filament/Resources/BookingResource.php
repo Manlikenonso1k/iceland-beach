@@ -14,6 +14,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Mail;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
@@ -65,107 +66,52 @@ class BookingResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('room_name')->searchable()->sortable(),
-                TextColumn::make('room_category')->searchable()->toggleable(),
-                TextColumn::make('is_booked')
-                    ->badge()
-                    ->colors([
-                        'warning' => 'no',
-                        'success' => 'booked',
-                        'gray' => 'rejected',
-                        'danger' => 'expired',
-                    ])
-                    ->formatStateUsing(fn (string $state) => match ($state) {
-                        'no' => 'Pending',
-                        'booked' => 'Confirmed',
-                        'rejected' => 'Rejected',
-                        'expired' => 'Expired',
-                        default => ucfirst($state),
-                    }),
-                TextColumn::make('customer_name')->searchable()->placeholder('-'),
-                TextColumn::make('email')->searchable()->placeholder('-'),
-                TextColumn::make('start_date')->dateTime('Y-m-d H:i')->placeholder('-'),
-                TextColumn::make('end_date')->dateTime('Y-m-d H:i')->placeholder('-'),
-                TextColumn::make('rejection_reason')->label('Reason')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('guest_name')->label('Guest Name')->searchable(),
+                TextColumn::make('guest_email')->label('Email')->searchable(),
+                TextColumn::make('guest_phone')->label('Phone'),
+                TextColumn::make('room_type')->label('Room'),
+                TextColumn::make('check_in')->label('Check In')->dateTime(),
+                TextColumn::make('status')->label('Status')->badge()->color(fn($state) => match($state) {
+                    'pending' => 'warning',
+                    'confirmed' => 'success',
+                    'rejected' => 'danger',
+                }),
             ])
             ->filters([
-                SelectFilter::make('is_booked')
+                SelectFilter::make('status')
                     ->options([
+                        'pending' => 'Pending',
+                        'confirmed' => 'Confirmed',
                         'rejected' => 'Rejected',
-                        'no' => 'Pending',
-                        'booked' => 'Confirmed',
-                        'expired' => 'Expired',
-                    ]),
+                    ])
+                    ->default('pending'),
             ])
             ->actions([
-                Action::make('confirmBooking')
+                Action::make('confirm')
                     ->label('Confirm')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->visible(function (Room $record): bool {
-                        /** @var \App\Models\User|null $user */
-                        $user = Filament::auth()->user();
-
-                        return $record->is_booked === 'no'
-                            && $user !== null
-                            && method_exists($user, 'hasAnyRole')
-                            && $user->hasAnyRole(['super_admin', 'frontdesk']);
+                    ->visible(fn($record) => $record->status === 'pending')
+                    ->action(function ($record) {
+                        $record->status = 'confirmed';
+                        $record->save();
+                        Mail::to($record->guest_email)->send(new \App\Mail\BookingConfirmedMail($record));
                     })
-                    ->action(function (Room $record, BookingWorkflowService $bookingWorkflow): void {
-                        $bookingWorkflow->confirm($record);
-
-                        Notification::make()
-                            ->title('Booking confirmed')
-                            ->body('Status updated and confirmation email processed.')
-                            ->success()
-                            ->send();
-                    }),
-                Action::make('rejectBooking')
+                    ->color('success'),
+                Action::make('reject')
                     ->label('Reject')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
+                    ->visible(fn($record) => $record->status === 'pending')
                     ->form([
-                        Textarea::make('reason')
-                            ->label('Reason (optional)')
-                            ->rows(3)
-                            ->maxLength(1000),
+                        Textarea::make('rejection_reason')->label('Reason')->required(),
                     ])
-                    ->visible(function (Room $record): bool {
-                        /** @var \App\Models\User|null $user */
-                        $user = Filament::auth()->user();
-
-                        return $record->is_booked === 'no'
-                            && $user !== null
-                            && method_exists($user, 'hasAnyRole')
-                            && $user->hasAnyRole(['super_admin', 'frontdesk']);
+                    ->action(function ($record, $data) {
+                        $record->status = 'rejected';
+                        $record->rejection_reason = $data['rejection_reason'];
+                        $record->save();
+                        Mail::to($record->guest_email)->send(new \App\Mail\BookingDeclinedMail($record, $data['rejection_reason']));
                     })
-                    ->action(function (Room $record, array $data, BookingWorkflowService $bookingWorkflow): void {
-                        $reason = isset($data['reason']) ? trim((string) $data['reason']) : null;
-                        $bookingWorkflow->reject($record, $reason);
-
-                        Notification::make()
-                            ->title('Booking rejected')
-                            ->body('Status updated and decline email processed.')
-                            ->success()
-                            ->send();
-                    }),
-                Action::make('sendBookingMail')
-                    ->label('Send Booking Mail')
-                    ->icon('heroicon-o-envelope')
-                    ->visible(fn (Room $record) => ! empty($record->email) && $record->is_booked === 'booked')
-                    ->action(function (Room $record, ReservationService $reservationService): void {
-                        $reservationService->sendBookingEmails($record);
-
-                        Notification::make()
-                            ->title('Booking email sent')
-                            ->success()
-                            ->send();
-                    }),
+                    ->color('danger'),
                 EditAction::make(),
                 DeleteAction::make(),
-            ])
-                ->bulkActions([]);
+            ]);
     }
 
     public static function getRelations(): array

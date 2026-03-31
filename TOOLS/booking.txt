@@ -1,0 +1,27 @@
+To get this system working perfectly in your Filament dashboard, you need a prompt that covers the Database logic, the Filament Resource configuration, and the Action/Email logic.
+
+Since you are bridging a legacy PHP file (rooms.php) with Filament, the key is ensuring they both write to the same bookings table.
+
+The Master Implementation Prompt
+"Act as a Senior Laravel & Filament Developer. Help me implement a booking management system that bridges a legacy PHP frontend with a Filament V3 admin panel.
+
+1. Database & Model Setup
+Table: bookings
+
+Columns: guest_name, guest_email, guest_phone, room_type, check_in (datetime), status (enum: pending, confirmed, rejected), rejection_reason (text, nullable).
+
+Room Mapping: Create a helper method in the Model to map room names to 1-2 letter abbreviations (e.g., 'Premium 1C' -> 'P1C', 'Beach Apartment 1' -> 'BA1').
+
+2. Filament Table (Pending Window)
+Filter: Show only bookings where status = pending.
+
+Columns: Add guest_name, guest_email, and guest_phone. Fix the check_in column to display accurate date/time using dateTime().
+
+Actions: >     * Confirm Button: Update status to confirmed, change calendar color to green, and send a 'Booking Confirmed' email via SMTP.
+
+Reject Button: Open a Modal with a textarea for 'Reason'. On submission, update status to rejected and email the guest the reason.
+
+3. Calendar Widget Integration
+Logic: Use the status to determine event color: Yellow (#FFC107) for pending, Green (#28A745) for confirmed.
+
+Display: Render the event title using the Room Abbreviation inside a circular CSS badge. Ensure the calendar refreshes its state when a booking is confirmed in the table below."
