@@ -228,8 +228,8 @@
             <div class="section-title">Incident Details</div>
             <div class="row">
                 <div style="flex: 1">
-                    Date (Today):
-                    <input id="reportDate" class="field-input" type="date" readonly>
+                    Date:
+                    <input class="field-input" type="text" maxlength="40">
                 </div>
                 <div style="flex: 1">
                     Time of Order:
@@ -274,16 +274,9 @@
 
     <script>
         (function () {
-            var dateInput = document.getElementById('reportDate');
             var orderInput = document.getElementById('timeOrder');
             var deliveryInput = document.getElementById('timeDelivery');
             var result = document.getElementById('delayResult');
-
-            var today = new Date();
-            var yyyy = today.getFullYear();
-            var mm = String(today.getMonth() + 1).padStart(2, '0');
-            var dd = String(today.getDate()).padStart(2, '0');
-            dateInput.value = yyyy + '-' + mm + '-' + dd;
 
             function calculateDelay() {
                 if (!orderInput.value || !deliveryInput.value) {
