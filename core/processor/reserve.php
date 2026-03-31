@@ -97,27 +97,45 @@ if(isset($_POST['reserveroom'])) {
     } elseif (strtotime($startdate) >= strtotime($enddate)) {
         $alert = "<div class='alert alert-danger'><b>Error!</b> Check-out date must be after check-in date.</div>";
     } else {
-        $room_details = $query->select("room", "room_name, room_price, is_booked, start_date, end_date", "room_name = ?", [$room_name], "s");
+            $room_details = $query->select("room", "room_name, room_price, is_booked, start_date, end_date", "room_name = ?", [$room_name], "s");
 
-        if ($room_details->num_rows === 0) {
-            $alert = "<div class='alert alert-danger'><b>Error!</b> Selected room was not found.</div>";
-        } else {
-            $room = $room_details->fetch_assoc();
-            $existingStart = $room['start_date'] ?? null;
-            $existingEnd = $room['end_date'] ?? null;
-
-            if (($room['is_booked'] ?? 'no') !== 'no') {
-                $alert = "<div class='alert alert-danger'><b>Unavailable!</b> This room has already been confirmed for another guest.</div>";
-            } elseif (! empty($existingStart) && ! empty($existingEnd)) {
-                if (hasDateOverlap($startdate, $enddate, $existingStart, $existingEnd)) {
-                    $alert = "<div class='alert alert-warning'><b>Pending Conflict:</b> This room already has a pending request for overlapping dates. Please choose a different room or date.</div>";
-                } else {
-                    $alert = "<div class='alert alert-warning'><b>Pending Request Exists:</b> This room already has another pending request. Please try again later.</div>";
-                }
+            if ($room_details->num_rows === 0) {
+                $alert = "<div class='alert alert-danger'><b>Error!</b> Selected room was not found.</div>";
             } else {
-                $durationInDays = (int) ceil((strtotime($enddate) - strtotime($startdate)) / 86400);
-                $durationInDays = $durationInDays > 0 ? $durationInDays : 1;
-                $totalPrice = ((float) ($room['room_price'] ?? 0)) * $durationInDays;
+                $room = $room_details->fetch_assoc();
+                $existingStart = $room['start_date'] ?? null;
+                $existingEnd = $room['end_date'] ?? null;
+
+                // Check for any pending booking for this room and overlapping dates in the bookings table
+                $pendingBooking = $query->select(
+                    "bookings",
+                    "*",
+                    "room_type = ? AND status = 'pending' AND ((check_in <= ? AND check_in >= ?) OR (check_in <= ? AND check_in >= ?))",
+                    [$room_name, $enddate, $startdate, $startdate, $enddate],
+                    "sssss"
+                );
+                if ($pendingBooking && $pendingBooking->num_rows > 0) {
+                    $alert = "<div class='alert alert-warning'><b>Pending Request Exists:</b> This room already has a pending booking for the selected dates. Please try again later.</div>";
+                } elseif (($room['is_booked'] ?? 'no') !== 'no') {
+                    $alert = "<div class='alert alert-danger'><b>Unavailable!</b> This room has already been confirmed for another guest.</div>";
+                } else {
+                    $durationInDays = (int) ceil((strtotime($enddate) - strtotime($startdate)) / 86400);
+                    $durationInDays = $durationInDays > 0 ? $durationInDays : 1;
+                    $totalPrice = ((float) ($room['room_price'] ?? 0)) * $durationInDays;
+
+                    // Insert into bookings table for Filament dashboard
+                    $query->insert(
+                        "bookings",
+                        [
+                            'guest_name' => $customer_name,
+                            'guest_email' => $email,
+                            'guest_phone' => $phone_number,
+                            'room_type' => $room_name,
+                            'check_in' => $startdate,
+                            'status' => 'pending',
+                            'rejection_reason' => null,
+                        ]
+                    );
 
                 $safeRoomName = $query->conn->real_escape_string($room_name);
                 $pendingSaved = $query->update(
