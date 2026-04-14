@@ -45,6 +45,7 @@
         .logo-section img {
             width: 140px;
             height: auto;
+            margin-left: 10px;
         }
 
         .company-info {
