@@ -9,7 +9,11 @@ class InvoicePolicy
 {
     public function before(User $user, string $ability): ?bool
     {
-        if ($user->hasAnyRole(['super_admin', 'admin'])) {
+        if (in_array($ability, ['delete', 'deleteAny', 'forceDelete', 'forceDeleteAny'], true)) {
+            return null;
+        }
+
+        if ($user->hasRole('super_admin') || $user->hasRole('admin')) {
             return true;
         }
 
@@ -38,12 +42,12 @@ class InvoicePolicy
 
     public function delete(User $user, Invoice $invoice): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin']);
+        return $user->hasRole('admin');
     }
 
     public function deleteAny(User $user): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin']);
+        return $user->hasRole('admin');
     }
 
     public function forceDelete(User $user, Invoice $invoice): bool
