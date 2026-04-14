@@ -41,7 +41,8 @@ class EditInvoice extends EditRecord
                         return null;
                     }
                 }),
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->visible(fn (): bool => auth()->user()?->can('delete', $this->record) ?? false),
         ];
     }
 

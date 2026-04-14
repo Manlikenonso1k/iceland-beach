@@ -5,30 +5,31 @@
     <title>Invoice {{ $invoice->invoice_number }}</title>
     <style>
         @page {
-            margin: 0;
+            margin: 14px 16px;
         }
         
         body {
             font-family: DejaVu Sans, Arial, sans-serif;
-            font-size: 11px;
+            font-size: 10px;
+            line-height: 1.35;
             color: #1e293b;
             margin: 0;
             padding: 0;
         }
 
         .container {
-            padding: 40px;
+            padding: 0;
         }
 
-        /* Header with blue background */
         .header {
             background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white;
-            padding: 30px 40px;
-            margin: 0 -40px 30px -40px;
+            padding: 16px 24px;
+            margin: 0 0 18px 0;
             display: table;
             width: 100%;
             box-sizing: border-box;
+            page-break-inside: avoid;
         }
 
         .header-content {
@@ -39,13 +40,13 @@
         .logo-section {
             display: table-cell;
             vertical-align: middle;
-            width: 200px;
+            width: 180px;
         }
 
         .logo-section img {
-            width: 140px;
+            width: 120px;
             height: auto;
-            margin-left: 10px;
+            margin-left: 24px;
         }
 
         .company-info {
@@ -57,22 +58,22 @@
 
         .company-info h1 {
             margin: 0 0 8px 0;
-            font-size: 26px;
+            font-size: 20px;
             font-weight: 700;
             letter-spacing: 1.5px;
         }
 
         .company-info p {
-            margin: 3px 0;
-            font-size: 12px;
+            margin: 2px 0;
+            font-size: 10px;
             opacity: 0.95;
         }
 
-        /* Invoice details section */
         .invoice-meta {
             display: table;
             width: 100%;
-            margin-bottom: 30px;
+            margin-bottom: 14px;
+            page-break-inside: avoid;
         }
 
         .invoice-details,
@@ -83,32 +84,32 @@
         }
 
         .invoice-details {
-            padding-right: 20px;
+            padding-right: 10px;
         }
 
         .customer-details {
             text-align: right;
-            padding-left: 20px;
+            padding-left: 10px;
         }
 
         .detail-box {
             background: #f8fafc;
             border-left: 4px solid #0ea5e9;
-            padding: 15px 20px;
+            padding: 12px 16px;
             border-radius: 4px;
         }
 
         .customer-box {
             background: #f8fafc;
             border-right: 4px solid #06b6d4;
-            padding: 15px 20px;
+            padding: 12px 16px;
             border-radius: 4px;
         }
 
         .detail-box h3,
         .customer-box h3 {
             margin: 0 0 10px 0;
-            font-size: 13px;
+            font-size: 11px;
             color: #0ea5e9;
             text-transform: uppercase;
             font-weight: 700;
@@ -117,8 +118,8 @@
 
         .detail-box p,
         .customer-box p {
-            margin: 6px 0;
-            line-height: 1.6;
+            margin: 4px 0;
+            line-height: 1.4;
         }
 
         .detail-box strong,
@@ -127,14 +128,12 @@
             font-weight: 600;
         }
 
-        /* Items table */
         table.items {
             width: 100%;
             border-collapse: collapse;
-            margin: 25px 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            border-radius: 8px;
-            overflow: hidden;
+            margin: 12px 0 10px 0;
+            border: 1px solid #dbeafe;
+            page-break-inside: avoid;
         }
 
         table.items thead tr {
@@ -143,10 +142,10 @@
         }
 
         table.items th {
-            padding: 14px 16px;
+            padding: 9px 10px;
             text-align: left;
             font-weight: 600;
-            font-size: 11px;
+            font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -157,6 +156,7 @@
 
         table.items tbody tr {
             border-bottom: 1px solid #e2e8f0;
+            page-break-inside: avoid;
         }
 
         table.items tbody tr:last-child {
@@ -172,7 +172,7 @@
         }
 
         table.items td {
-            padding: 12px 16px;
+            padding: 8px 10px;
             color: #334155;
         }
 
@@ -182,11 +182,11 @@
             white-space: nowrap;
         }
 
-        /* Totals section */
         .totals-section {
-            margin: 30px 0;
+            margin: 10px 0 8px 0;
             display: table;
             width: 100%;
+            page-break-inside: avoid;
         }
 
         .totals-left {
@@ -199,7 +199,7 @@
             display: table-cell;
             width: 50%;
             vertical-align: top;
-            padding-left: 20px;
+            padding-left: 12px;
         }
 
         .totals-table {
@@ -216,7 +216,7 @@
         }
 
         .totals-table td {
-            padding: 10px 0;
+            padding: 7px 0;
         }
 
         .totals-table .label {
@@ -236,8 +236,8 @@
         .grand-total {
             background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
             color: white !important;
-            font-size: 15px;
-            padding: 15px 0 !important;
+            font-size: 13px;
+            padding: 10px 0 !important;
             border-radius: 6px;
         }
 
@@ -247,57 +247,70 @@
             font-weight: 700;
         }
 
-        /* Bank details */
+        .amount-in-words {
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-left: 4px solid #06b6d4;
+            border-radius: 6px;
+            margin: 10px 0 10px 0;
+            page-break-inside: avoid;
+        }
+
+        .amount-in-words strong {
+            color: #0ea5e9;
+        }
+
         .bank-details {
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             border: 2px solid #0ea5e9;
             border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
+            padding: 12px 14px;
+            margin: 8px 0 0 0;
+            page-break-inside: avoid;
         }
 
         .bank-details h3 {
-            margin: 0 0 12px 0;
+            margin: 0 0 8px 0;
             color: #0ea5e9;
-            font-size: 13px;
+            font-size: 11px;
             text-transform: uppercase;
             font-weight: 700;
             letter-spacing: 0.5px;
         }
 
         .bank-details p {
-            margin: 8px 0;
-            line-height: 1.6;
+            margin: 4px 0;
+            line-height: 1.35;
         }
 
         .bank-details strong {
             color: #0369a1;
             font-weight: 600;
             display: inline-block;
-            min-width: 80px;
+            min-width: 90px;
         }
 
-        /* Footer */
         .footer {
-            margin-top: 40px;
-            padding-top: 25px;
-            border-top: 3px solid #0ea5e9;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #0ea5e9;
             text-align: center;
+            page-break-inside: avoid;
         }
 
         .thank-you {
-            font-size: 22px;
+            font-size: 16px;
             font-weight: 700;
             color: #0ea5e9;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             letter-spacing: 2px;
         }
 
         .total-words {
             background: #f8fafc;
-            padding: 15px;
+            padding: 10px 12px;
             border-radius: 6px;
-            margin-top: 15px;
+            margin-top: 6px;
             border-left: 4px solid #06b6d4;
         }
 
@@ -305,11 +318,10 @@
             color: #0ea5e9;
         }
 
-        /* Decorative elements */
         .wave-divider {
-            height: 4px;
+            height: 3px;
             background: linear-gradient(90deg, #0ea5e9 0%, #06b6d4 50%, #0ea5e9 100%);
-            margin: 20px 0;
+            margin: 12px 0;
         }
     </style>
 </head>
@@ -383,8 +395,12 @@
             </div>
         </div>
 
+        <div class="amount-in-words">
+            <strong>Amount in Words:</strong> {{ $invoice->total_in_words }}
+        </div>
+
         <div class="bank-details">
-            <h3>💳 Payment Information</h3>
+            <h3>Payment Information</h3>
             <p><strong>Bank:</strong> {{ $invoice->bank_name }}</p>
             <p><strong>Account Number:</strong> {{ $invoice->bank_account_number }}</p>
             <p><strong>Account Name:</strong> {{ $invoice->bank_account_name }}</p>
@@ -392,9 +408,6 @@
 
         <div class="footer">
             <div class="thank-you">THANK YOU FOR YOUR BUSINESS!</div>
-            <div class="total-words">
-                <strong>Amount in Words:</strong> {{ $invoice->total_in_words }}
-            </div>
         </div>
     </div>
 </body>
