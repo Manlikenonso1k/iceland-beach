@@ -13,7 +13,7 @@ class InvoicePolicy
             return null;
         }
 
-        if ($user->hasRole('super_admin') || $user->hasRole('admin')) {
+        if ($user->hasAnyRole(['Super Admin', 'super_admin', 'admin'])) {
             return true;
         }
 
@@ -22,22 +22,22 @@ class InvoicePolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'frontdesk']);
+        return $user->hasAnyRole(['Super Admin', 'super_admin', 'admin', 'Front Desk', 'frontdesk']);
     }
 
     public function view(User $user, Invoice $invoice): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'frontdesk']);
+        return $user->hasAnyRole(['Super Admin', 'super_admin', 'admin', 'Front Desk', 'frontdesk']);
     }
 
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'frontdesk']);
+        return $user->hasAnyRole(['Super Admin', 'super_admin', 'admin', 'Front Desk', 'frontdesk']);
     }
 
     public function update(User $user, Invoice $invoice): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'frontdesk']);
+        return $user->hasAnyRole(['Super Admin', 'super_admin', 'admin', 'Front Desk', 'frontdesk']);
     }
 
     public function delete(User $user, Invoice $invoice): bool
@@ -72,7 +72,7 @@ class InvoicePolicy
 
     public function replicate(User $user, Invoice $invoice): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'frontdesk']);
+        return $user->hasAnyRole(['Super Admin', 'super_admin', 'admin', 'Front Desk', 'frontdesk']);
     }
 
     public function reorder(User $user): bool
