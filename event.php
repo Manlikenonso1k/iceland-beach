@@ -104,17 +104,19 @@ require_once "includes/header.php";
 
 <!-- Hero Section -->
 <section
-    class="relative w-full min-h-[400px] md:min-h-[500px] flex items-center justify-center px-margin-mobile md:px-margin-desktop mb-stack-lg bg-blue-gradient">
+    class="relative w-full min-h-[400px] md:min-h-[500px] flex items-center justify-center px-margin-mobile md:px-margin-desktop mb-stack-lg bg-black">
     <div class="absolute inset-0 z-0">
-        <img alt="Abstract architecture" class="w-full h-full object-cover opacity-20 mix-blend-overlay"
+        <img alt="Iceland Beach Hero" class="w-full h-full object-cover opacity-90"
             src="https://tenstrings.org/wp-content/uploads/2026/06/Beach-hero-scaled.jpg" />
+        <!-- Soft neutral overlay to ensure text remains readable -->
+        <div class="absolute inset-0 bg-black/40"></div>
     </div>
     <div class="relative z-10 text-center max-w-4xl mx-auto py-12">
         <h1
-            class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-white mb-stack-sm drop-shadow-lg">
+            class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-white mb-stack-sm drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
             Curated Year of Excellence
         </h1>
-        <p class="font-body-lg text-body-lg text-slate-200 max-w-2xl mx-auto">
+        <p class="font-body-lg text-body-lg text-white max-w-2xl mx-auto drop-shadow-[0_1px_5px_rgba(0,0,0,0.5)]">
             Experience a symphony of masterfully designed moments. From intimate cultural showcases to grand
             coastal celebrations, every event is architected for the discerning few.
         </p>
