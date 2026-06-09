@@ -128,190 +128,6 @@ require_once "includes/header.php";
         <!-- Timeline Line -->
         <div class="fixed left-8 md:left-24 top-0 bottom-0 w-px bg-secondary/20 z-0 hidden lg:block"></div>
         
-        <!-- January -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
-            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
-                January
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill"
-                                style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
-                        </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Iceland New Year Festival</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">JAN 03</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                A stark, beautiful contrast of fire and ice. Minimalist celebrations under the
-                                simulated auroras, featuring private ice dining and thermal pool meditations.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- February -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
-            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
-                February
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">favorite</span>
-                        </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Valentine’s Festival</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">FEB 14</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                An intimate evening of coastal romance and curated dining experiences.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- March -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
-            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
-                March
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">celebration</span>
-                        </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Easter Fiesta</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">MAR 29</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                Vibrant spring celebrations featuring coastal traditions and family festivities.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- April -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
-            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
-                April
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">museum</span>
-                        </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Coastal Culture Festival</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">APR 25</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                A deep dive into the rich heritage and artistic expressions of the coast.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- May -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
-            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
-                May
-            </h2>
-            <div class="mb-base flex justify-between items-end">
-                <h3 class="font-headline-md text-headline-md text-black font-bold">Beach Fashion Festival</h3>
-                <span class="font-label-caps text-label-caps text-secondary font-bold">MAY 30</span>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter grid-rows-2 h-auto md:h-[600px]">
-                <div class="md:col-span-8 md:row-span-2 event-card-border bg-white rounded-DEFAULT p-gutter relative flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
-                    <span class="material-symbols-outlined text-secondary text-6xl opacity-80" data-weight="fill"
-                        style="font-variation-settings: 'FILL' 1;">checkroom</span>
-                    <div class="absolute bottom-gutter left-gutter">
-                        <span class="font-label-caps text-label-caps text-secondary bg-sky-50 px-2 py-1 rounded-sm border border-secondary/30 font-bold">
-                            Main Runway
-                        </span>
-                    </div>
-                </div>
-                <div class="md:col-span-4 md:row-span-1 event-card-border bg-white rounded-DEFAULT p-gutter flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
-                    <span class="material-symbols-outlined text-secondary text-4xl opacity-80" data-weight="fill"
-                        style="font-variation-settings: 'FILL' 1;">diamond</span>
-                </div>
-                <div class="md:col-span-4 md:row-span-1 event-card-border bg-white rounded-DEFAULT p-gutter flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
-                    <span class="material-symbols-outlined text-secondary text-4xl opacity-80" data-weight="fill"
-                        style="font-variation-settings: 'FILL' 1;">styler</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- June -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
-            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
-                June
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">construction</span>
-                        </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Preparation</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">JUNE</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                Curating the next season of excellence. Private resort maintenance and planning.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- July -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
@@ -515,6 +331,190 @@ require_once "includes/header.php";
                                 class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
                                 View Details
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- January -->
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
+            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+                January
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                    <div class="flex flex-col md:flex-row gap-gutter items-center">
+                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
+                                data-weight="fill"
+                                style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                        </div>
+                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
+                            <div class="flex justify-between items-start mb-base">
+                                <h3 class="font-headline-md text-headline-md text-black font-bold">Iceland New Year Festival</h3>
+                                <span class="font-label-caps text-label-caps text-secondary font-bold">JAN 03</span>
+                            </div>
+                            <p class="font-body-md text-body-md text-black mb-stack-sm">
+                                A stark, beautiful contrast of fire and ice. Minimalist celebrations under the
+                                simulated auroras, featuring private ice dining and thermal pool meditations.
+                            </p>
+                            <button
+                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- February -->
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
+            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+                February
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                    <div class="flex flex-col md:flex-row gap-gutter items-center">
+                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
+                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                        </div>
+                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
+                            <div class="flex justify-between items-start mb-base">
+                                <h3 class="font-headline-md text-headline-md text-black font-bold">Valentine's Festival</h3>
+                                <span class="font-label-caps text-label-caps text-secondary font-bold">FEB 14</span>
+                            </div>
+                            <p class="font-body-md text-body-md text-black mb-stack-sm">
+                                An intimate evening of coastal romance and curated dining experiences.
+                            </p>
+                            <button
+                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- March -->
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
+            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+                March
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                    <div class="flex flex-col md:flex-row gap-gutter items-center">
+                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
+                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">celebration</span>
+                        </div>
+                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
+                            <div class="flex justify-between items-start mb-base">
+                                <h3 class="font-headline-md text-headline-md text-black font-bold">Easter Fiesta</h3>
+                                <span class="font-label-caps text-label-caps text-secondary font-bold">MAR 29</span>
+                            </div>
+                            <p class="font-body-md text-body-md text-black mb-stack-sm">
+                                Vibrant spring celebrations featuring coastal traditions and family festivities.
+                            </p>
+                            <button
+                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- April -->
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
+            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+                April
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                    <div class="flex flex-col md:flex-row gap-gutter items-center">
+                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
+                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">museum</span>
+                        </div>
+                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
+                            <div class="flex justify-between items-start mb-base">
+                                <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Coastal Culture Festival</h3>
+                                <span class="font-label-caps text-label-caps text-secondary font-bold">APR 25</span>
+                            </div>
+                            <p class="font-body-md text-body-md text-black mb-stack-sm">
+                                A deep dive into the rich heritage and artistic expressions of the coast.
+                            </p>
+                            <button
+                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- May -->
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
+            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+                May
+            </h2>
+            <div class="mb-base flex justify-between items-end">
+                <h3 class="font-headline-md text-headline-md text-black font-bold">Beach Fashion Festival</h3>
+                <span class="font-label-caps text-label-caps text-secondary font-bold">MAY 30</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter grid-rows-2 h-auto md:h-[600px]">
+                <div class="md:col-span-8 md:row-span-2 event-card-border bg-white rounded-DEFAULT p-gutter relative flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
+                    <span class="material-symbols-outlined text-secondary text-6xl opacity-80" data-weight="fill"
+                        style="font-variation-settings: 'FILL' 1;">checkroom</span>
+                    <div class="absolute bottom-gutter left-gutter">
+                        <span class="font-label-caps text-label-caps text-secondary bg-sky-50 px-2 py-1 rounded-sm border border-secondary/30 font-bold">
+                            Main Runway
+                        </span>
+                    </div>
+                </div>
+                <div class="md:col-span-4 md:row-span-1 event-card-border bg-white rounded-DEFAULT p-gutter flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
+                    <span class="material-symbols-outlined text-secondary text-4xl opacity-80" data-weight="fill"
+                        style="font-variation-settings: 'FILL' 1;">diamond</span>
+                </div>
+                <div class="md:col-span-4 md:row-span-1 event-card-border bg-white rounded-DEFAULT p-gutter flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
+                    <span class="material-symbols-outlined text-secondary text-4xl opacity-80" data-weight="fill"
+                        style="font-variation-settings: 'FILL' 1;">styler</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- June -->
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+            <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
+            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+                June
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                    <div class="flex flex-col md:flex-row gap-gutter items-center">
+                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
+                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">construction</span>
+                        </div>
+                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
+                            <div class="flex justify-between items-start mb-base">
+                                <h3 class="font-headline-md text-headline-md text-black font-bold">Preparation</h3>
+                                <span class="font-label-caps text-label-caps text-secondary font-bold">JUNE</span>
+                            </div>
+                            <p class="font-body-md text-body-md text-black mb-stack-sm">
+                                Curating the next season of excellence. Private resort maintenance and planning.
+                            </p>
                         </div>
                     </div>
                 </div>
