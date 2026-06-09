@@ -200,7 +200,8 @@ class InvoiceResource extends Resource
                         }
                     }),
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->visible(fn (Invoice $record): bool => auth()->user()?->can('delete', $record) ?? false),
             ])
             ->bulkActions([])
             ->paginated(false);
