@@ -164,7 +164,7 @@
             <div class="absolute inset-0 z-0">
                 <img alt="Abstract architecture" class="w-full h-full object-cover opacity-20 mix-blend-overlay"
                     data-alt="A dramatic, minimalist architectural night view. Deep navy blue and charcoal tones dominate the sky, while subtle, elegant lighting highlights the sleek, modern lines of an exclusive coastal resort structure. The mood is calm, prestige, and atmospheric with a mysterious high-end aesthetic. Matte surfaces contrast with sharp geometric shapes, evoking late-night tranquility."
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoRcGTQ9-g37snT3EgyJX_kzKD5rQFw-lqWM54O_l7b6zQcQn1OOg_eHNY0lP0EjprP5GJm4N35BpoHxJOkj7VIZuauEMJYMqF6WqX1sFu9r_kA8bklb6uSCsHqLgFaH6PR8z627kI9YXu7QWF37sdexpdr_Tx5P_5FCqg1CZEbC799nyEOL-i48tvFvaKBTm-WqKssmT9MhPmRky95TNMSSlm4eor-6ySqNPn5x-HTa10T99YJhRDQ2VfP-EXciRbyH_-VwLBk74" />
+                    src="https://tenstrings.org/wp-content/uploads/2026/06/Beach-hero-scaled.jpg" />
             </div>
             <div class="relative z-10 text-center max-w-4xl mx-auto">
                 <h1
@@ -572,8 +572,7 @@
             </section>
         </div>
     </main>
-    <!-- Footer -->
-    <!--
+
     <footer
         class="w-full px-margin-mobile md:px-margin-desktop py-stack-lg flex flex-col items-center gap-gutter bg-surface-container-lowest dark:bg-surface-container-lowest border-t border-outline-variant/20">
         <div
@@ -594,7 +593,7 @@
             © 2026 ICELAND BEACH RESORT. ALL RIGHTS RESERVED.
         </div>
     </footer>
-    -->
+
 </body>
 
 </html>
