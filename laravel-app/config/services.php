@@ -35,4 +35,21 @@ return [
         ],
     ],
 
+    // ── Paystack ──────────────────────────────────────────────────────────────
+    'paystack' => [
+        'public_key'  => env('PAYSTACK_PUBLIC_KEY'),
+        'secret_key'  => env('PAYSTACK_SECRET_KEY'),
+        'base_url'    => env('PAYSTACK_PAYMENT_URL', 'https://api.paystack.co'),
+    ],
+
+    // ── TGI Titan (TGIPAY) ───────────────────────────────────────────────────
+    // Per PAYMENT_KNOWLEDGE.md: no HMAC – auth via 'integration-key' header only.
+    'titan' => [
+        'merchant_id'  => env('TITAN_MERCHANT_ID'),
+        'api_key'      => env('TITAN_API_KEY'),
+        'secret'       => env('TITAN_SECRET'),
+        'base_url'     => env('TITAN_BASE_URL', 'https://pay.titansecure.ng/api'),
+        'callback_url' => env('TITAN_CALLBACK_URL'),
+    ],
+
 ];
