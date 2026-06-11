@@ -9,122 +9,168 @@
 
 ## 📋 Overview
 
-Iceland Beach Resort is a modern, responsive web application showcasing a premium beachfront destination. The platform provides visitors with an immersive experience through stunning visuals, comprehensive resort information, and an intuitive booking interface. Built with modern web technologies and deployed with automated CI/CD pipelines for seamless updates.
+Iceland Beach Resort is a modern, responsive web application showcasing a premium beachfront destination. The platform provides visitors with an immersive experience through stunning visuals, comprehensive resort information, and an intuitive booking interface.
+
+It now includes a **full event ticketing system** — customers can purchase tickets online, pay via Paystack or TGI Titan, receive a receipt email with a QR code, and be checked in at the gate by an admin scanning the QR.
 
 ## ✨ Key Features
 
 - **🎥 Video Hero Section**: Captivating full-screen video background showcasing the resort's ambiance
-- **📱 Fully Responsive Design**: Optimized viewing experience across all devices (mobile, tablet, desktop)
-- **🖼️ Interactive Gallery**: Dynamic image gallery highlighting resort amenities and scenic views
-- **🎯 Modern UI/UX**: Clean, intuitive interface built with Bootstrap 5.3.2
-- **⚡ Fast Loading**: Optimized assets and efficient code structure for superior performance
-- **🛠️ Admin Dashboard**: Comprehensive backend management system for content updates
-- **🔒 Secure Architecture**: PHP-based backend with organized template structure
+- **📱 Fully Responsive Design**: Optimized viewing experience across all devices
+- **🖼️ Interactive Gallery**: Dynamic image gallery highlighting resort amenities
+- **🎟️ Event Ticketing System**: Full purchase → payment → QR receipt → gate check-in flow
+- **💳 Dual Payment Gateways**: Paystack (inline popup) + TGI Titan (hosted redirect)
+- **📧 Automated Email Receipts**: QR code embedded in receipt email on payment success
+- **🛠️ Admin Dashboard**: Filament 3 admin panel for order management and QR check-in
+- **🔒 Secure Architecture**: UUID-based URLs, server-side payment verification, CSRF-safe webhooks
 - **🚀 Automated Deployment**: CI/CD pipeline for instant updates to production
 
 ## 🛠️ Technologies Used
 
-### Frontend
-- **HTML5**: Semantic markup for better SEO and accessibility
-- **CSS3**: Modern styling with custom animations and transitions
-- **JavaScript (ES6+)**: Interactive features and dynamic content
-- **Bootstrap 5.3.2**: Responsive grid system and pre-built components
+### Frontend (Public Site)
+- **HTML5 / CSS3 / JavaScript (ES6+)**
+- **Bootstrap 5.3.2**: Responsive grid and components
+- **Tailwind CSS** (via CDN): Used on the events and ticketing pages
+- **Paystack Inline JS**: `PaystackPop.setup()` for card popup
 
-### Backend
-- **PHP**: Server-side scripting and business logic
-- **Template Engine**: Custom template system in `/temoke` directory
-- **Modular Components**: Reusable includes for headers, footers, and shared elements
+### Backend — Public Site
+- **PHP Legacy**: Server-side scripting (`ticket.php`, `event.php`, etc.)
+
+### Backend — Admin & Ticketing
+- **Laravel 12**: Full-stack PHP framework (`laravel-app/`)
+- **Filament 3**: Admin panel with TicketResource, filters, check-in actions
+- **SQLite**: Database (production-ready, no MySQL needed)
+- **simplesoftwareio/simple-qrcode**: SVG QR code generation
+
+### Payment Gateways
+- **Paystack**: Inline JS popup → server-side verification
+- **TGI Titan (TGIPAY)**: Server-to-server redirect flow via `integration-key` header
 
 ### DevOps & Deployment
 - **GitHub Actions**: Automated CI/CD workflow
 - **SSH Deployment**: Secure file transfer to production server
-- **Hostinger**: Linux-based hosting environment
+- **Hostinger**: Linux-based shared hosting
 
 ## 📁 Project Structure
 
 ```
-iceland-beach-resort/
-├── admin/                  # Admin dashboard and management tools
-├── includes/               # Reusable PHP components
-│   ├── header.php         # Site header template
-│   └── footer.php         # Site footer template
-├── temoke/                # Template files and layouts
-├── static/                # Static assets
-│   ├── images/            # Image resources
-│   ├── videos/            # Video content
-│   ├── styles/            # CSS stylesheets
-│   └── scripts/           # JavaScript files
-├── .github/
-│   └── workflows/         # GitHub Actions CI/CD configuration
-├── index.php              # Homepage
-└── README.md              # Project documentation
+iceland-beach/
+├── ticket.php                  # 🎟️ Public ticket purchase form (PHP Legacy)
+├── event.php                   # Events listing page
+├── index.php                   # Homepage
+├── about.php                   # About page
+├── gallery.php                 # Gallery page
+├── includes/                   # Shared PHP components (header, footer)
+├── static/                     # CSS, JS, images
+├── admin/                      # Legacy admin tools
+├── RESULT.md                   # 📄 Full build documentation (read this!)
+│
+└── laravel-app/                # 🚀 Laravel 12 backend
+    ├── .env                    # Environment config (payment keys live here)
+    ├── config/services.php     # Paystack + Titan config
+    ├── routes/web.php          # All payment + ticketing routes
+    │
+    ├── database/migrations/
+    │   └── ..._create_tickets_table.php
+    │
+    ├── app/
+    │   ├── Models/Ticket.php
+    │   ├── Http/Controllers/PaymentController.php
+    │   ├── Mail/TicketReceiptMail.php
+    │   └── Filament/Resources/TicketResource.php
+    │
+    └── resources/views/
+        ├── ticket/
+        │   ├── success.blade.php   # Receipt page with QR code
+        │   └── verify.blade.php    # Gate scan result (green/red screen)
+        └── mail/
+            └── ticket-receipt.blade.php
 ```
+
+> 📄 For full technical documentation of the ticketing system, see **[RESULT.md](RESULT.md)**
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-- PHP 7.4 or higher
-- A local web server (Apache/Nginx) or PHP built-in server
+- PHP 8.2 or higher
+- Composer
 - Git
-- A modern web browser
+- A local web server (Apache/Nginx) or PHP built-in server
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/Manlikenonso1k/iceland-beach.git
-   cd iceland-beach-resort
+   cd iceland-beach
    ```
 
-2. **Set up your local environment**
+2. **Install Laravel dependencies**
    ```bash
-   # If using PHP built-in server
+   cd laravel-app
+   composer install
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+3. **Set up environment**
+   ```bash
+   nano .env   # add your payment keys + mail config
+   ```
+
+4. **Run migrations**
+   ```bash
+   php artisan migrate
+   ```
+
+5. **Link storage** (for QR codes)
+   ```bash
+   php artisan storage:link
+   mkdir -p storage/app/public/qrcodes
+   ```
+
+6. **Serve the Laravel app**
+   ```bash
+   php artisan serve
+   ```
+
+7. **Serve the PHP legacy site** (separate terminal)
+   ```bash
+   cd ..   # back to project root
    php -S localhost:8000
    ```
 
-3. **Access the application**
-   
-   Open your browser and navigate to:
-   ```
-   http://localhost:8000
-   ```
+## 🔄 Deployment (Production)
 
-4. **Configure environment variables** (if applicable)
-   
-   Create a configuration file for your local environment settings.
+This project uses **GitHub Actions** for automated deployment. Every push to `main` triggers the CI/CD pipeline.
 
-### Database Setup (if applicable)
+### After `git pull` on server — run these commands:
 
-If your project uses a database, include setup instructions here:
-```sql
--- Import the database schema
--- Add relevant SQL commands or migration instructions
-```
-
-## 🔄 Deployment
-
-This project uses **GitHub Actions** for automated deployment to Hostinger. Every push to the `main` branch triggers the CI/CD pipeline.
-
-### Deployment Workflow
-
-1. Code is pushed to the `main` branch
-2. GitHub Actions workflow is triggered automatically
-3. Files are deployed via SSH to the Hostinger server
-4. Changes are live instantly
-
-### Manual Deployment
-
-If you need to deploy manually:
 ```bash
-# Connect to your server via SSH
-ssh user@your-hostinger-server.com
+cd domains/icelandbeach.com/public_html/laravel-app
 
-# Navigate to project directory and pull latest changes
-cd /path/to/project
-git pull origin mainnn
+# Install dependencies
+composer install --no-dev --optimize-autoloader
+
+# Run any new migrations
+php artisan migrate --force
+
+# Fix storage symlink (exec() disabled on this host — use ln directly)
+ln -sf /home/u519226541/domains/icelandbeach.com/public_html/laravel-app/storage/app/public \
+        /home/u519226541/domains/icelandbeach.com/public_html/laravel-app/public/storage
+
+# Ensure QR folder exists
+mkdir -p storage/app/public/qrcodes
+chmod -R 775 storage bootstrap/cache
+
+# Re-cache for performance
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 ```
+
+> ⚠️ `php artisan storage:link` fails on this Hostinger server (`exec()` is disabled). Always use the `ln -sf` command above instead.
 
 ## 🖼️ Screenshots
 
