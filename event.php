@@ -100,6 +100,40 @@ require_once "includes/header.php";
     .bg-blue-gradient {
         background: linear-gradient(180deg, rgba(34, 113, 144, 0.95) 0%, rgba(17, 56, 72, 0.9) 100%);
     }
+
+    /* ── Month slide-in animation (from event-month.php) ── */
+    .month-animate {
+        opacity: 0;
+        transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .month-animate[data-dir="left"] {
+        transform: translateX(-40px);
+    }
+
+    .month-animate[data-dir="right"] {
+        transform: translateX(40px);
+    }
+
+    .month-animate.visible {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* ── Collage grid top rounding ── */
+    .collage-grid {
+        display: grid;
+        gap: 4px;
+        overflow: hidden;
+        border-radius: 0.125rem 0.125rem 0 0;
+    }
+
+    .collage-grid img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
 </style>
 
 <!-- Hero Section -->
@@ -160,178 +194,167 @@ require_once "includes/header.php";
         </section>
 
         <!-- August -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="left">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
             <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 August
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">music_note</span>
+            <div class="grid grid-cols-1 gap-gutter">
+                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                    <!-- COLLAGE: 2-panel split -->
+                    <div class="collage-grid" style="grid-template-columns:3fr 2fr; height:130px">
+                        <img src="/images/aug-main.jpg" alt="African Music Festival main">
+                        <img src="/images/aug-side.jpg" alt="African Music Festival side">
+                    </div>
+                    <div class="p-gutter">
+                        <div class="flex justify-between items-start mb-base">
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">African Music Festival</h3>
+                            <span class="font-label-caps text-label-caps text-secondary font-bold">AUG 20</span>
                         </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">African Music Festival</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">AUG 20</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                The rhythm of the continent meets the sound of the waves.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
+                        <p class="font-body-md text-body-md text-black mb-stack-sm">
+                            The rhythm of the continent meets the sound of the waves.
+                        </p>
+                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                            Details</button>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- September -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="right">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
             <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 September
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">school</span>
+            <div class="grid grid-cols-1 gap-gutter">
+                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                    <!-- COLLAGE: tall main + 2 stacked -->
+                    <div class="collage-grid" style="grid-template-columns:3fr 2fr; grid-template-rows:80px 80px;">
+                        <img src="/images/sep-main.jpg" style="grid-row:span 2" alt="Inter-School Beach Blast main">
+                        <img src="/images/sep-top.jpg" alt="Inter-School Beach Blast top">
+                        <img src="/images/sep-btm.jpg" alt="Inter-School Beach Blast bottom">
+                    </div>
+                    <div class="p-gutter">
+                        <div class="flex justify-between items-start mb-base">
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">Inter-School Beach Blast</h3>
+                            <span class="font-label-caps text-label-caps text-secondary font-bold">SEP 11</span>
                         </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Inter-School Beach Blast</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">SEP 11</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                Fostering community and competition through coastal sports and arts.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
+                        <p class="font-body-md text-body-md text-black mb-stack-sm">
+                            Fostering community and competition through coastal sports and arts.
+                        </p>
+                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                            Details</button>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- October -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="left">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
             <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 October
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">flag</span>
+            <div class="grid grid-cols-1 gap-gutter">
+                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                    <!-- COLLAGE: 3-column banner -->
+                    <div class="collage-grid" style="grid-template-columns:1fr 1fr 1fr; height:110px">
+                        <img src="/images/oct-1.jpg" alt="Lagos Freedom Fest 1">
+                        <img src="/images/oct-2.jpg" alt="Lagos Freedom Fest 2">
+                        <img src="/images/oct-3.jpg" alt="Lagos Freedom Fest 3">
+                    </div>
+                    <div class="p-gutter">
+                        <div class="flex justify-between items-start mb-base">
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Freedom Fest</h3>
+                            <span class="font-label-caps text-label-caps text-secondary font-bold">OCT 04</span>
                         </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Freedom Fest</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">OCT 04</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                Celebrating independence and the spirit of liberty by the sea.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
+                        <p class="font-body-md text-body-md text-black mb-stack-sm">
+                            Celebrating independence and the spirit of liberty by the sea.
+                        </p>
+                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                            Details</button>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- November -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="right">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
             <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 November
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">wine_bar</span>
+            <div class="grid grid-cols-1 gap-gutter">
+                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                    <!-- COLLAGE: hero + 2 side tiles -->
+                    <div class="collage-grid" style="grid-template-columns:2fr 1fr; grid-template-rows:75px 75px;">
+                        <img src="/images/nov-main.jpg" style="grid-row:span 2" alt="Palm Wine Festival main">
+                        <img src="/images/nov-top.jpg" alt="Palm Wine Festival top">
+                        <img src="/images/nov-btm.jpg" alt="Palm Wine Festival bottom">
+                    </div>
+                    <div class="p-gutter">
+                        <div class="flex justify-between items-start mb-base">
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">Palm Wine Festival</h3>
+                            <span class="font-label-caps text-label-caps text-secondary font-bold">NOV 15</span>
                         </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Palm Wine Festival</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">NOV 15</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                A sophisticated exploration of traditional spirits and modern mixology.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
+                        <p class="font-body-md text-body-md text-black mb-stack-sm">
+                            A sophisticated exploration of traditional spirits and modern mixology.
+                        </p>
+                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                            Details</button>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- December -->
-        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
+        <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="left">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
             <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 December
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter mb-stack-md">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+            <!-- Card 1: All Nigerian Cuisine Festival -->
+            <div class="grid grid-cols-1 gap-gutter mb-stack-md">
+                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                    <!-- COLLAGE: 2×2 equal mosaic (top half) -->
+                    <div class="collage-grid" style="grid-template-columns:1fr 1fr; grid-template-rows:75px 75px;">
+                        <img src="/images/dec-1.jpg" alt="All Nigerian Cuisine Festival 1">
+                        <img src="/images/dec-2.jpg" alt="All Nigerian Cuisine Festival 2">
+                        <img src="/images/dec-3.jpg" alt="All Nigerian Cuisine Festival 3">
+                        <img src="/images/dec-4.jpg" alt="All Nigerian Cuisine Festival 4">
+                    </div>
+                    <div class="p-gutter">
+                        <div class="flex justify-between items-start mb-base">
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">All Nigerian Cuisine Festival</h3>
+                            <span class="font-label-caps text-label-caps text-secondary font-bold">DEC 06</span>
                         </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">All Nigerian Cuisine Festival</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">DEC 06</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                A culinary journey through the diverse and rich flavors of Nigeria.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
+                        <p class="font-body-md text-body-md text-black mb-stack-sm">
+                            A culinary journey through the diverse and rich flavors of Nigeria.
+                        </p>
+                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                            Details</button>
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
-                    <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">piano</span>
+            <!-- Card 2: Lagos Highlife Festival -->
+            <div class="grid grid-cols-1 gap-gutter">
+                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                    <!-- COLLAGE: 2-panel split -->
+                    <div class="collage-grid" style="grid-template-columns:3fr 2fr; height:130px">
+                        <img src="/images/dec-highlife-main.jpg" alt="Lagos Highlife Festival main">
+                        <img src="/images/dec-highlife-side.jpg" alt="Lagos Highlife Festival side">
+                    </div>
+                    <div class="p-gutter">
+                        <div class="flex justify-between items-start mb-base">
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Highlife Festival</h3>
+                            <span class="font-label-caps text-label-caps text-secondary font-bold">DEC 20</span>
                         </div>
-                        <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
-                            <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Highlife Festival</h3>
-                                <span class="font-label-caps text-label-caps text-secondary font-bold">DEC 20</span>
-                            </div>
-                            <p class="font-body-md text-body-md text-black mb-stack-sm">
-                                The grand finale of the year, celebrating the timeless elegance of Highlife music.
-                            </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
-                        </div>
+                        <p class="font-body-md text-body-md text-black mb-stack-sm">
+                            The grand finale of the year, celebrating the timeless elegance of Highlife music.
+                        </p>
+                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                            Details</button>
                     </div>
                 </div>
             </div>
@@ -522,6 +545,18 @@ require_once "includes/header.php";
         </section>
     </div>
 </div>
+
+<script>
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('visible');
+                obs.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.month-animate').forEach(el => obs.observe(el));
+</script>
 
 <?php 
 include "includes/footer.php"; 
