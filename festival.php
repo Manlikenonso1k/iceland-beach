@@ -14,11 +14,12 @@ require_once "includes/header.php";
             extend: {
                 colors: {
                     festive: {
-                        gold: '#d4a574',
-                        navy: '#2c3e50',
-                        coral: '#e8b4a0',
-                        black: '#1a1a1a',
-                        cream: '#fafaf8'
+                        gold: '#0066cc',
+                        navy: '#0066cc',
+                        coral: '#0052a3',
+                        black: '#000000',
+                        cream: '#ffffff',
+                        light: '#f0f8ff'
                     }
                 },
                 fontFamily: {
@@ -31,8 +32,8 @@ require_once "includes/header.php";
     }
 </script>
 <style>
-    body { background-color: #fafaf8; color: #1a1a1a; }
-    .gold-glow:hover { box-shadow: 0px 0px 20px rgba(212, 165, 116, 0.4); border-color: #d4a574; }
+    body { background-color: #ffffff; color: #000000; }
+    .gold-glow:hover { box-shadow: 0px 0px 20px rgba(0, 102, 204, 0.4); border-color: #0066cc; }
     .card-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
     .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(44, 62, 80, 0.1); }
 </style>
@@ -42,16 +43,16 @@ require_once "includes/header.php";
     <div class="absolute inset-0 z-0">
         <img alt="Coconut Festival Hero" class="w-full h-full object-cover opacity-60"
             src="https://tenstrings.org/wp-content/uploads/2026/06/Beach-hero-scaled.jpg" />
-        <div class="absolute inset-0 bg-gradient-to-b from-festive-navy/80 to-festive-navy/40"></div>
+        <div class="absolute inset-0 bg-[#f0f8ff]/80"></div>
     </div>
     <div class="relative z-10 text-center max-w-4xl mx-auto px-6 py-20 mt-16">
         <span class="inline-block px-4 py-1 border border-festive-gold text-festive-gold font-ui tracking-widest text-sm mb-6 rounded-full">
             JULY 12, 2026 • ICELAND BEACH
         </span>
-        <h1 class="font-heading text-5xl md:text-7xl text-white mb-6 leading-tight drop-shadow-lg">
+        <h1 class="font-heading text-5xl md:text-7xl text-black mb-6 leading-tight drop-shadow-lg">
             Coconut Festival <br/> <span class="text-festive-gold">& Black Fragrance Pre-Launch</span>
         </h1>
-        <p class="font-body text-xl text-festive-cream/90 max-w-2xl mx-auto mb-10 drop-shadow-md">
+        <p class="font-body text-xl text-black/90 max-w-2xl mx-auto mb-10 drop-shadow-md">
             An immersive cultural experience blending traditional coastal flavors, live entertainment, and high-end beachwear fashion.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -175,6 +176,68 @@ require_once "includes/header.php";
         </div>
     </div>
 </section>
+
+<!-- FESTIVE IMAGE CAROUSEL -->
+<div class="festive-carousel" style="margin-bottom: 4rem;">
+    <h3 style="text-align: center; margin-bottom: 2rem; color: #000000;" class="font-heading text-4xl">
+        Festival Highlights
+    </h3>
+    
+    <div class="carousel-wrapper" style="
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding: 1rem;
+        border-radius: 20px;
+        background: #f0f8ff;
+        scroll-behavior: smooth;
+    ">
+        <img src="/public/images/festival/1-coconut-drinks.jpg" alt="Coconut Drinks" 
+             style="width: 280px; height: 200px; border-radius: 15px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: transform 0.3s;" 
+             onmouseover="this.style.transform='scale(1.05)'" 
+             onmouseout="this.style.transform='scale(1)'">
+        
+        <img src="/public/images/festival/2-live-band.jpg" alt="Live Band Performance" 
+             style="width: 280px; height: 200px; border-radius: 15px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: transform 0.3s;" 
+             onmouseover="this.style.transform='scale(1.05)'" 
+             onmouseout="this.style.transform='scale(1)'">
+        
+        <img src="/public/images/festival/3-dancers.jpg" alt="Dancers" 
+             style="width: 280px; height: 200px; border-radius: 15px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: transform 0.3s;" 
+             onmouseover="this.style.transform='scale(1.05)'" 
+             onmouseout="this.style.transform='scale(1)'">
+        
+        <img src="/public/images/festival/4-beachwear.jpg" alt="Black Fragrance Beachwear" 
+             style="width: 280px; height: 200px; border-radius: 15px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: transform 0.3s;" 
+             onmouseover="this.style.transform='scale(1.05)'" 
+             onmouseout="this.style.transform='scale(1)'">
+        
+        <img src="/public/images/festival/5-runway.jpg" alt="Fashion Runway" 
+             style="width: 280px; height: 200px; border-radius: 15px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: transform 0.3s;" 
+             onmouseover="this.style.transform='scale(1.05)'" 
+             onmouseout="this.style.transform='scale(1)'">
+        
+        <img src="/public/images/festival/6-buffet.jpg" alt="Buffet Food" 
+             style="width: 280px; height: 200px; border-radius: 15px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: transform 0.3s;" 
+             onmouseover="this.style.transform='scale(1.05)'" 
+             onmouseout="this.style.transform='scale(1)'">
+        
+        <img src="/public/images/festival/7-beach-sunset.jpg" alt="Beach Sunset" 
+             style="width: 280px; height: 200px; border-radius: 15px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: transform 0.3s;" 
+             onmouseover="this.style.transform='scale(1.05)'" 
+             onmouseout="this.style.transform='scale(1)'">
+        
+        <img src="/public/images/festival/8-crowd.jpg" alt="Festival Crowd" 
+             style="width: 280px; height: 200px; border-radius: 15px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: transform 0.3s;" 
+             onmouseover="this.style.transform='scale(1.05)'" 
+             onmouseout="this.style.transform='scale(1)'">
+        
+        <img src="/public/images/festival/9-coconut-theme.jpg" alt="Coconut Theme Decoration" 
+             style="width: 280px; height: 200px; border-radius: 15px; object-fit: cover; flex-shrink: 0; cursor: pointer; transition: transform 0.3s;" 
+             onmouseover="this.style.transform='scale(1.05)'" 
+             onmouseout="this.style.transform='scale(1)'">
+    </div>
+</div>
 
 <!-- Schedule -->
 <section id="schedule" class="bg-festive-cream py-20 px-6 border-t border-slate-200">
