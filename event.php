@@ -215,8 +215,9 @@ require_once "includes/header.php";
                     class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
                     <!-- COLLAGE: 2-panel split -->
                     <div class="collage-grid" style="grid-template-columns:3fr 2fr; height:130px">
-                        <img src="/images/aug-main.jpg" alt="African Music Festival main">
-                        <img src="/images/aug-side.jpg" alt="African Music Festival side">
+                        <img src="static/redesign%20images/african%20festival.png" alt="African Music Festival main">
+                        <img src="static/redesign%20images/African%20Music%20Festival.jpg"
+                            alt="African Music Festival side">
                     </div>
                     <div class="p-gutter">
                         <div class="flex justify-between items-start mb-base">
@@ -636,8 +637,8 @@ require_once "includes/header.php";
         });
 
         tl.to(card, { x: 0, opacity: 1, duration: 0.4, ease: "power1.out" })       // Slide in
-          .to(card, { x: 0, opacity: 1, duration: 0.2 })                           // Wait in center
-          .to(card, { x: '30vw', opacity: 0, duration: 0.4, ease: "power1.in" });  // Slide out
+            .to(card, { x: 0, opacity: 1, duration: 0.2 })                           // Wait in center
+            .to(card, { x: '30vw', opacity: 0, duration: 0.4, ease: "power1.in" });  // Slide out
     });
 </script>
 
