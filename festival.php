@@ -1,6 +1,6 @@
-<?php 
+<?php
 $bodyClass = 'festival-page';
-require_once "includes/header.php"; 
+require_once "includes/header.php";
 ?>
 
 <!-- Tailwind Integration & Fonts -->
@@ -9,14 +9,17 @@ require_once "includes/header.php";
 <!-- Google Fonts for Redesign -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet">
 
 <style>
     /* ============================================
        MODERN COASTAL SOPHISTICATION DESIGN SYSTEM
        ============================================ */
-    
+
     :root {
         /* Color Palette */
         --primary: #1a3a52;
@@ -32,7 +35,7 @@ require_once "includes/header.php";
         --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.08);
         --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.12);
         --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.15);
-        
+
         /* Spacing */
         --spacing-xs: 0.5rem;
         --spacing-sm: 1rem;
@@ -40,78 +43,100 @@ require_once "includes/header.php";
         --spacing-lg: 2rem;
         --spacing-xl: 3rem;
         --spacing-2xl: 5rem;
-        
+
         /* Radius */
         --radius-sm: 6px;
         --radius-md: 12px;
         --radius-lg: 16px;
         --radius-xl: 20px;
     }
-    
+
     .festival-redesign-wrapper {
         font-family: 'Inter', sans-serif;
         color: var(--text-dark);
         background-color: var(--background);
         line-height: 1.6;
     }
-    
-    .festival-redesign-wrapper h1, .festival-redesign-wrapper h2, .festival-redesign-wrapper h3, .festival-redesign-wrapper h4, .festival-redesign-wrapper h5, .festival-redesign-wrapper h6 {
+
+    .festival-redesign-wrapper h1,
+    .festival-redesign-wrapper h2,
+    .festival-redesign-wrapper h3,
+    .festival-redesign-wrapper h4,
+    .festival-redesign-wrapper h5,
+    .festival-redesign-wrapper h6 {
         font-family: 'Playfair Display', serif;
         font-weight: 700;
         color: var(--primary);
         line-height: 1.2;
     }
-    
-    .festival-redesign-wrapper h1 { font-size: 3.5rem; letter-spacing: -0.02em; }
-    .festival-redesign-wrapper h2 { font-size: 2.5rem; letter-spacing: -0.01em; }
-    .festival-redesign-wrapper h3 { font-size: 1.75rem; }
-    .festival-redesign-wrapper h4 { font-size: 1.25rem; }
-    
-    .festival-redesign-wrapper p { color: var(--text-dark); }
-    
+
+    .festival-redesign-wrapper h1 {
+        font-size: 3.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .festival-redesign-wrapper h2 {
+        font-size: 2.5rem;
+        letter-spacing: -0.01em;
+    }
+
+    .festival-redesign-wrapper h3 {
+        font-size: 1.75rem;
+    }
+
+    .festival-redesign-wrapper h4 {
+        font-size: 1.25rem;
+    }
+
+    .festival-redesign-wrapper p {
+        color: var(--text-dark);
+    }
+
     .festival-redesign-wrapper a {
         color: var(--primary);
         text-decoration: none;
         transition: color 180ms ease-out;
     }
-    
+
     .festival-redesign-wrapper a:hover {
         color: var(--accent);
     }
-    
-    .festival-redesign-wrapper button, .festival-redesign-wrapper .btn-ticket {
+
+    .festival-redesign-wrapper button,
+    .festival-redesign-wrapper .btn-ticket {
         font-family: 'Inter', sans-serif;
         cursor: pointer;
         border: none;
         transition: all 180ms cubic-bezier(0.23, 1, 0.32, 1);
     }
-    
-    .festival-redesign-wrapper button:active, .festival-redesign-wrapper .btn-ticket:active {
+
+    .festival-redesign-wrapper button:active,
+    .festival-redesign-wrapper .btn-ticket:active {
         transform: scale(0.97);
     }
-    
+
     .festival-redesign-wrapper .container {
         max-width: 1280px;
         margin: 0 auto;
         padding: 0 1rem;
     }
-    
+
     @media (min-width: 640px) {
         .festival-redesign-wrapper .container {
             padding: 0 1.5rem;
         }
     }
-    
+
     @media (min-width: 1024px) {
         .festival-redesign-wrapper .container {
             padding: 0 2rem;
         }
     }
-    
+
     /* ============================================
        HERO SECTION
        ============================================ */
-    
+
     .festival-redesign-wrapper .hero {
         position: relative;
         min-height: 90vh;
@@ -120,7 +145,7 @@ require_once "includes/header.php";
         justify-content: center;
         overflow: hidden;
     }
-    
+
     .festival-redesign-wrapper .hero::before {
         content: '';
         position: absolute;
@@ -130,7 +155,7 @@ require_once "includes/header.php";
         background-position: center;
         z-index: 0;
     }
-    
+
     .festival-redesign-wrapper .hero::after {
         content: '';
         position: absolute;
@@ -138,7 +163,7 @@ require_once "includes/header.php";
         background: linear-gradient(to right, rgba(0, 0, 0, 0.4), transparent);
         z-index: 1;
     }
-    
+
     .festival-redesign-wrapper .hero-content {
         position: relative;
         z-index: 10;
@@ -147,7 +172,7 @@ require_once "includes/header.php";
         padding: 5rem 1rem;
         text-align: left;
     }
-    
+
     .festival-redesign-wrapper .hero-badge {
         display: inline-flex;
         align-items: center;
@@ -159,24 +184,24 @@ require_once "includes/header.php";
         border-radius: 9999px;
         margin-bottom: 1.5rem;
     }
-    
+
     .festival-redesign-wrapper .hero-badge span {
         font-size: 0.875rem;
         font-weight: 500;
         color: white;
         letter-spacing: 0.05em;
     }
-    
+
     .festival-redesign-wrapper .hero h1 {
         color: white;
         margin-bottom: 1.5rem;
         text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     }
-    
+
     .festival-redesign-wrapper .hero h1 .accent {
         color: var(--accent);
     }
-    
+
     .festival-redesign-wrapper .hero p {
         font-size: 1.25rem;
         color: rgba(255, 255, 255, 0.9);
@@ -184,13 +209,13 @@ require_once "includes/header.php";
         margin-bottom: 2.5rem;
         text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
     }
-    
+
     .festival-redesign-wrapper .hero-buttons {
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
     }
-    
+
     .festival-redesign-wrapper .btn-primary {
         background: var(--accent);
         color: var(--primary);
@@ -203,11 +228,11 @@ require_once "includes/header.php";
         gap: 0.5rem;
         transition: background 180ms ease-out;
     }
-    
+
     .festival-redesign-wrapper .btn-primary:hover {
         background: var(--accent-light);
     }
-    
+
     .festival-redesign-wrapper .btn-secondary {
         background: rgba(255, 255, 255, 0.1);
         color: white;
@@ -218,62 +243,63 @@ require_once "includes/header.php";
         font-size: 1rem;
         transition: all 180ms ease-out;
     }
-    
+
     .festival-redesign-wrapper .btn-secondary:hover {
         background: rgba(255, 255, 255, 0.2);
     }
-    
+
     @media (max-width: 768px) {
         .festival-redesign-wrapper .hero h1 {
             font-size: 2.5rem;
         }
-        
+
         .festival-redesign-wrapper .hero p {
             font-size: 1rem;
         }
-        
+
         .festival-redesign-wrapper .hero-buttons {
             flex-direction: column;
         }
-        
-        .festival-redesign-wrapper .btn-primary, .festival-redesign-wrapper .btn-secondary {
+
+        .festival-redesign-wrapper .btn-primary,
+        .festival-redesign-wrapper .btn-secondary {
             width: 100%;
             text-align: center;
             justify-content: center;
         }
     }
-    
+
     /* ============================================
        OVERVIEW SECTION
        ============================================ */
-    
+
     .festival-redesign-wrapper .overview {
         padding: 5rem 0;
         background: var(--card-bg);
     }
-    
+
     .festival-redesign-wrapper .overview-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 3rem;
         align-items: center;
     }
-    
+
     .festival-redesign-wrapper .overview-content h2 {
         margin-bottom: 1.5rem;
     }
-    
+
     .festival-redesign-wrapper .overview-content p {
         font-size: 1.125rem;
         margin-bottom: 1.5rem;
         line-height: 1.8;
     }
-    
+
     .festival-redesign-wrapper .feature-list {
         list-style: none;
         padding: 0;
     }
-    
+
     .festival-redesign-wrapper .feature-list li {
         display: flex;
         align-items: center;
@@ -281,7 +307,7 @@ require_once "includes/header.php";
         margin-bottom: 1rem;
         font-size: 1.125rem;
     }
-    
+
     .festival-redesign-wrapper .feature-icon {
         width: 1.5rem;
         height: 1.5rem;
@@ -292,19 +318,19 @@ require_once "includes/header.php";
         justify-content: center;
         flex-shrink: 0;
     }
-    
+
     .festival-redesign-wrapper .feature-icon::before {
         content: '★';
         color: var(--accent);
         font-size: 1rem;
     }
-    
+
     .festival-redesign-wrapper .overview-images {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
     }
-    
+
     .festival-redesign-wrapper .overview-images img {
         width: 100%;
         height: 16rem;
@@ -312,59 +338,59 @@ require_once "includes/header.php";
         border-radius: var(--radius-lg);
         box-shadow: var(--shadow-medium);
     }
-    
+
     .festival-redesign-wrapper .overview-images img:last-child {
         margin-top: 2rem;
     }
-    
+
     @media (max-width: 768px) {
         .festival-redesign-wrapper .overview-grid {
             grid-template-columns: 1fr;
             gap: 2rem;
         }
-        
+
         .festival-redesign-wrapper .overview-images {
             grid-template-columns: 1fr;
         }
-        
+
         .festival-redesign-wrapper .overview-images img:last-child {
             margin-top: 0;
         }
     }
-    
+
     /* ============================================
        TICKETING SECTION
        ============================================ */
-    
+
     .festival-redesign-wrapper .ticketing {
         padding: 6rem 0;
         background: var(--primary);
         color: white;
     }
-    
+
     .festival-redesign-wrapper .ticketing-header {
         text-align: center;
         margin-bottom: 4rem;
     }
-    
+
     .festival-redesign-wrapper .ticketing-header h2 {
         color: white;
         margin-bottom: 1rem;
     }
-    
+
     .festival-redesign-wrapper .ticketing-header p {
         color: rgba(255, 255, 255, 0.8);
         font-size: 1.25rem;
         max-width: 32rem;
         margin: 0 auto;
     }
-    
+
     .festival-redesign-wrapper .tickets-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 2rem;
     }
-    
+
     .festival-redesign-wrapper .ticket-card {
         background: var(--card-bg);
         color: var(--primary);
@@ -375,12 +401,12 @@ require_once "includes/header.php";
         transition: all 200ms cubic-bezier(0.23, 1, 0.32, 1);
         border: 1px solid var(--border-color);
     }
-    
+
     .festival-redesign-wrapper .ticket-card:hover {
         transform: translateY(-1rem);
         box-shadow: var(--shadow-hover);
     }
-    
+
     .festival-redesign-wrapper .ticket-card.highlight {
         background: var(--accent);
         color: var(--primary);
@@ -388,7 +414,7 @@ require_once "includes/header.php";
         box-shadow: 0 20px 40px rgba(212, 165, 116, 0.3);
         border: 2px solid var(--accent);
     }
-    
+
     .festival-redesign-wrapper .ticket-badge {
         position: absolute;
         top: 0;
@@ -400,36 +426,36 @@ require_once "includes/header.php";
         font-weight: 700;
         border-radius: 0 0 0 0.75rem;
     }
-    
+
     .festival-redesign-wrapper .ticket-card h3 {
         font-size: 1.5rem;
         margin-bottom: 0.5rem;
         color: inherit;
     }
-    
+
     .festival-redesign-wrapper .ticket-price {
         font-size: 2.25rem;
         font-weight: 700;
         color: var(--accent);
         margin-bottom: 1rem;
     }
-    
+
     .festival-redesign-wrapper .ticket-card.highlight .ticket-price {
         color: white;
     }
-    
+
     .festival-redesign-wrapper .ticket-note {
         font-size: 0.875rem;
         color: var(--text-muted);
         margin-bottom: 1.5rem;
     }
-    
+
     .festival-redesign-wrapper .ticket-features {
         list-style: none;
         margin-bottom: 2rem;
         padding: 0;
     }
-    
+
     .festival-redesign-wrapper .ticket-features li {
         display: flex;
         align-items: center;
@@ -437,13 +463,13 @@ require_once "includes/header.php";
         font-size: 0.875rem;
         margin-bottom: 0.75rem;
     }
-    
+
     .festival-redesign-wrapper .ticket-features li::before {
         content: '★';
         color: var(--accent);
         font-size: 0.75rem;
     }
-    
+
     .festival-redesign-wrapper .btn-ticket {
         width: 100%;
         padding: 0.75rem;
@@ -453,60 +479,60 @@ require_once "includes/header.php";
         color: white;
         transition: all 180ms ease-out;
     }
-    
+
     .festival-redesign-wrapper .btn-ticket:hover {
         background: var(--primary-light);
     }
-    
+
     .festival-redesign-wrapper .ticket-card.highlight .btn-ticket {
         background: white;
         color: var(--primary);
     }
-    
+
     .festival-redesign-wrapper .ticket-card.highlight .btn-ticket:hover {
         background: var(--background);
     }
-    
+
     @media (max-width: 1024px) {
         .festival-redesign-wrapper .tickets-grid {
             grid-template-columns: repeat(2, 1fr);
         }
     }
-    
+
     @media (max-width: 768px) {
         .festival-redesign-wrapper .tickets-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .festival-redesign-wrapper .ticket-card.highlight {
             transform: none;
         }
     }
-    
+
     /* ============================================
        HIGHLIGHTS SECTION
        ============================================ */
-    
+
     .festival-redesign-wrapper .highlights {
         padding: 5rem 0;
         background: var(--card-bg);
     }
-    
+
     .festival-redesign-wrapper .highlights-header {
         text-align: center;
         margin-bottom: 4rem;
     }
-    
+
     .festival-redesign-wrapper .highlights-header h2 {
         margin-bottom: 0;
     }
-    
+
     .festival-redesign-wrapper .highlights-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 2rem;
     }
-    
+
     .festival-redesign-wrapper .highlight-card {
         background: var(--card-bg);
         border: 1px solid var(--border-color);
@@ -514,12 +540,12 @@ require_once "includes/header.php";
         border-radius: var(--radius-lg);
         transition: all 200ms cubic-bezier(0.23, 1, 0.32, 1);
     }
-    
+
     .festival-redesign-wrapper .highlight-card:hover {
         transform: translateY(-0.25rem);
         box-shadow: var(--shadow-medium);
     }
-    
+
     .festival-redesign-wrapper .highlight-icon {
         width: 4rem;
         height: 4rem;
@@ -531,18 +557,18 @@ require_once "includes/header.php";
         margin-bottom: 1.5rem;
         font-size: 2rem;
     }
-    
+
     .festival-redesign-wrapper .highlight-card h3 {
         font-size: 1.5rem;
         margin-bottom: 1rem;
     }
-    
+
     .festival-redesign-wrapper .highlight-card p {
         font-size: 1rem;
         margin-bottom: 1.5rem;
         line-height: 1.8;
     }
-    
+
     .festival-redesign-wrapper .highlight-detail {
         font-size: 0.875rem;
         font-weight: 600;
@@ -550,47 +576,47 @@ require_once "includes/header.php";
         border-top: 1px solid var(--border-color);
         padding-top: 1rem;
     }
-    
+
     @media (max-width: 768px) {
         .festival-redesign-wrapper .highlights-grid {
             grid-template-columns: 1fr;
         }
     }
-    
+
     /* ============================================
        ENTERTAINMENT SECTION
        ============================================ */
-    
+
     .festival-redesign-wrapper .entertainment {
         padding: 5rem 0;
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
         color: white;
     }
-    
+
     .festival-redesign-wrapper .entertainment-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 3rem;
         align-items: center;
     }
-    
+
     .festival-redesign-wrapper .entertainment-content h2 {
         color: white;
         margin-bottom: 1.5rem;
     }
-    
+
     .festival-redesign-wrapper .entertainment-content p {
         color: rgba(255, 255, 255, 0.9);
         font-size: 1.125rem;
         margin-bottom: 1.5rem;
         line-height: 1.8;
     }
-    
+
     .festival-redesign-wrapper .entertainment-list {
         list-style: none;
         padding: 0;
     }
-    
+
     .festival-redesign-wrapper .entertainment-list li {
         display: flex;
         align-items: center;
@@ -598,13 +624,13 @@ require_once "includes/header.php";
         margin-bottom: 0.75rem;
         color: rgba(255, 255, 255, 0.9);
     }
-    
+
     .festival-redesign-wrapper .entertainment-list li::before {
         content: '•';
         color: var(--accent);
         font-size: 1.25rem;
     }
-    
+
     .festival-redesign-wrapper .entertainment-image {
         width: 100%;
         height: 24rem;
@@ -612,47 +638,47 @@ require_once "includes/header.php";
         border-radius: var(--radius-lg);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     }
-    
+
     @media (max-width: 768px) {
         .festival-redesign-wrapper .entertainment-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .festival-redesign-wrapper .entertainment-image {
             height: 16rem;
         }
     }
-    
+
     /* ============================================
        SCHEDULE SECTION
        ============================================ */
-    
+
     .festival-redesign-wrapper .schedule {
         padding: 5rem 0;
         background: var(--card-bg);
     }
-    
+
     .festival-redesign-wrapper .schedule-header {
         text-align: center;
         margin-bottom: 4rem;
     }
-    
+
     .festival-redesign-wrapper .schedule-header h2 {
         margin-bottom: 0.5rem;
     }
-    
+
     .festival-redesign-wrapper .schedule-header p {
         color: var(--text-muted);
         font-size: 1.125rem;
     }
-    
+
     .festival-redesign-wrapper .schedule-list {
         list-style: none;
         max-width: 56rem;
         margin: 0 auto;
         padding: 0;
     }
-    
+
     .festival-redesign-wrapper .schedule-item {
         display: flex;
         align-items: center;
@@ -664,11 +690,11 @@ require_once "includes/header.php";
         margin-bottom: 1rem;
         transition: all 200ms ease-out;
     }
-    
+
     .festival-redesign-wrapper .schedule-item:hover {
         box-shadow: var(--shadow-medium);
     }
-    
+
     .festival-redesign-wrapper .schedule-time-icon {
         width: 3rem;
         height: 3rem;
@@ -681,42 +707,42 @@ require_once "includes/header.php";
         color: var(--accent);
         font-size: 1.5rem;
     }
-    
+
     .festival-redesign-wrapper .schedule-content p:first-child {
         font-size: 0.875rem;
         font-weight: 600;
         color: var(--accent);
         margin-bottom: 0.25rem;
     }
-    
+
     .festival-redesign-wrapper .schedule-content p:last-child {
         font-size: 1.125rem;
         font-weight: 600;
         color: var(--primary);
     }
-    
+
     /* ============================================
        CTA SECTION
        ============================================ */
-    
+
     .festival-redesign-wrapper .cta {
         padding: 5rem 0;
         background: var(--accent);
         text-align: center;
     }
-    
+
     .festival-redesign-wrapper .cta h2 {
         color: var(--primary);
         margin-bottom: 1rem;
     }
-    
+
     .festival-redesign-wrapper .cta p {
         color: rgba(26, 58, 82, 0.8);
         font-size: 1.25rem;
         max-width: 32rem;
         margin: 0 auto 2rem;
     }
-    
+
     .festival-redesign-wrapper .btn-cta {
         background: var(--primary);
         color: white;
@@ -729,15 +755,15 @@ require_once "includes/header.php";
         gap: 0.5rem;
         transition: background 180ms ease-out;
     }
-    
+
     .festival-redesign-wrapper .btn-cta:hover {
         background: var(--primary-light);
     }
-    
+
     /* ============================================
        UTILITY CLASSES
        ============================================ */
-    
+
     .festival-redesign-wrapper .material-icons {
         font-family: 'Material Symbols Outlined';
         font-weight: normal;
@@ -762,21 +788,24 @@ require_once "includes/header.php";
                     <span class="material-icons" style="font-size: 1rem;">location_on</span>
                     <span>JULY 12, 2026 - ICELAND BEACH</span>
                 </div>
-                
+
                 <h1>
                     Coconut Festival
                     <br>
                     <span class="accent">& Black Fragrance Pre-Launch</span>
                 </h1>
-                
-                <p>An immersive cultural experience blending traditional coastal flavors, live entertainment, and high-end beachwear fashion.</p>
-                
+
+                <p>An immersive cultural experience blending traditional coastal flavors, live entertainment, and
+                    high-end beachwear fashion.</p>
+
                 <div class="hero-buttons">
-                    <button class="btn-primary" onclick="document.getElementById('tickets').scrollIntoView({behavior: 'smooth'})">
+                    <button class="btn-primary"
+                        onclick="document.getElementById('tickets').scrollIntoView({behavior: 'smooth'})">
                         Secure Your Spot
                         <span class="material-icons" style="font-size: 1rem;">chevron_right</span>
                     </button>
-                    <button class="btn-secondary" onclick="document.getElementById('schedule').scrollIntoView({behavior: 'smooth'})">
+                    <button class="btn-secondary"
+                        onclick="document.getElementById('schedule').scrollIntoView({behavior: 'smooth'})">
                         View Schedule
                     </button>
                 </div>
@@ -790,8 +819,10 @@ require_once "includes/header.php";
             <div class="overview-grid">
                 <div class="overview-content">
                     <h2>Experience the Tropics</h2>
-                    <p>Join us for an unforgettable evening at Iceland Beach. The Coconut Festival is more than an event—it's a celebration of coastal lifestyle. We are also thrilled to host the exclusive pre-launch of the <strong>Black Fragrance Beachwear Collection</strong>.</p>
-                    
+                    <p>Join us for an unforgettable evening at Iceland Beach. The Coconut Festival is more than an
+                        event—it's a celebration of coastal lifestyle. We are also thrilled to host the exclusive
+                        pre-launch of the <strong>Black Fragrance Beachwear Collection</strong>.</p>
+
                     <ul class="feature-list">
                         <li>
                             <div class="feature-icon"></div>
@@ -807,7 +838,7 @@ require_once "includes/header.php";
                         </li>
                     </ul>
                 </div>
-                
+
                 <div class="overview-images">
                     <img src="static/redesign%20images/beachwear-fashion-showcase.png" alt="Fashion Showcase">
                     <img src="static/redesign%20images/coconut-culinary-experience.png" alt="Culinary Experience">
@@ -823,7 +854,7 @@ require_once "includes/header.php";
                 <h2>Ticketing & Packages</h2>
                 <p>Choose your level of experience.</p>
             </div>
-            
+
             <div class="tickets-grid">
                 <!-- Regular Access -->
                 <div class="ticket-card">
@@ -834,9 +865,11 @@ require_once "includes/header.php";
                         <li>1 complimentary coconut</li>
                         <li>Access to main stage</li>
                     </ul>
-                    <a href="ticket.php" class="btn-ticket" style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Book Now</a>
+                    <a href="ticket.php" class="btn-ticket"
+                        style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Book
+                        Now</a>
                 </div>
-                
+
                 <!-- VIP Experience -->
                 <div class="ticket-card highlight">
                     <div class="ticket-badge">POPULAR</div>
@@ -848,9 +881,11 @@ require_once "includes/header.php";
                         <li>1 complimentary coconut</li>
                         <li>Dedicated service</li>
                     </ul>
-                    <a href="ticket.php" class="btn-ticket" style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Book VIP</a>
+                    <a href="ticket.php" class="btn-ticket"
+                        style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Book
+                        VIP</a>
                 </div>
-                
+
                 <!-- Buffet Package -->
                 <div class="ticket-card">
                     <h3>Buffet Package</h3>
@@ -861,7 +896,9 @@ require_once "includes/header.php";
                         <li>Exclusive buffet seating</li>
                         <li>Complementary welcome drink</li>
                     </ul>
-                    <a href="ticket.php" class="btn-ticket" style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Reserve Buffet</a>
+                    <a href="ticket.php" class="btn-ticket"
+                        style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Reserve
+                        Buffet</a>
                 </div>
             </div>
         </div>
@@ -873,19 +910,21 @@ require_once "includes/header.php";
             <div class="highlights-header">
                 <h2>Festival Highlights</h2>
             </div>
-            
+
             <div class="highlights-grid">
                 <div class="highlight-card">
                     <div class="highlight-icon"><span class="material-icons">music_note</span></div>
                     <h3>Black Fragrance Fashion Show</h3>
-                    <p>Witness the exclusive pre-launch of the new beachwear collection. Featuring 3 dynamic runway shows blending cultural patterns with contemporary coastal aesthetics.</p>
+                    <p>Witness the exclusive pre-launch of the new beachwear collection. Featuring 3 dynamic runway
+                        shows blending cultural patterns with contemporary coastal aesthetics.</p>
                     <div class="highlight-detail">Runway Times: 7:30 PM | 9:00 PM | 10:00 PM</div>
                 </div>
-                
+
                 <div class="highlight-card">
                     <div class="highlight-icon"><span class="material-icons">shopping_bag</span></div>
                     <h3>Souvenirs & Activities</h3>
-                    <p>Take home a piece of the festival with complimentary 15ml coconut oil. Shop exclusive beachwear, totes, and enjoy our dedicated face painting stations.</p>
+                    <p>Take home a piece of the festival with complimentary 15ml coconut oil. Shop exclusive beachwear,
+                        totes, and enjoy our dedicated face painting stations.</p>
                     <div class="highlight-detail">Coconut Carpet Photo Booth Available</div>
                 </div>
             </div>
@@ -898,15 +937,18 @@ require_once "includes/header.php";
             <div class="entertainment-grid">
                 <div class="entertainment-content">
                     <h2>Live Entertainment</h2>
-                    <p>Experience world-class performances from renowned artists and emerging talents. Our curated lineup features live bands, DJ sets, and cultural performances that celebrate the spirit of coastal celebration.</p>
+                    <p>Experience world-class performances from renowned artists and emerging talents. Our curated
+                        lineup features live bands, DJ sets, and cultural performances that celebrate the spirit of
+                        coastal celebration.</p>
                     <ul class="entertainment-list">
                         <li>International & Local Artists</li>
                         <li>Multiple Performance Stages</li>
                         <li>Interactive Performances</li>
                     </ul>
                 </div>
-                
-                <img src="static/redesign%20images/live-entertainment-stage.png" alt="Live Entertainment" class="entertainment-image">
+
+                <img src="static/redesign%20images/African%20Music%20Festival.jpg" alt="Live Entertainment"
+                    class="entertainment-image">
             </div>
         </div>
     </section>
@@ -918,7 +960,7 @@ require_once "includes/header.php";
                 <h2>Event Schedule</h2>
                 <p>July 12, 2026 - Iceland Beach</p>
             </div>
-            
+
             <ul class="schedule-list">
                 <li class="schedule-item">
                     <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
@@ -983,7 +1025,7 @@ require_once "includes/header.php";
 <script>
     // Smooth scroll for anchor links
     document.querySelectorAll('.festival-redesign-wrapper a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
+        anchor.addEventListener('click', function (e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
@@ -997,14 +1039,14 @@ require_once "includes/header.php";
 
     // Hover effects for ticket cards
     document.querySelectorAll('.festival-redesign-wrapper .ticket-card').forEach(card => {
-        card.addEventListener('mouseenter', function() {
+        card.addEventListener('mouseenter', function () {
             this.style.transition = 'all 200ms cubic-bezier(0.23, 1, 0.32, 1)';
         });
     });
 
     // Button click feedback
     document.querySelectorAll('.festival-redesign-wrapper button, .festival-redesign-wrapper .btn-ticket').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             this.style.transform = 'scale(0.97)';
             setTimeout(() => {
                 this.style.transform = 'scale(1)';
@@ -1020,10 +1062,12 @@ require_once "includes/header.php";
         height: 60vh;
         min-height: 400px;
         overflow: hidden;
-        background-color: #f8f9fa; /* fallback background */
+        background-color: #f8f9fa;
+        /* fallback background */
         border-top: 1px solid #e5e7eb;
         margin-top: 3rem;
     }
+
     .crowd-animation-canvas {
         position: absolute;
         top: 0;
@@ -1141,7 +1185,7 @@ require_once "includes/header.php";
             const width = img.naturalWidth;
             const height = img.naturalHeight;
             const total = rows * cols;
-            
+
             // IMPORTANT FIX: width is divided by rows (15), height is divided by cols (7)
             const rectWidth = width / rows;
             const rectHeight = height / cols;
@@ -1225,6 +1269,6 @@ require_once "includes/header.php";
     });
 </script>
 
-<?php 
-include "includes/footer.php"; 
+<?php
+include "includes/footer.php";
 ?>
