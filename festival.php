@@ -1013,8 +1013,28 @@ require_once "includes/header.php";
     });
 </script>
 
-<section class="crowd-animation relative w-full h-[60vh] min-h-[400px] overflow-hidden bg-background border-t border-gray-200 mt-12">
-    <canvas id="crowdCanvas" class="absolute inset-0 w-full h-full"></canvas>
+<style>
+    .crowd-animation-container {
+        position: relative;
+        width: 100%;
+        height: 60vh;
+        min-height: 400px;
+        overflow: hidden;
+        background-color: #f8f9fa; /* fallback background */
+        border-top: 1px solid #e5e7eb;
+        margin-top: 3rem;
+    }
+    .crowd-animation-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+
+<section class="crowd-animation-container">
+    <canvas id="crowdCanvas" class="crowd-animation-canvas"></canvas>
 </section>
 
 <script>
@@ -1032,7 +1052,8 @@ require_once "includes/header.php";
         resizeCanvas();
 
         const img = new Image();
-        img.src = '/images/peeps/all-peeps.png';
+        // Trying relative path to public folder since the file is in the root
+        img.src = 'public/images/peeps/all-peeps.png';
         const rows = 15;
         const cols = 7;
         const totalPeeps = 150;
