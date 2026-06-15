@@ -600,7 +600,7 @@ require_once "includes/header.php";
     }
     
     .festival-redesign-wrapper .entertainment-list li::before {
-        content: '♪';
+        content: '•';
         color: var(--accent);
         font-size: 1.25rem;
     }
@@ -876,14 +876,14 @@ require_once "includes/header.php";
             
             <div class="highlights-grid">
                 <div class="highlight-card">
-                    <div class="highlight-icon">♪</div>
+                    <div class="highlight-icon"><span class="material-icons">music_note</span></div>
                     <h3>Black Fragrance Fashion Show</h3>
                     <p>Witness the exclusive pre-launch of the new beachwear collection. Featuring 3 dynamic runway shows blending cultural patterns with contemporary coastal aesthetics.</p>
                     <div class="highlight-detail">Runway Times: 7:30 PM | 9:00 PM | 10:00 PM</div>
                 </div>
                 
                 <div class="highlight-card">
-                    <div class="highlight-icon">🛍️</div>
+                    <div class="highlight-icon"><span class="material-icons">shopping_bag</span></div>
                     <h3>Souvenirs & Activities</h3>
                     <p>Take home a piece of the festival with complimentary 15ml coconut oil. Shop exclusive beachwear, totes, and enjoy our dedicated face painting stations.</p>
                     <div class="highlight-detail">Coconut Carpet Photo Booth Available</div>
@@ -921,42 +921,42 @@ require_once "includes/header.php";
             
             <ul class="schedule-list">
                 <li class="schedule-item">
-                    <div class="schedule-time-icon">🕐</div>
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
                         <p>5:00 PM</p>
                         <p>Gates Open & Welcome Reception</p>
                     </div>
                 </li>
                 <li class="schedule-item">
-                    <div class="schedule-time-icon">🕐</div>
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
                         <p>6:00 PM</p>
                         <p>Culinary Experience Begins</p>
                     </div>
                 </li>
                 <li class="schedule-item">
-                    <div class="schedule-time-icon">🕐</div>
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
                         <p>7:30 PM</p>
                         <p>First Fashion Runway Show</p>
                     </div>
                 </li>
                 <li class="schedule-item">
-                    <div class="schedule-time-icon">🕐</div>
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
                         <p>8:00 PM</p>
                         <p>Live Band Performance</p>
                     </div>
                 </li>
                 <li class="schedule-item">
-                    <div class="schedule-time-icon">🕐</div>
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
                         <p>9:00 PM</p>
                         <p>Second Runway Show</p>
                     </div>
                 </li>
                 <li class="schedule-item">
-                    <div class="schedule-time-icon">🕐</div>
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
                         <p>10:00 PM</p>
                         <p>Final Runway Show & Celebration</p>
