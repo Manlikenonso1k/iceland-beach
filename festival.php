@@ -1037,6 +1037,7 @@ require_once "includes/header.php";
     <canvas id="crowdCanvas" class="crowd-animation-canvas"></canvas>
 </section>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const canvas = document.getElementById('crowdCanvas');
@@ -1044,65 +1045,183 @@ require_once "includes/header.php";
         const ctx = canvas.getContext('2d');
         const container = canvas.parentElement;
 
-        function resizeCanvas() {
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        const img = new Image();
-        // Trying relative path to public folder since the file is in the root
-        img.src = 'public/images/peeps/all-peeps.png';
-        const rows = 15;
-        const cols = 7;
-        const totalPeeps = 150;
-        const peepsArray = [];
-
-        img.onload = () => {
-            const spriteWidth = img.width / cols;
-            const spriteHeight = img.height / rows;
-
-            for(let i = 0; i < totalPeeps; i++) {
-                peepsArray.push({
-                    x: Math.random() * canvas.width,
-                    y: (Math.random() * (canvas.height - spriteHeight)) + (spriteHeight / 2),
-                    colIndex: Math.floor(Math.random() * cols),
-                    rowIndex: Math.floor(Math.random() * rows),
-                    speedX: (Math.random() * 1.5) - 0.75,
-                    bobSpeed: Math.random() * 0.05 + 0.02,
-                    bobHeight: Math.random() * 15 + 5,
-                    scale: Math.random() * 0.4 + 0.6,
-                    timeOffset: Math.random() * Math.PI * 2
-                });
-            }
-            requestAnimationFrame(animateCrowd);
+        const config = {
+            src: 'public/images/peeps/all-peeps.png',
+            rows: 15,
+            cols: 7
         };
 
-        function animateCrowd(timestamp) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const spriteWidth = img.width / cols;
-            const spriteHeight = img.height / rows;
+        // UTILS
+        const randomRange = (min, max) => min + Math.random() * (max - min);
+        const randomIndex = (array) => randomRange(0, array.length) | 0;
+        const removeFromArray = (array, i) => array.splice(i, 1)[0];
+        const removeItemFromArray = (array, item) => removeFromArray(array, array.indexOf(item));
+        const removeRandomFromArray = (array) => removeFromArray(array, randomIndex(array));
+        const getRandomFromArray = (array) => array[randomIndex(array) | 0];
 
-            peepsArray.sort((a, b) => a.y - b.y);
+        // TWEEN FACTORIES
+        const resetPeep = ({ stage, peep }) => {
+            const direction = Math.random() > 0.5 ? 1 : -1;
+            const offsetY = 100 - 250 * gsap.parseEase("power2.in")(Math.random());
+            const startY = stage.height - peep.height + offsetY;
+            let startX, endX;
 
-            peepsArray.forEach(peep => {
-                peep.x += peep.speedX;
-                if (peep.x > canvas.width + spriteWidth) peep.x = -spriteWidth;
-                if (peep.x < -spriteWidth * 2) peep.x = canvas.width;
+            if (direction === 1) {
+                startX = -peep.width;
+                endX = stage.width;
+                peep.scaleX = 1;
+            } else {
+                startX = stage.width + peep.width;
+                endX = 0;
+                peep.scaleX = -1;
+            }
 
-                const currentY = peep.y + Math.sin(timestamp * peep.bobSpeed + peep.timeOffset) * peep.bobHeight;
-                const sourceX = peep.colIndex * spriteWidth;
-                const sourceY = peep.rowIndex * spriteHeight;
+            peep.x = startX;
+            peep.y = startY;
+            peep.anchorY = startY;
 
-                ctx.drawImage(
-                    img,
-                    sourceX, sourceY, spriteWidth, spriteHeight,
-                    peep.x, currentY, spriteWidth * peep.scale, spriteHeight * peep.scale
-                );
+            return { startX, startY, endX };
+        };
+
+        const normalWalk = ({ peep, props }) => {
+            const { startX, startY, endX } = props;
+            const xDuration = 10;
+            const yDuration = 0.25;
+
+            const tl = gsap.timeline();
+            tl.timeScale(randomRange(0.5, 1.5));
+            tl.to(peep, { duration: xDuration, x: endX, ease: "none" }, 0);
+            tl.to(peep, { duration: yDuration, repeat: Math.ceil(xDuration / yDuration), yoyo: true, y: startY - 10 }, 0);
+
+            return tl;
+        };
+
+        const walks = [normalWalk];
+
+        const createPeep = ({ image, rect }) => {
+            const peep = {
+                image,
+                rect: [],
+                width: 0,
+                height: 0,
+                x: 0,
+                y: 0,
+                anchorY: 0,
+                scaleX: 1,
+                walk: null,
+                setRect: (newRect) => {
+                    peep.rect = newRect;
+                    peep.width = newRect[2];
+                    peep.height = newRect[3];
+                },
+                render: (ctx) => {
+                    ctx.save();
+                    ctx.translate(peep.x, peep.y);
+                    ctx.scale(peep.scaleX, 1);
+                    ctx.drawImage(
+                        peep.image,
+                        peep.rect[0], peep.rect[1], peep.rect[2], peep.rect[3],
+                        0, 0, peep.width, peep.height
+                    );
+                    ctx.restore();
+                }
+            };
+            peep.setRect(rect);
+            return peep;
+        };
+
+        const img = new Image();
+        const stage = { width: 0, height: 0 };
+        const allPeeps = [];
+        const availablePeeps = [];
+        const crowd = [];
+
+        const createPeeps = () => {
+            const { rows, cols } = config;
+            const width = img.naturalWidth;
+            const height = img.naturalHeight;
+            const total = rows * cols;
+            
+            // IMPORTANT FIX: width is divided by rows (15), height is divided by cols (7)
+            const rectWidth = width / rows;
+            const rectHeight = height / cols;
+
+            for (let i = 0; i < total; i++) {
+                allPeeps.push(createPeep({
+                    image: img,
+                    rect: [
+                        (i % rows) * rectWidth,
+                        ((i / rows) | 0) * rectHeight,
+                        rectWidth,
+                        rectHeight
+                    ]
+                }));
+            }
+        };
+
+        const addPeepToCrowd = () => {
+            if (!availablePeeps.length) return;
+            const peep = removeRandomFromArray(availablePeeps);
+            const walk = getRandomFromArray(walks)({
+                peep,
+                props: resetPeep({ peep, stage })
+            }).eventCallback("onComplete", () => {
+                removePeepFromCrowd(peep);
+                addPeepToCrowd();
             });
-            requestAnimationFrame(animateCrowd);
-        }
+
+            peep.walk = walk;
+            crowd.push(peep);
+            crowd.sort((a, b) => a.anchorY - b.anchorY);
+            return peep;
+        };
+
+        const removePeepFromCrowd = (peep) => {
+            removeItemFromArray(crowd, peep);
+            availablePeeps.push(peep);
+        };
+
+        const initCrowd = () => {
+            while (availablePeeps.length) {
+                addPeepToCrowd().walk.progress(Math.random());
+            }
+        };
+
+        const render = () => {
+            if (!canvas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+            crowd.forEach(peep => peep.render(ctx));
+            ctx.restore();
+        };
+
+        const resize = () => {
+            stage.width = container.clientWidth;
+            stage.height = container.clientHeight;
+            canvas.width = stage.width * devicePixelRatio;
+            canvas.height = stage.height * devicePixelRatio;
+
+            crowd.forEach(peep => {
+                if (peep.walk) peep.walk.kill();
+            });
+            crowd.length = 0;
+            availablePeeps.length = 0;
+            availablePeeps.push(...allPeeps);
+
+            initCrowd();
+        };
+
+        const init = () => {
+            createPeeps();
+            resize();
+            gsap.ticker.add(render);
+        };
+
+        img.onload = init;
+        img.src = config.src;
+
+        window.addEventListener("resize", resize);
     });
 </script>
 
