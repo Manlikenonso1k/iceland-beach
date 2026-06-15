@@ -1111,8 +1111,8 @@ require_once "includes/header.php";
                 walk: null,
                 setRect: (newRect) => {
                     peep.rect = newRect;
-                    peep.width = newRect[2];
-                    peep.height = newRect[3];
+                    peep.width = newRect[2] * 3;
+                    peep.height = newRect[3] * 3;
                 },
                 render: (ctx) => {
                     ctx.save();
