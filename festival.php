@@ -1013,6 +1013,78 @@ require_once "includes/header.php";
     });
 </script>
 
+<section class="crowd-animation relative w-full h-[60vh] min-h-[400px] overflow-hidden bg-background border-t border-gray-200 mt-12">
+    <canvas id="crowdCanvas" class="absolute inset-0 w-full h-full"></canvas>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('crowdCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const container = canvas.parentElement;
+
+        function resizeCanvas() {
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const img = new Image();
+        img.src = '/images/peeps/all-peeps.png';
+        const rows = 15;
+        const cols = 7;
+        const totalPeeps = 150;
+        const peepsArray = [];
+
+        img.onload = () => {
+            const spriteWidth = img.width / cols;
+            const spriteHeight = img.height / rows;
+
+            for(let i = 0; i < totalPeeps; i++) {
+                peepsArray.push({
+                    x: Math.random() * canvas.width,
+                    y: (Math.random() * (canvas.height - spriteHeight)) + (spriteHeight / 2),
+                    colIndex: Math.floor(Math.random() * cols),
+                    rowIndex: Math.floor(Math.random() * rows),
+                    speedX: (Math.random() * 1.5) - 0.75,
+                    bobSpeed: Math.random() * 0.05 + 0.02,
+                    bobHeight: Math.random() * 15 + 5,
+                    scale: Math.random() * 0.4 + 0.6,
+                    timeOffset: Math.random() * Math.PI * 2
+                });
+            }
+            requestAnimationFrame(animateCrowd);
+        };
+
+        function animateCrowd(timestamp) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const spriteWidth = img.width / cols;
+            const spriteHeight = img.height / rows;
+
+            peepsArray.sort((a, b) => a.y - b.y);
+
+            peepsArray.forEach(peep => {
+                peep.x += peep.speedX;
+                if (peep.x > canvas.width + spriteWidth) peep.x = -spriteWidth;
+                if (peep.x < -spriteWidth * 2) peep.x = canvas.width;
+
+                const currentY = peep.y + Math.sin(timestamp * peep.bobSpeed + peep.timeOffset) * peep.bobHeight;
+                const sourceX = peep.colIndex * spriteWidth;
+                const sourceY = peep.rowIndex * spriteHeight;
+
+                ctx.drawImage(
+                    img,
+                    sourceX, sourceY, spriteWidth, spriteHeight,
+                    peep.x, currentY, spriteWidth * peep.scale, spriteHeight * peep.scale
+                );
+            });
+            requestAnimationFrame(animateCrowd);
+        }
+    });
+</script>
+
 <?php 
 include "includes/footer.php"; 
 ?>
