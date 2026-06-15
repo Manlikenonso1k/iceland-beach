@@ -1,11 +1,14 @@
-<?php 
+<?php
 $bodyClass = 'event-page';
-require_once "includes/header.php"; 
+require_once "includes/header.php";
 ?>
 
 <!-- Tailwind Integration & Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=Raleway:wght@400&family=Bodoni+Moda:wght@500;600&display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+<link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=Raleway:wght@400&family=Bodoni+Moda:wght@500;600&display=swap"
+    rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script id="tailwind-config">
     tailwind.config = {
@@ -161,19 +164,23 @@ require_once "includes/header.php";
     <div class="relative py-12">
         <!-- Timeline Line -->
         <div class="fixed left-8 md:left-24 top-0 bottom-0 w-px bg-secondary/20 z-0 hidden lg:block"></div>
-        
+
         <!-- July -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 July
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
-                            <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
-                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">nutrition</span>
+                        <div
+                            class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100 overflow-hidden">
+                            <img src="https://tenstrings.org/wp-content/uploads/2026/06/Lagos-Coconut-Festival.png"
+                                alt="Lagos Coconut Festival"
+                                class="absolute inset-0 w-full h-full object-cover object-center" />
                         </div>
                         <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
                             <div class="flex justify-between items-start mb-base">
@@ -196,11 +203,13 @@ require_once "includes/header.php";
         <!-- August -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="left">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 August
             </h2>
             <div class="grid grid-cols-1 gap-gutter">
-                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
                     <!-- COLLAGE: 2-panel split -->
                     <div class="collage-grid" style="grid-template-columns:3fr 2fr; height:130px">
                         <img src="/images/aug-main.jpg" alt="African Music Festival main">
@@ -208,13 +217,15 @@ require_once "includes/header.php";
                     </div>
                     <div class="p-gutter">
                         <div class="flex justify-between items-start mb-base">
-                            <h3 class="font-headline-md text-headline-md text-black font-bold">African Music Festival</h3>
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">African Music Festival
+                            </h3>
                             <span class="font-label-caps text-label-caps text-secondary font-bold">AUG 20</span>
                         </div>
                         <p class="font-body-md text-body-md text-black mb-stack-sm">
                             The rhythm of the continent meets the sound of the waves.
                         </p>
-                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                        <button
+                            class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
                             Details</button>
                     </div>
                 </div>
@@ -224,11 +235,13 @@ require_once "includes/header.php";
         <!-- September -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="right">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 September
             </h2>
             <div class="grid grid-cols-1 gap-gutter">
-                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
                     <!-- COLLAGE: tall main + 2 stacked -->
                     <div class="collage-grid" style="grid-template-columns:3fr 2fr; grid-template-rows:80px 80px;">
                         <img src="/images/sep-main.jpg" style="grid-row:span 2" alt="Inter-School Beach Blast main">
@@ -237,13 +250,15 @@ require_once "includes/header.php";
                     </div>
                     <div class="p-gutter">
                         <div class="flex justify-between items-start mb-base">
-                            <h3 class="font-headline-md text-headline-md text-black font-bold">Inter-School Beach Blast</h3>
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">Inter-School Beach Blast
+                            </h3>
                             <span class="font-label-caps text-label-caps text-secondary font-bold">SEP 11</span>
                         </div>
                         <p class="font-body-md text-body-md text-black mb-stack-sm">
                             Fostering community and competition through coastal sports and arts.
                         </p>
-                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                        <button
+                            class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
                             Details</button>
                     </div>
                 </div>
@@ -253,11 +268,13 @@ require_once "includes/header.php";
         <!-- October -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="left">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 October
             </h2>
             <div class="grid grid-cols-1 gap-gutter">
-                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
                     <!-- COLLAGE: 3-column banner -->
                     <div class="collage-grid" style="grid-template-columns:1fr 1fr 1fr; height:110px">
                         <img src="/images/oct-1.jpg" alt="Lagos Freedom Fest 1">
@@ -272,7 +289,8 @@ require_once "includes/header.php";
                         <p class="font-body-md text-body-md text-black mb-stack-sm">
                             Celebrating independence and the spirit of liberty by the sea.
                         </p>
-                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                        <button
+                            class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
                             Details</button>
                     </div>
                 </div>
@@ -282,11 +300,13 @@ require_once "includes/header.php";
         <!-- November -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="right">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 November
             </h2>
             <div class="grid grid-cols-1 gap-gutter">
-                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
                     <!-- COLLAGE: hero + 2 side tiles -->
                     <div class="collage-grid" style="grid-template-columns:2fr 1fr; grid-template-rows:75px 75px;">
                         <img src="/images/nov-main.jpg" style="grid-row:span 2" alt="Palm Wine Festival main">
@@ -301,7 +321,8 @@ require_once "includes/header.php";
                         <p class="font-body-md text-body-md text-black mb-stack-sm">
                             A sophisticated exploration of traditional spirits and modern mixology.
                         </p>
-                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                        <button
+                            class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
                             Details</button>
                     </div>
                 </div>
@@ -311,12 +332,14 @@ require_once "includes/header.php";
         <!-- December -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24 month-animate" data-dir="left">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 December
             </h2>
             <!-- Card 1: All Nigerian Cuisine Festival -->
             <div class="grid grid-cols-1 gap-gutter mb-stack-md">
-                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
                     <!-- COLLAGE: 2×2 equal mosaic (top half) -->
                     <div class="collage-grid" style="grid-template-columns:1fr 1fr; grid-template-rows:75px 75px;">
                         <img src="/images/dec-1.jpg" alt="All Nigerian Cuisine Festival 1">
@@ -326,20 +349,23 @@ require_once "includes/header.php";
                     </div>
                     <div class="p-gutter">
                         <div class="flex justify-between items-start mb-base">
-                            <h3 class="font-headline-md text-headline-md text-black font-bold">All Nigerian Cuisine Festival</h3>
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">All Nigerian Cuisine
+                                Festival</h3>
                             <span class="font-label-caps text-label-caps text-secondary font-bold">DEC 06</span>
                         </div>
                         <p class="font-body-md text-body-md text-black mb-stack-sm">
                             A culinary journey through the diverse and rich flavors of Nigeria.
                         </p>
-                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                        <button
+                            class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
                             Details</button>
                     </div>
                 </div>
             </div>
             <!-- Card 2: Lagos Highlife Festival -->
             <div class="grid grid-cols-1 gap-gutter">
-                <div class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="event-card-border bg-white rounded-DEFAULT relative overflow-hidden group blue-glow shadow-sm">
                     <!-- COLLAGE: 2-panel split -->
                     <div class="collage-grid" style="grid-template-columns:3fr 2fr; height:130px">
                         <img src="/images/dec-highlife-main.jpg" alt="Lagos Highlife Festival main">
@@ -347,13 +373,15 @@ require_once "includes/header.php";
                     </div>
                     <div class="p-gutter">
                         <div class="flex justify-between items-start mb-base">
-                            <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Highlife Festival</h3>
+                            <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Highlife Festival
+                            </h3>
                             <span class="font-label-caps text-label-caps text-secondary font-bold">DEC 20</span>
                         </div>
                         <p class="font-body-md text-body-md text-black mb-stack-sm">
                             The grand finale of the year, celebrating the timeless elegance of Highlife music.
                         </p>
-                        <button class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
+                        <button
+                            class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">View
                             Details</button>
                     </div>
                 </div>
@@ -363,20 +391,24 @@ require_once "includes/header.php";
         <!-- January -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 January
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                        <div
+                            class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill"
                                 style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
                         </div>
                         <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
                             <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Iceland New Year Festival</h3>
+                                <h3 class="font-headline-md text-headline-md text-black font-bold">Iceland New Year
+                                    Festival</h3>
                                 <span class="font-label-caps text-label-caps text-secondary font-bold">JAN 03</span>
                             </div>
                             <p class="font-body-md text-body-md text-black mb-stack-sm">
@@ -396,19 +428,23 @@ require_once "includes/header.php";
         <!-- February -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 February
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                        <div
+                            class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill" style="font-variation-settings: 'FILL' 1;">favorite</span>
                         </div>
                         <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
                             <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Valentine's Festival</h3>
+                                <h3 class="font-headline-md text-headline-md text-black font-bold">Valentine's Festival
+                                </h3>
                                 <span class="font-label-caps text-label-caps text-secondary font-bold">FEB 14</span>
                             </div>
                             <p class="font-body-md text-body-md text-black mb-stack-sm">
@@ -427,13 +463,16 @@ require_once "includes/header.php";
         <!-- March -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 March
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                        <div
+                            class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill" style="font-variation-settings: 'FILL' 1;">celebration</span>
                         </div>
@@ -458,19 +497,23 @@ require_once "includes/header.php";
         <!-- April -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 April
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                        <div
+                            class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill" style="font-variation-settings: 'FILL' 1;">museum</span>
                         </div>
                         <div class="w-full md:w-2/3 flex flex-col justify-center text-left">
                             <div class="flex justify-between items-start mb-base">
-                                <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Coastal Culture Festival</h3>
+                                <h3 class="font-headline-md text-headline-md text-black font-bold">Lagos Coastal Culture
+                                    Festival</h3>
                                 <span class="font-label-caps text-label-caps text-secondary font-bold">APR 25</span>
                             </div>
                             <p class="font-body-md text-body-md text-black mb-stack-sm">
@@ -489,7 +532,8 @@ require_once "includes/header.php";
         <!-- May -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 May
             </h2>
             <div class="mb-base flex justify-between items-end">
@@ -497,20 +541,24 @@ require_once "includes/header.php";
                 <span class="font-label-caps text-label-caps text-secondary font-bold">MAY 30</span>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter grid-rows-2 h-auto md:h-[600px]">
-                <div class="md:col-span-8 md:row-span-2 event-card-border bg-white rounded-DEFAULT p-gutter relative flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
+                <div
+                    class="md:col-span-8 md:row-span-2 event-card-border bg-white rounded-DEFAULT p-gutter relative flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
                     <span class="material-symbols-outlined text-secondary text-6xl opacity-80" data-weight="fill"
                         style="font-variation-settings: 'FILL' 1;">checkroom</span>
                     <div class="absolute bottom-gutter left-gutter">
-                        <span class="font-label-caps text-label-caps text-secondary bg-sky-50 px-2 py-1 rounded-sm border border-secondary/30 font-bold">
+                        <span
+                            class="font-label-caps text-label-caps text-secondary bg-sky-50 px-2 py-1 rounded-sm border border-secondary/30 font-bold">
                             Main Runway
                         </span>
                     </div>
                 </div>
-                <div class="md:col-span-4 md:row-span-1 event-card-border bg-white rounded-DEFAULT p-gutter flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
+                <div
+                    class="md:col-span-4 md:row-span-1 event-card-border bg-white rounded-DEFAULT p-gutter flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
                     <span class="material-symbols-outlined text-secondary text-4xl opacity-80" data-weight="fill"
                         style="font-variation-settings: 'FILL' 1;">diamond</span>
                 </div>
-                <div class="md:col-span-4 md:row-span-1 event-card-border bg-white rounded-DEFAULT p-gutter flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
+                <div
+                    class="md:col-span-4 md:row-span-1 event-card-border bg-white rounded-DEFAULT p-gutter flex items-center justify-center group blue-glow shadow-sm border border-slate-100">
                     <span class="material-symbols-outlined text-secondary text-4xl opacity-80" data-weight="fill"
                         style="font-variation-settings: 'FILL' 1;">styler</span>
                 </div>
@@ -520,13 +568,16 @@ require_once "includes/header.php";
         <!-- June -->
         <section class="relative z-10 mb-stack-lg pl-0 lg:pl-24">
             <div class="absolute left-[-5px] top-12 w-3 h-3 bg-secondary rounded-full hidden lg:block rotate-45"></div>
-            <h2 class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
+            <h2
+                class="font-ui-button text-ui-button text-secondary uppercase tracking-widest mb-stack-md text-xl font-bold">
                 June
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
-                <div class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
+                <div
+                    class="md:col-span-12 event-card-border bg-white rounded-DEFAULT p-gutter relative overflow-hidden group blue-glow shadow-sm">
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
-                        <div class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                        <div
+                            class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill" style="font-variation-settings: 'FILL' 1;">construction</span>
                         </div>
@@ -558,6 +609,6 @@ require_once "includes/header.php";
     document.querySelectorAll('.month-animate').forEach(el => obs.observe(el));
 </script>
 
-<?php 
-include "includes/footer.php"; 
+<?php
+include "includes/footer.php";
 ?>
