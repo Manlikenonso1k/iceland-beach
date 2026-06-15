@@ -1030,6 +1030,7 @@ require_once "includes/header.php";
         left: 0;
         width: 100%;
         height: 100%;
+        image-rendering: pixelated;
     }
 </style>
 
@@ -1190,6 +1191,7 @@ require_once "includes/header.php";
         const render = () => {
             if (!canvas) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = false;
             ctx.save();
             ctx.scale(devicePixelRatio, devicePixelRatio);
             crowd.forEach(peep => peep.render(ctx));
