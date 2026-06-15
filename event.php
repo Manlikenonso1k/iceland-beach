@@ -93,7 +93,7 @@ require_once "includes/header.php";
 
     .event-card-border {
         border: 1px solid #e2e8f0;
-        transition: all 0.3s ease;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .event-card-border:hover {
@@ -178,6 +178,7 @@ require_once "includes/header.php";
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
                         <div
                             class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100 overflow-hidden">
+                            <!-- REPLACE WITH EVENT IMAGE -->
                             <img src="https://tenstrings.org/wp-content/uploads/2026/06/Lagos-Coconut-Festival.png"
                                 alt="Lagos Coconut Festival"
                                 class="absolute inset-0 w-full h-full object-cover object-center" />
@@ -403,6 +404,7 @@ require_once "includes/header.php";
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
                         <div
                             class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <!-- REPLACE WITH EVENT IMAGE -->
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill"
                                 style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
@@ -440,6 +442,7 @@ require_once "includes/header.php";
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
                         <div
                             class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <!-- REPLACE WITH EVENT IMAGE -->
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill" style="font-variation-settings: 'FILL' 1;">favorite</span>
                         </div>
@@ -475,6 +478,7 @@ require_once "includes/header.php";
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
                         <div
                             class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <!-- REPLACE WITH EVENT IMAGE -->
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill" style="font-variation-settings: 'FILL' 1;">celebration</span>
                         </div>
@@ -509,6 +513,7 @@ require_once "includes/header.php";
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
                         <div
                             class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <!-- REPLACE WITH EVENT IMAGE -->
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill" style="font-variation-settings: 'FILL' 1;">museum</span>
                         </div>
@@ -580,6 +585,7 @@ require_once "includes/header.php";
                     <div class="flex flex-col md:flex-row gap-gutter items-center">
                         <div
                             class="w-full md:w-1/3 aspect-square flex items-center justify-center bg-sky-50 rounded-sm relative border border-slate-100">
+                            <!-- REPLACE WITH EVENT IMAGE -->
                             <span class="material-symbols-outlined text-secondary text-6xl opacity-80"
                                 data-weight="fill" style="font-variation-settings: 'FILL' 1;">construction</span>
                         </div>
@@ -599,7 +605,10 @@ require_once "includes/header.php";
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script>
+    // Keep original observer for month titles if needed
     const obs = new IntersectionObserver((entries) => {
         entries.forEach(e => {
             if (e.isIntersecting) {
@@ -609,6 +618,27 @@ require_once "includes/header.php";
         });
     }, { threshold: 0.12 });
     document.querySelectorAll('.month-animate').forEach(el => obs.observe(el));
+
+    // New ScrollTrigger logic for event cards
+    gsap.registerPlugin(ScrollTrigger);
+
+    document.querySelectorAll('.event-card-border').forEach((card) => {
+        // Initial state off-screen to the left
+        gsap.set(card, { x: '-30vw', opacity: 0 });
+
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: card,
+                start: "top 90%",     // Starts when top of card hits 90% down the viewport
+                end: "bottom 10%",    // Ends when bottom of card hits 10% down the viewport
+                scrub: 1              // Smooth scrubbing tied to scrollbar
+            }
+        });
+
+        tl.to(card, { x: 0, opacity: 1, duration: 0.4, ease: "power1.out" })       // Slide in
+          .to(card, { x: 0, opacity: 1, duration: 0.2 })                           // Wait in center
+          .to(card, { x: '30vw', opacity: 0, duration: 0.4, ease: "power1.in" });  // Slide out
+    });
 </script>
 
 <?php
