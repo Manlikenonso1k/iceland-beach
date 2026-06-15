@@ -190,10 +190,12 @@ require_once "includes/header.php";
                             <p class="font-body-md text-body-md text-black mb-stack-sm">
                                 A tropical celebration of coastal flavors and island lifestyle.
                             </p>
-                            <button
-                                class="self-start font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
-                                View Details
-                            </button>
+                            <a href="https://icelandbeach.com/festival" class="inline-block self-start">
+                                <button
+                                    class="font-ui-button text-ui-button text-secondary border border-secondary px-6 py-2 rounded-DEFAULT hover:bg-secondary hover:text-on-secondary transition-all">
+                                    View Details
+                                </button>
+                            </a>
                         </div>
                     </div>
                 </div>
