@@ -947,8 +947,8 @@ require_once "includes/header.php";
                     </ul>
                 </div>
 
-                <img src="static/redesign%20images/African%20Music%20Festival.jpg" alt="Live Entertainment"
-                    class="entertainment-image">
+                <img src="static/redesign%20images/coconut%20festival.mp4
+                " alt="Live Entertainment" class="entertainment-image">
             </div>
         </div>
     </section>
