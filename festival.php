@@ -947,8 +947,7 @@ require_once "includes/header.php";
                     </ul>
                 </div>
 
-                <img src="static/redesign%20images/coconut%20festival.mp4
-                " alt="Live Entertainment" class="entertainment-image">
+                <video src="static/redesign%20images/coconut%20festival.mp4" autoplay loop muted playsinline class="entertainment-image"></video>
             </div>
         </div>
     </section>
