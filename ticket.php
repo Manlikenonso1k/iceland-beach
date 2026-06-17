@@ -1,4 +1,54 @@
 <?php
+// Handle AJAX Promo Code Validation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'calculate_price') {
+    header('Content-Type: application/json');
+    $ticketType = $_POST['ticket_type'] ?? '';
+    $quantity = max(1, (int)($_POST['quantity'] ?? 1));
+    $promoCode = strtoupper(trim($_POST['promo_code'] ?? ''));
+
+    $prices = [
+        'Regular' => 5000,
+        'VIP' => 10000,
+        'Individual Buffet' => 25000,
+        "Couple's Buffet" => 45000
+    ];
+
+    if (!isset($prices[$ticketType])) {
+        echo json_encode(['success' => false, 'error' => 'Invalid ticket type']);
+        exit;
+    }
+
+    $basePrice = $prices[$ticketType];
+    $isEarlyBird = false;
+
+    if ($promoCode === 'ICECOCONUT' && date('Y-m-d') <= '2026-06-28') {
+        if ($ticketType === 'Individual Buffet') {
+            $basePrice = 20000;
+            $isEarlyBird = true;
+        } elseif ($ticketType === "Couple's Buffet") {
+            $basePrice = 40000;
+            $isEarlyBird = true;
+        }
+    } elseif ($promoCode !== '') {
+        if ($promoCode === 'ICECOCONUT') {
+            echo json_encode(['success' => false, 'error' => 'Promo code expired']);
+            exit;
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Invalid promo code']);
+            exit;
+        }
+    }
+
+    $totalAmount = $basePrice * $quantity;
+    echo json_encode([
+        'success' => true,
+        'amount' => $totalAmount,
+        'is_early_bird' => $isEarlyBird,
+        'base_price' => $basePrice
+    ]);
+    exit;
+}
+
 /**
  * Iceland Beach Event — Public Ticket Purchase Form
  * Stack: PHP Legacy (no framework)
@@ -215,6 +265,8 @@ require_once "includes/header.php";
                         <select class="form-input" id="ticket_type" name="ticket_type" required>
                             <option value="Regular">Regular — ₦5,000</option>
                             <option value="VIP">VIP — ₦10,000</option>
+                            <option value="Individual Buffet">Individual Buffet — ₦25,000</option>
+                            <option value="Couple's Buffet">Couple's Buffet — ₦45,000</option>
                         </select>
                     </div>
                     <div>
@@ -222,6 +274,16 @@ require_once "includes/header.php";
                         <input class="form-input" type="number" id="quantity" name="quantity"
                             value="1" min="1" max="20" required>
                     </div>
+                </div>
+
+                <!-- Promo Code -->
+                <div>
+                    <label class="form-label" for="promo_code">Promo Code (Optional)</label>
+                    <div class="flex gap-2">
+                        <input class="form-input flex-1" type="text" id="promo_code" name="promo_code" placeholder="Enter code here" autocomplete="off" style="text-transform: uppercase;">
+                        <button type="button" id="apply-promo-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold py-2 px-4 rounded transition-colors text-sm">Apply</button>
+                    </div>
+                    <div id="promo-msg" class="text-xs mt-1 hidden font-semibold"></div>
                 </div>
 
                 <!-- Live Amount Display -->
@@ -267,34 +329,69 @@ require_once "includes/header.php";
 </div>
 
 <script>
-    // ── Pricing constants (naira) ──────────────────────────────────────────────
-    const PRICES = { Regular: 5000, VIP: 10000 };
-
     const typeEl   = document.getElementById('ticket_type');
     const qtyEl    = document.getElementById('quantity');
+    const promoEl  = document.getElementById('promo_code');
+    const promoBtn = document.getElementById('apply-promo-btn');
+    const promoMsg = document.getElementById('promo-msg');
     const display  = document.getElementById('amount-display');
     const form     = document.getElementById('ticket-form');
     const payBtn   = document.getElementById('pay-btn');
 
-    // ── Live amount calculation ────────────────────────────────────────────────
-    function calcAmount() {
-        const price = PRICES[typeEl.value] || 5000;
-        const qty   = Math.max(1, parseInt(qtyEl.value) || 1);
-        return price * qty;
-    }
+    let currentAmount = 5000;
 
-    function updateDisplay() {
-        const amt = calcAmount();
-        display.textContent = '₦' + amt.toLocaleString('en-NG', { minimumFractionDigits: 2 });
+    // ── Live amount calculation (Server-side) ──────────────────────────────────
+    async function updateDisplay() {
+        const formData = new FormData();
+        formData.append('action', 'calculate_price');
+        formData.append('ticket_type', typeEl.value);
+        formData.append('quantity', qtyEl.value);
+        formData.append('promo_code', promoEl.value.trim());
+
+        try {
+            const response = await fetch('', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                currentAmount = data.amount;
+                display.textContent = '₦' + currentAmount.toLocaleString('en-NG', { minimumFractionDigits: 2 });
+                
+                if (data.is_early_bird) {
+                    promoMsg.textContent = "Promo applied: Early Bird Price!";
+                    promoMsg.className = "text-xs mt-1 text-green-600 font-semibold block";
+                } else if (promoEl.value.trim() !== '') {
+                    promoMsg.textContent = "Promo code active (applies to Buffet only).";
+                    promoMsg.className = "text-xs mt-1 text-sky-600 font-semibold block";
+                } else {
+                    promoMsg.className = "hidden";
+                }
+            } else {
+                promoMsg.textContent = data.error;
+                promoMsg.className = "text-xs mt-1 text-red-600 font-semibold block";
+                
+                const backupPrices = { 'Regular': 5000, 'VIP': 10000, 'Individual Buffet': 25000, "Couple's Buffet": 45000 };
+                currentAmount = (backupPrices[typeEl.value] || 5000) * Math.max(1, parseInt(qtyEl.value) || 1);
+                display.textContent = '₦' + currentAmount.toLocaleString('en-NG', { minimumFractionDigits: 2 });
+            }
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     typeEl.addEventListener('change', updateDisplay);
-    qtyEl.addEventListener('input',  updateDisplay);
+    qtyEl.addEventListener('input', updateDisplay);
+    promoBtn.addEventListener('click', updateDisplay);
     updateDisplay();
 
     // ── Form submission logic ─────────────────────────────────────────────────
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', async function (e) {
         e.preventDefault();
+
+        // Await final server validation of the price
+        await updateDisplay();
 
         const gateway = document.querySelector('input[name="payment_method"]:checked').value;
 
@@ -308,7 +405,7 @@ require_once "includes/header.php";
         // Paystack: open inline popup first
         const email  = document.getElementById('email').value.trim();
         const name   = document.getElementById('name').value.trim();
-        const amount = calcAmount() * 100; // kobo for Paystack
+        const amount = currentAmount * 100; // kobo for Paystack
 
         if (!email || !name) {
             alert('Please fill in your name and email before proceeding.');

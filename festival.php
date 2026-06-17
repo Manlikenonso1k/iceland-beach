@@ -387,7 +387,7 @@ require_once "includes/header.php";
 
     .festival-redesign-wrapper .tickets-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 2rem;
     }
 
@@ -861,44 +861,57 @@ require_once "includes/header.php";
                     <h3>Regular Access</h3>
                     <div class="ticket-price">₦5,000</div>
                     <ul class="ticket-features">
-                        <li>Event entry</li>
+                        <li>Event entry (covers ₦3,000 venue fee)</li>
                         <li>1 complimentary coconut</li>
-                        <li>Access to main stage</li>
                     </ul>
                     <a href="ticket.php" class="btn-ticket"
                         style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Book
                         Now</a>
                 </div>
 
-                <!-- VIP Experience -->
+                <!-- VIP Access -->
                 <div class="ticket-card highlight">
-                    <div class="ticket-badge">POPULAR</div>
-                    <h3>VIP Experience</h3>
+                    <div class="ticket-badge">VIP</div>
+                    <h3>VIP Access</h3>
                     <div class="ticket-price">₦10,000</div>
                     <ul class="ticket-features">
-                        <li>Priority access</li>
+                        <li>Priority Access & Event Entry</li>
                         <li>Premium seating area</li>
                         <li>1 complimentary coconut</li>
-                        <li>Dedicated service</li>
                     </ul>
                     <a href="ticket.php" class="btn-ticket"
                         style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Book
                         VIP</a>
                 </div>
 
-                <!-- Buffet Package -->
+                <!-- Individual Buffet Package -->
                 <div class="ticket-card">
-                    <h3>Buffet Package</h3>
+                    <h3>Individual Buffet</h3>
                     <div class="ticket-price">₦25,000</div>
-                    <div class="ticket-note">₦40,000 for couples</div>
+                    <div class="ticket-note">₦20,000 Early Bird with promo</div>
                     <ul class="ticket-features">
-                        <li>Coconut-inspired menu</li>
-                        <li>Exclusive buffet seating</li>
-                        <li>Complementary welcome drink</li>
+                        <li>Exclusive buffet seating & service</li>
+                        <li>Full coconut-inspired menu (7-10 PM)</li>
+                        <li>Complimentary welcome drink</li>
                     </ul>
                     <a href="ticket.php" class="btn-ticket"
                         style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Reserve
                         Buffet</a>
+                </div>
+
+                <!-- Couple's Buffet Package -->
+                <div class="ticket-card">
+                    <h3>Couple's Buffet</h3>
+                    <div class="ticket-price">₦45,000</div>
+                    <div class="ticket-note">₦40,000 Early Bird with promo</div>
+                    <ul class="ticket-features">
+                        <li>Full buffet access for two</li>
+                        <li>Exclusive seating for two</li>
+                        <li>Welcome drinks for two</li>
+                    </ul>
+                    <a href="ticket.php" class="btn-ticket"
+                        style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Reserve
+                        Couple</a>
                 </div>
             </div>
         </div>
