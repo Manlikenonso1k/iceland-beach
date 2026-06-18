@@ -19,7 +19,7 @@
                         <li><a href="" class="text-dark text-decoration-none">Facilities</a></li>
                         <li><a href="about" class="text-dark text-decoration-none">About Us</a></li>
                         <li><a href="contact" class="text-dark text-decoration-none">Contact</a></li>
-                        <li><a href="https://oluwadimu-adedeji.web.app" class="text-dark text-decoration-none">Create Your business website</a></li>
+                        <li><a href="https://nonsostudio.com/" class="text-dark text-decoration-none">Create Your business website</a></li>
                     </ul>
                 </div>
                 <!-- Social Media Section -->
@@ -39,7 +39,7 @@
             <div class="row">
                 <div class="col text-center">
                     <p class="small mb-0">© 2026 Iceland Beach. All Rights Reserved.</p>
-                    <p>Website Designed & Developed by <a href="https://oluwadimu-adedeji.web.app" class="text-light">Oluwadimu Adedeji</a></p>
+                    <p>Made with love <a href="https://nonsostudio.com/" class="text-light">Chinonso</a></p>
                 </div>
             </div>
         </div>
