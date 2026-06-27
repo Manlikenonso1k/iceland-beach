@@ -300,25 +300,8 @@ require_once "includes/header.php";
                     <div class="amount-display" id="amount-display">₦5,000.00</div>
                 </div>
 
-                <!-- Payment Method -->
-                <div>
-                    <label class="form-label">Payment Method *</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="gateway-option" for="gw-paystack">
-                            <input type="radio" id="gw-paystack" name="payment_method"
-                                value="paystack" checked>
-                            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;">
-                                💳 Paystack
-                            </span>
-                        </label>
-                        <label class="gateway-option" for="gw-titan">
-                            <input type="radio" id="gw-titan" name="payment_method" value="titan">
-                            <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;">
-                                🏦 TGI Titan
-                            </span>
-                        </label>
-                    </div>
-                </div>
+                <!-- Payment Method (Hidden, defaults to TGI Pay) -->
+                <input type="hidden" name="payment_method" value="titan">
 
                 <!-- Submit button -->
                 <div id="success-msg" class="success-alert">
@@ -401,32 +384,8 @@ require_once "includes/header.php";
         // Await final server validation of the price
         await updateDisplay();
 
-        const gateway = document.querySelector('input[name="payment_method"]:checked').value;
-
-        if (gateway === 'titan') {
-            // Titan: redirect to the correct TGIPay hosted payment link
-            const titanLinks = {
-                'Regular':           'https://merchant.tgipay.com/make-payment/560bf4bb-3c3b-4c24-9f31-5aec96a1fd3b',
-                'VIP':               'https://merchant.tgipay.com/make-payment/17d782eb-8fda-4d10-b470-2fcd34cd2517',
-                'Individual Buffet': 'https://merchant.tgipay.com/make-payment/0361d33c-14a4-4484-bc30-65be59fd81f2',
-                "Couple's Buffet":   'https://merchant.tgipay.com/make-payment/25fdcf89-2fd9-46cd-b5c9-30d124a3809e'
-            };
-            const selectedType = typeEl.value;
-            const titanUrl = titanLinks[selectedType];
-            if (titanUrl) {
-                window.location.href = titanUrl;
-            } else {
-                // Fallback: POST to /initiate-titan API flow
-                form.action = '/initiate-titan';
-                form.submit();
-            }
-            return;
-        }
-
-        // Paystack: open inline popup first
         const email  = document.getElementById('email').value.trim();
         const name   = document.getElementById('name').value.trim();
-        const amount = currentAmount * 100; // kobo for Paystack
 
         if (!email || !name) {
             alert('Please fill in your name and email before proceeding.');
@@ -434,38 +393,11 @@ require_once "includes/header.php";
         }
 
         payBtn.disabled = true;
-        payBtn.textContent = 'Opening payment…';
+        payBtn.textContent = 'Initiating payment…';
 
-        // Paystack inline JS — pattern from PAYMENT_KNOWLEDGE.md
-        const handler = PaystackPop.setup({
-            // Public key pulled from a meta tag injected by PHP
-            key: document.querySelector('meta[name="paystack-public-key"]')?.content
-                || 'pk_test_your_paystack_public_key_here',
-            email:     email,
-            amount:    amount,
-            currency:  'NGN',
-            ref:       'BEACH_' + Math.floor(Math.random() * 1e9) + Date.now(),
-            metadata: {
-                custom_fields: [
-                    { display_name: 'Name',  variable_name: 'name',  value: name },
-                    { display_name: 'Phone', variable_name: 'phone',
-                      value: document.getElementById('phone').value },
-                ]
-            },
-            callback: function (response) {
-                // Payment popup returned success — populate hidden ref and POST to Laravel
-                document.getElementById('paystack_ref').value = response.reference;
-                document.getElementById('success-msg').style.display = 'block';
-                form.action = '/verify-payment';
-                form.submit();
-            },
-            onClose: function () {
-                payBtn.disabled = false;
-                payBtn.textContent = 'Proceed to Payment →';
-            }
-        });
-
-        handler.openIframe();
+        // TGI Pay: POST to /initiate-titan API flow
+        form.action = '/initiate-titan';
+        form.submit();
     });
 </script>
 
