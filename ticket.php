@@ -221,6 +221,14 @@ require_once "includes/header.php";
                 <div class="text-xs font-bold text-amber-700 uppercase tracking-widest mb-1">VIP</div>
                 <div class="text-xl font-bold text-slate-800" style="font-family:'Bodoni Moda',serif;">₦10,000</div>
             </div>
+            <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
+                <div class="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-1">Individual Buffet</div>
+                <div class="text-xl font-bold text-slate-800" style="font-family:'Bodoni Moda',serif;">₦25,000</div>
+            </div>
+            <div class="bg-purple-50 border border-purple-100 rounded-lg p-3">
+                <div class="text-xs font-bold text-purple-700 uppercase tracking-widest mb-1">Couple's Buffet</div>
+                <div class="text-xl font-bold text-slate-800" style="font-family:'Bodoni Moda',serif;">₦45,000</div>
+            </div>
         </div>
 
         <!--
@@ -396,9 +404,22 @@ require_once "includes/header.php";
         const gateway = document.querySelector('input[name="payment_method"]:checked').value;
 
         if (gateway === 'titan') {
-            // Titan: normal POST to /initiate-titan
-            form.action = '/initiate-titan';
-            form.submit();
+            // Titan: redirect to the correct TGIPay hosted payment link
+            const titanLinks = {
+                'Regular':           'https://merchant.tgipay.com/make-payment/560bf4bb-3c3b-4c24-9f31-5aec96a1fd3b',
+                'VIP':               'https://merchant.tgipay.com/make-payment/17d782eb-8fda-4d10-b470-2fcd34cd2517',
+                'Individual Buffet': 'https://merchant.tgipay.com/make-payment/0361d33c-14a4-4484-bc30-65be59fd81f2',
+                "Couple's Buffet":   'https://merchant.tgipay.com/make-payment/25fdcf89-2fd9-46cd-b5c9-30d124a3809e'
+            };
+            const selectedType = typeEl.value;
+            const titanUrl = titanLinks[selectedType];
+            if (titanUrl) {
+                window.location.href = titanUrl;
+            } else {
+                // Fallback: POST to /initiate-titan API flow
+                form.action = '/initiate-titan';
+                form.submit();
+            }
             return;
         }
 

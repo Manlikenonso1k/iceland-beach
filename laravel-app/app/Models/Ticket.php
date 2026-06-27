@@ -23,14 +23,18 @@ class Ticket extends Model
         'payment_ref',
         'paid',
         'checked_in',
+        'scan_count',
+        'checked_in_at',
         'qr_code_path',
     ];
 
     protected $casts = [
-        'paid'       => 'boolean',
-        'checked_in' => 'boolean',
-        'amount'     => 'integer',
-        'quantity'   => 'integer',
+        'paid'          => 'boolean',
+        'checked_in'    => 'boolean',
+        'amount'        => 'integer',
+        'quantity'      => 'integer',
+        'scan_count'    => 'integer',
+        'checked_in_at' => 'datetime',
     ];
 
     protected static function boot(): void

@@ -74,9 +74,45 @@
             opacity: 0.75;
             font-weight: 600;
         }
+
+        .scan-count-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin-top: 12px;
+        }
+        .scan-low { background: rgba(255,255,255,0.2); }
+        .scan-warn { background: #fbbf24; color: #78350f; }
+        .scan-danger { background: #ef4444; color: #ffffff; }
+
+        .fraud-alert {
+            margin-top: 16px;
+            padding: 12px 20px;
+            background: rgba(239,68,68,0.3);
+            border: 2px solid rgba(239,68,68,0.6);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            max-width: 360px;
+            width: 100%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
     </style>
 </head>
 <body>
+
+@php
+    $scanCount = $ticket->scan_count ?? 0;
+    $scanBadgeClass = $scanCount <= 1 ? 'scan-low' : ($scanCount <= 2 ? 'scan-warn' : 'scan-danger');
+@endphp
 
 @if($status === 'ok')
 {{-- ✅ Valid — welcome! ──────────────────────────────────────────────────── --}}
@@ -90,6 +126,10 @@
         <div><strong>Type</strong> {{ $ticket->ticket_type }}</div>
         <div><strong>Qty</strong> {{ $ticket->quantity }}</div>
         <div><strong>Ref</strong> {{ $ticket->order_ref }}</div>
+    </div>
+
+    <div class="scan-count-badge {{ $scanBadgeClass }}">
+        🔍 Scanned {{ $scanCount }} {{ $scanCount === 1 ? 'time' : 'times' }}
     </div>
 </div>
 
@@ -105,6 +145,10 @@
         <div><strong>Ref</strong> {{ $ticket->order_ref }}</div>
         <div><strong>Status</strong> Unpaid</div>
     </div>
+
+    <div class="scan-count-badge {{ $scanBadgeClass }}">
+        🔍 Scanned {{ $scanCount }} {{ $scanCount === 1 ? 'time' : 'times' }}
+    </div>
 </div>
 
 @elseif($status === 'already')
@@ -118,7 +162,21 @@
         <div><strong>Name</strong> {{ $ticket->name }}</div>
         <div><strong>Type</strong> {{ $ticket->ticket_type }}</div>
         <div><strong>Ref</strong> {{ $ticket->order_ref }}</div>
+        @if($ticket->checked_in_at)
+        <div><strong>Checked in</strong> {{ $ticket->checked_in_at->format('d M Y, H:i') }}</div>
+        @endif
     </div>
+
+    <div class="scan-count-badge {{ $scanBadgeClass }}">
+        ⚠️ This QR has been scanned {{ $scanCount }} {{ $scanCount === 1 ? 'time' : 'times' }}
+    </div>
+
+    @if($scanCount > 2)
+    <div class="fraud-alert">
+        🚨 FRAUD WARNING: This QR code has been scanned {{ $scanCount }} times!
+        Possible ticket sharing detected. Verify guest identity.
+    </div>
+    @endif
 </div>
 
 @else

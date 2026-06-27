@@ -39,9 +39,10 @@ class PaymentController extends Controller
             return redirect()->back()->with('error', 'Payment verification failed. Please contact support.');
         }
 
-        $ticketType = $request->input('ticket_type');   // "Regular" or "VIP"
+        $ticketType = $request->input('ticket_type');
         $quantity   = (int) $request->input('quantity', 1);
-        $unitPrice  = $ticketType === 'VIP' ? 10000 : 5000; // naira
+        $promoCode  = strtoupper(trim($request->input('promo_code', '')));
+        $unitPrice  = $this->getUnitPrice($ticketType, $promoCode);
         $amountKobo = $unitPrice * $quantity * 100;
 
         $ticket = Ticket::create([
@@ -78,7 +79,8 @@ class PaymentController extends Controller
     {
         $ticketType = $request->input('ticket_type');
         $quantity   = (int) $request->input('quantity', 1);
-        $unitPrice  = $ticketType === 'VIP' ? 10000 : 5000; // naira
+        $promoCode  = strtoupper(trim($request->input('promo_code', '')));
+        $unitPrice  = $this->getUnitPrice($ticketType, $promoCode);
         $amountKobo = $unitPrice * $quantity * 100;
         $orderRef   = uniqid('BEACH_');
 
@@ -192,20 +194,45 @@ class PaymentController extends Controller
      * GET /ticket/verify/{uuid}
      * Called when admin scans QR at the gate.
      */
-    public function verifyEntry(string $uuid)
+    public function verifyEntry(Request $request, string $uuid)
     {
         $ticket = Ticket::where('uuid', $uuid)->firstOrFail();
 
+        // Always increment scan_count on every scan — tracks fraud/sharing
+        $ticket->increment('scan_count');
+        $ticket->refresh();
+
         if (!$ticket->paid) {
-            return view('ticket.verify', ['ticket' => $ticket, 'status' => 'unpaid']);
+            $status = 'unpaid';
+        } elseif ($ticket->checked_in) {
+            $status = 'already';
+        } else {
+            $ticket->update([
+                'checked_in'    => true,
+                'checked_in_at' => now(),
+            ]);
+            $status = 'ok';
         }
 
-        if ($ticket->checked_in) {
-            return view('ticket.verify', ['ticket' => $ticket, 'status' => 'already']);
+        // Support JSON response for admin scanner AJAX
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status'     => $status,
+                'scan_count' => $ticket->scan_count,
+                'ticket'     => [
+                    'name'        => $ticket->name,
+                    'email'       => $ticket->email,
+                    'ticket_type' => $ticket->ticket_type,
+                    'quantity'    => $ticket->quantity,
+                    'order_ref'   => $ticket->order_ref,
+                    'paid'        => $ticket->paid,
+                    'checked_in'  => $ticket->checked_in,
+                    'checked_in_at' => $ticket->checked_in_at?->format('d M Y, H:i'),
+                ],
+            ]);
         }
 
-        $ticket->update(['checked_in' => true]);
-        return view('ticket.verify', ['ticket' => $ticket, 'status' => 'ok']);
+        return view('ticket.verify', ['ticket' => $ticket, 'status' => $status]);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -228,6 +255,32 @@ class PaymentController extends Controller
             ->generate($content, storage_path("app/public/{$path}"));
 
         $ticket->update(['qr_code_path' => $path]);
+    }
+
+    /**
+     * Get the unit price in naira for a ticket type, applying promo code if valid.
+     */
+    private function getUnitPrice(string $ticketType, string $promoCode = ''): int
+    {
+        $prices = [
+            'Regular'          => 5000,
+            'VIP'              => 10000,
+            'Individual Buffet' => 25000,
+            "Couple's Buffet"  => 45000,
+        ];
+
+        $unitPrice = $prices[$ticketType] ?? 5000;
+
+        // ICECOCONUT promo: early bird discount on buffet tiers only
+        if ($promoCode === 'ICECOCONUT' && date('Y-m-d') <= '2026-06-28') {
+            if ($ticketType === 'Individual Buffet') {
+                $unitPrice = 20000;
+            } elseif ($ticketType === "Couple's Buffet") {
+                $unitPrice = 40000;
+            }
+        }
+
+        return $unitPrice;
     }
 
     /**

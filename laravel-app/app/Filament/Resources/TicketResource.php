@@ -47,9 +47,11 @@ class TicketResource extends Resource
                 TextColumn::make('ticket_type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'VIP'     => 'warning',
-                        'Regular' => 'info',
-                        default   => 'gray',
+                        'VIP'               => 'warning',
+                        'Regular'           => 'info',
+                        'Individual Buffet' => 'success',
+                        "Couple's Buffet"   => 'purple',
+                        default             => 'gray',
                     })
                     ->label('Type'),
 
@@ -82,6 +84,18 @@ class TicketResource extends Resource
                     ->badge()
                     ->label('Gateway'),
 
+                TextColumn::make('scan_count')
+                    ->label('Scans')
+                    ->alignCenter()
+                    ->badge()
+                    ->color(fn (int $state): string => match (true) {
+                        $state >= 3 => 'danger',
+                        $state == 2 => 'warning',
+                        default     => 'gray',
+                    })
+                    ->icon(fn (int $state): ?string => $state >= 3 ? 'heroicon-o-exclamation-triangle' : null)
+                    ->tooltip(fn (int $state): ?string => $state >= 3 ? 'Potential fraud — scanned ' . $state . ' times' : null),
+
                 TextColumn::make('created_at')
                     ->dateTime('d M Y, H:i')
                     ->sortable()
@@ -98,7 +112,12 @@ class TicketResource extends Resource
                     ->label('Check-in Status'),
 
                 SelectFilter::make('ticket_type')
-                    ->options(['Regular' => 'Regular', 'VIP' => 'VIP'])
+                    ->options([
+                        'Regular'           => 'Regular',
+                        'VIP'               => 'VIP',
+                        'Individual Buffet' => 'Individual Buffet',
+                        "Couple's Buffet"   => "Couple's Buffet",
+                    ])
                     ->label('Ticket Type'),
 
                 SelectFilter::make('payment_gateway')
