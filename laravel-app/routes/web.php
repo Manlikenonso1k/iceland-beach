@@ -20,13 +20,13 @@ Route::get('/invoices/{id}/view', function ($id) {
 // Paystack: frontend verifies reference then POSTs here
 Route::post('/verify-payment', [PaymentController::class, 'paystackVerify']);
 
-// Titan: form submits here, we initiate and redirect to Titan hosted page
-Route::post('/initiate-titan', [PaymentController::class, 'initiateTitan']);
+// TGIPay: form submits here, we initiate and redirect to TGIPay hosted page
+Route::post('/initiate-tgipay', [PaymentController::class, 'initiateTgiPay']);
 
-// Titan: customer redirected back here after payment (GET, not a POST webhook)
+// TGIPay: customer redirected back here after payment (GET, not a POST webhook)
 // CSRF excluded via withoutMiddleware — per PAYMENT_KNOWLEDGE.md gotchas
-Route::get('/titan/callback', [PaymentController::class, 'titanCallback'])
-    ->name('titan.callback')
+Route::get('/tgipay/callback', [PaymentController::class, 'tgiPayCallback'])
+    ->name('tgipay.callback')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // Success page (server-side rendered, works offline after first load)

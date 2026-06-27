@@ -65,17 +65,17 @@ class PaymentController extends Controller
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TGI TITAN (TGIPAY)
+    // TGI PAY (TGIPAY)
     // ──────────────────────────────────────────────────────────────────────────
 
     /**
-     * Initiate a Titan payment and redirect the customer to Titan's hosted page.
-     * POST /initiate-titan
+     * Initiate a TGI Pay payment and redirect the customer to TGI Pay's hosted page.
+     * POST /initiate-tgipay
      *
      * Per PAYMENT_KNOWLEDGE.md: auth is via 'integration-key' header only — no HMAC.
      * Amount is sent as actual naira float (not kobo).
      */
-    public function initiateTitan(Request $request)
+    public function initiateTgiPay(Request $request)
     {
         $ticketType = $request->input('ticket_type');
         $quantity   = (int) $request->input('quantity', 1);
@@ -93,7 +93,7 @@ class PaymentController extends Controller
             'quantity'        => $quantity,
             'amount'          => $amountKobo,
             'order_ref'       => $orderRef,
-            'payment_gateway' => 'titan',
+            'payment_gateway' => 'tgipay',
             'paid'            => false,
         ]);
 
@@ -105,20 +105,20 @@ class PaymentController extends Controller
             'customerFirstName'  => $nameParts[0] ?? '',
             'customerLastName'   => $nameParts[1] ?? '',
             'customerEmail'      => $request->input('email'),
-            'amount'             => (float) ($amountKobo / 100),  // back to naira for Titan
+            'amount'             => (float) ($amountKobo / 100),  // back to naira for TGI Pay
             'transactionReference' => $orderRef,
             'currency'           => 'NGN',
         ];
 
         $response = Http::withHeaders([
-            'integration-key' => config('services.titan.api_key'),
+            'integration-key' => config('services.tgipay.api_key'),
         ])
             ->acceptJson()
             ->timeout(30)
-            ->post(config('services.titan.base_url') . '/payment/initiate', $payload);
+            ->post(config('services.tgipay.base_url') . '/payment/initiate', $payload);
 
         if (!$response->ok()) {
-            Log::error('Titan initiation failed', ['response' => $response->body()]);
+            Log::error('TGI Pay initiation failed', ['response' => $response->body()]);
             return redirect()->back()->with('error', 'Could not initiate payment. Please try again.');
         }
 
@@ -132,13 +132,13 @@ class PaymentController extends Controller
     }
 
     /**
-     * Titan redirects the customer here after payment.
-     * GET /titan/callback?ref=...&status=...
+     * TGI Pay redirects the customer here after payment.
+     * GET /tgipay/callback?ref=...&status=...
      *
-     * Per PAYMENT_KNOWLEDGE.md: Titan uses a GET redirect callback (not a POST webhook).
-     * There is no HMAC signature on Titan; we query the API to confirm status.
+     * Per PAYMENT_KNOWLEDGE.md: TGI Pay uses a GET redirect callback (not a POST webhook).
+     * There is no HMAC signature on TGI Pay; we query the API to confirm status.
      */
-    public function titanCallback(Request $request)
+    public function tgiPayCallback(Request $request)
     {
         $ref    = (string) $request->query('ref', '');
         $status = (string) $request->query('status', 'processing');
@@ -157,7 +157,7 @@ class PaymentController extends Controller
         $ticket = Ticket::where('order_ref', $ref)->first();
 
         if (!$ticket) {
-            Log::warning('Titan callback: ticket not found', ['ref' => $ref]);
+            Log::warning('TGI Pay callback: ticket not found', ['ref' => $ref]);
             return redirect('/')->with('error', 'Order not found.');
         }
 

@@ -234,9 +234,9 @@ require_once "includes/header.php";
         <!--
             Single form. On Paystack: JS intercepts submit, opens popup, on success
             populates #paystack_ref and changes action to /verify-payment then submits.
-            On Titan: submits directly to /initiate-titan.
+            On TGI Pay: submits directly to /initiate-tgipay.
         -->
-        <form id="ticket-form" method="POST" action="/initiate-titan" novalidate>
+        <form id="ticket-form" method="POST" action="/initiate-tgipay" novalidate>
             <!-- CSRF token for Laravel (when form goes to Laravel backend) -->
             <input type="hidden" name="_token" id="csrf-token"
                 value="<?= isset($_COOKIE['XSRF-TOKEN']) ? htmlspecialchars($_COOKIE['XSRF-TOKEN']) : '' ?>">
@@ -301,7 +301,7 @@ require_once "includes/header.php";
                 </div>
 
                 <!-- Payment Method (Hidden, defaults to TGI Pay) -->
-                <input type="hidden" name="payment_method" value="titan">
+                <input type="hidden" name="payment_method" value="tgipay">
 
                 <!-- Submit button -->
                 <div id="success-msg" class="success-alert">
@@ -315,7 +315,7 @@ require_once "includes/header.php";
     </div>
 
     <p class="text-center text-xs text-slate-400 mt-4" style="font-family:'Raleway',sans-serif;">
-        Your payment is secured by Paystack or TGI Titan. We never store your card details.
+        Your payment is secured by TGI Pay. We never store your card details.
     </p>
 </div>
 
@@ -395,8 +395,8 @@ require_once "includes/header.php";
         payBtn.disabled = true;
         payBtn.textContent = 'Initiating payment…';
 
-        // TGI Pay: POST to /initiate-titan API flow
-        form.action = '/initiate-titan';
+        // TGI Pay: POST to /initiate-tgipay API flow
+        form.action = '/initiate-tgipay';
         form.submit();
     });
 </script>

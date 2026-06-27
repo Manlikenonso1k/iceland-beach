@@ -121,7 +121,7 @@ class TicketResource extends Resource
                     ->label('Ticket Type'),
 
                 SelectFilter::make('payment_gateway')
-                    ->options(['paystack' => 'Paystack', 'titan' => 'TGI Titan'])
+                    ->options(['paystack' => 'Paystack', 'tgipay' => 'TGI Pay'])
                     ->label('Gateway'),
             ])
             ->actions([
