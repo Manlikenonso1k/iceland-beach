@@ -21,7 +21,8 @@ Route::get('/invoices/{id}/view', function ($id) {
 Route::post('/verify-payment', [PaymentController::class, 'paystackVerify']);
 
 // TGIPay: form submits here, we initiate and redirect to TGIPay hosted page
-Route::post('/initiate-tgipay', [PaymentController::class, 'initiateTgiPay']);
+Route::post('/initiate-tgipay', [PaymentController::class, 'initiateTgiPay'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // TGIPay: customer redirected back here after payment (GET, not a POST webhook)
 // CSRF excluded via withoutMiddleware — per PAYMENT_KNOWLEDGE.md gotchas
