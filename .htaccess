@@ -10,6 +10,12 @@
     RewriteRule ^livewire(?:/.*)?$ laravel-app/public/index.php [L,QSA]
     RewriteRule ^(css|js|build|storage)/filament(?:/.*)?$ laravel-app/public/$0 [L,QSA]
 
+    # Route Payment and Ticketing URLs into Laravel
+    RewriteRule ^initiate-tgipay(?:/.*)?$ laravel-app/public/index.php [L,QSA]
+    RewriteRule ^tgipay/callback(?:/.*)?$ laravel-app/public/index.php [L,QSA]
+    RewriteRule ^verify-payment(?:/.*)?$ laravel-app/public/index.php [L,QSA]
+    RewriteRule ^ticket(?:/.*)?$ laravel-app/public/index.php [L,QSA]
+
     # -----------------------------------------------------
     # 0. ALLOW STATIC FILES (VIDEOS, IMAGES, CSS, JS)
     #    Add this BEFORE other rewrite rules to prevent conflicts
