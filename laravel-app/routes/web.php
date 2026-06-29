@@ -44,7 +44,12 @@ Route::post('/verify-payment', [PaymentController::class, 'paystackVerify']);
 // TGIPay: Blade form with @csrf POSTs here — CSRF is now properly validated
 Route::post('/initiate-tgipay', [PaymentController::class, 'initiateTgiPay']);
 
-// TGIPay: customer is GET-redirected back here after payment (no CSRF token present)
-Route::get('/tgipay/callback', [PaymentController::class, 'tgiPayCallback'])
+// TGIPay: customer is redirected back here (TGI Pay can use GET or POST)
+Route::any('/tgipay/callback', [PaymentController::class, 'tgiPayCallback'])
     ->name('tgipay.callback')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+// TGIPay: Background webhook notification
+Route::post('/webhooks/tgi', [PaymentController::class, 'tgiPayWebhook'])
+    ->name('tgipay.webhook')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);

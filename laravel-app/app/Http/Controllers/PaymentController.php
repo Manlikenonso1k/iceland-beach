@@ -197,15 +197,14 @@ class PaymentController extends Controller
 
     /**
      * TGI Pay redirects the customer here after payment.
-     * GET /tgipay/callback?ref=...&status=...
+     * ANY /tgipay/callback?ref=...&status=... (Can be GET or POST)
      *
-     * Per PAYMENT_KNOWLEDGE.md: TGI Pay uses a GET redirect callback (not a POST webhook).
-     * There is no HMAC signature on TGI Pay; we query the API to confirm status.
+     * CSRF is disabled in routes.
      */
     public function tgiPayCallback(Request $request)
     {
-        $ref    = (string) $request->query('ref', '');
-        $status = (string) $request->query('status', 'processing');
+        $ref    = (string) $request->input('ref', '');
+        $status = (string) $request->input('status', 'processing');
 
         // Normalise status exactly as in PAYMENT_KNOWLEDGE.md handleWebhook logic.
         $internalStatus = match ($status) {
@@ -235,6 +234,45 @@ class PaymentController extends Controller
         }
 
         return redirect()->route('ticket.success', $ticket->uuid);
+    }
+
+    /**
+     * TGIPay Background Webhook.
+     * POST /webhooks/tgi
+     * 
+     * Handles the server-to-server notification behind the scenes.
+     */
+    public function tgiPayWebhook(Request $request)
+    {
+        $ref    = (string) $request->input('ref', '');
+        $status = (string) $request->input('status', 'processing');
+
+        $internalStatus = match ($status) {
+            'success', 'successful', 'completed', 'paid' => 'success',
+            'failed', 'cancelled', 'canceled'             => 'failed',
+            default                                        => 'processing',
+        };
+
+        if ($internalStatus !== 'success') {
+            return response()->json(['message' => 'Status not successful, ignored'], 200);
+        }
+
+        $ticket = Ticket::where('order_ref', $ref)->first();
+
+        if (!$ticket) {
+            return response()->json(['message' => 'Ticket not found'], 404);
+        }
+
+        if (!$ticket->paid) {
+            $ticket->update([
+                'paid'        => true,
+                'payment_ref' => $ref,
+            ]);
+            $this->generateQr($ticket);
+            $this->sendReceiptEmail($ticket);
+        }
+
+        return response()->json(['message' => 'Webhook processed successfully'], 200);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
