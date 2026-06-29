@@ -65,6 +65,70 @@ class PaymentController extends Controller
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+    // TICKET PURCHASE FORM
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Show the ticket purchase form (replaces legacy ticket.php).
+     * GET /ticket
+     */
+    public function showTicketForm()
+    {
+        return view('ticket.purchase', [
+            'paystackPublicKey' => config('services.paystack.public_key', ''),
+        ]);
+    }
+
+    /**
+     * Server-side price calculator for the AJAX promo/quantity widget.
+     * POST /ticket/calculate-price  (JSON, no session needed — CSRF excluded in route)
+     *
+     * Mirrors the legacy calculate_price handler that was inside ticket.php.
+     */
+    public function calculatePrice(Request $request)
+    {
+        $ticketType = $request->input('ticket_type', '');
+        $quantity   = max(1, (int) $request->input('quantity', 1));
+        $promoCode  = strtoupper(trim($request->input('promo_code', '')));
+
+        $prices = [
+            'Regular'           => 5000,
+            'VIP'               => 10000,
+            'Individual Buffet' => 25000,
+            "Couple's Buffet"   => 45000,
+        ];
+
+        if (!array_key_exists($ticketType, $prices)) {
+            return response()->json(['success' => false, 'error' => 'Invalid ticket type']);
+        }
+
+        $basePrice   = $prices[$ticketType];
+        $isEarlyBird = false;
+
+        if ($promoCode === 'ICECOCONUT' && date('Y-m-d') <= '2026-06-28') {
+            if ($ticketType === 'Individual Buffet') {
+                $basePrice   = 20000;
+                $isEarlyBird = true;
+            } elseif ($ticketType === "Couple's Buffet") {
+                $basePrice   = 40000;
+                $isEarlyBird = true;
+            }
+        } elseif ($promoCode !== '') {
+            if ($promoCode === 'ICECOCONUT') {
+                return response()->json(['success' => false, 'error' => 'Promo code expired']);
+            }
+            return response()->json(['success' => false, 'error' => 'Invalid promo code']);
+        }
+
+        return response()->json([
+            'success'      => true,
+            'amount'       => $basePrice * $quantity,
+            'is_early_bird'=> $isEarlyBird,
+            'base_price'   => $basePrice,
+        ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // TGI PAY (TGIPAY)
     // ──────────────────────────────────────────────────────────────────────────
 
@@ -111,7 +175,7 @@ class PaymentController extends Controller
         ];
 
         $response = Http::withHeaders([
-            'integration-key' => config('services.tgipay.api_key'),
+            'integration-key' => config('services.tgipay.integration_key'),
         ])
             ->acceptJson()
             ->timeout(30)

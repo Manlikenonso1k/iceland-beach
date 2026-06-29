@@ -17,23 +17,34 @@ Route::get('/invoices/{id}/view', function ($id) {
 // TICKET PAYMENT ROUTES
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Paystack: frontend verifies reference then POSTs here
-Route::post('/verify-payment', [PaymentController::class, 'paystackVerify']);
+// IMPORTANT: Specific sub-routes must be declared BEFORE the generic GET /ticket
+// so Laravel's router matches them first (most-specific wins).
 
-// TGIPay: form submits here, we initiate and redirect to TGIPay hosted page
-Route::post('/initiate-tgipay', [PaymentController::class, 'initiateTgiPay'])
-    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-
-// TGIPay: customer redirected back here after payment (GET, not a POST webhook)
-// CSRF excluded via withoutMiddleware — per PAYMENT_KNOWLEDGE.md gotchas
-Route::get('/tgipay/callback', [PaymentController::class, 'tgiPayCallback'])
-    ->name('tgipay.callback')
-    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+// QR scan / gate entry verify — this URL is embedded in the QR code
+Route::get('/ticket/verify/{uuid}', [PaymentController::class, 'verifyEntry'])
+    ->name('ticket.verify');
 
 // Success page (server-side rendered, works offline after first load)
 Route::get('/ticket/{uuid}/success', [PaymentController::class, 'success'])
     ->name('ticket.success');
 
-// QR scan / gate entry verify — this URL is embedded in the QR code
-Route::get('/ticket/verify/{uuid}', [PaymentController::class, 'verifyEntry'])
-    ->name('ticket.verify');
+// Ticket purchase form — replaces legacy ticket.php
+Route::get('/ticket', [PaymentController::class, 'showTicketForm'])
+    ->name('ticket.form');
+
+// AJAX price calculator — replaces the inline PHP AJAX handler in legacy ticket.php
+// CSRF excluded: pure JSON API called by JS fetch(), session not present in request
+Route::post('/ticket/calculate-price', [PaymentController::class, 'calculatePrice'])
+    ->name('ticket.calculate')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+// Paystack: frontend JS verifies reference then POSTs here
+Route::post('/verify-payment', [PaymentController::class, 'paystackVerify']);
+
+// TGIPay: Blade form with @csrf POSTs here — CSRF is now properly validated
+Route::post('/initiate-tgipay', [PaymentController::class, 'initiateTgiPay']);
+
+// TGIPay: customer is GET-redirected back here after payment (no CSRF token present)
+Route::get('/tgipay/callback', [PaymentController::class, 'tgiPayCallback'])
+    ->name('tgipay.callback')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
