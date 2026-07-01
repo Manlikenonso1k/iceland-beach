@@ -166,7 +166,7 @@
 </head>
 <body>
 
-<p class="page-title">🎉 Payment Confirmed — Your Ticket is Ready</p>
+<p class="page-title">Payment Confirmed - Your Ticket is Ready</p>
 
 @php
     $qrSvg = '';
@@ -177,7 +177,7 @@
 
 <div id="receipt">
     <div class="event-name">Iceland Beach Event</div>
-    <div class="event-meta">Victoria Island, Lagos &nbsp;·&nbsp; Present this ticket at the gate</div>
+    <div class="event-meta">Okun-Ajah Road, off Ogombo Road, Ajah, Lagos 106104 <br> Present this ticket at the gate</div>
 
     <div class="divider"></div>
 

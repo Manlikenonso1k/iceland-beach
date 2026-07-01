@@ -115,7 +115,7 @@
 
     <div class="header">
         <h1>🏖️ Iceland Beach Event</h1>
-        <p>Victoria Island, Lagos &nbsp;·&nbsp; Your ticket is confirmed!</p>
+        <p>Okun-Ajah Road, off Ogombo Road, Ajah, Lagos 106104 - Your ticket is confirmed!</p>
     </div>
 
     <div class="body">
@@ -188,7 +188,7 @@
         <!-- Event info -->
         <div class="info-note">
             📅 <strong>Event Date:</strong> To be announced &nbsp;·&nbsp;
-            📍 <strong>Venue:</strong> Iceland Beach Resort, Victoria Island, Lagos<br>
+            📍 <strong>Venue:</strong> Iceland Beach Resort, Okun-Ajah Road, off Ogombo Road, Ajah, Lagos 106104<br>
             Please arrive at least 30 minutes before the event begins. Tickets are non-refundable.
         </div>
 
@@ -199,7 +199,7 @@
 
     <div class="footer">
         <strong>Iceland Beach Resort</strong><br>
-        Victoria Island, Lagos, Nigeria<br>
+        Okun-Ajah Road, off Ogombo Road, Ajah, Lagos 106104<br>
         This is an automated email — please do not reply directly.<br>
         © {{ date('Y') }} Iceland Beach. All rights reserved.
     </div>
