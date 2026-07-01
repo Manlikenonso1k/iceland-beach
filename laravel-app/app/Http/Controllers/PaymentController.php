@@ -310,9 +310,6 @@ class PaymentController extends Controller
     public function verifyEntry(Request $request, string $uuid)
     {
         $user = Auth::user();
-        if (!$user || !$user->hasAnyRole(['Scanner', 'Admin', 'Super Admin', 'Manager'])) {
-            abort(403, 'You do not have permission to scan tickets.');
-        }
 
         $ticket = Ticket::where('uuid', $uuid)->firstOrFail();
 
@@ -334,7 +331,7 @@ class PaymentController extends Controller
 
         TicketScanLog::create([
             'ticket_id' => $ticket->id,
-            'user_id'   => $user->id,
+            'user_id'   => $user?->id,
             'status'    => $status,
         ]);
 

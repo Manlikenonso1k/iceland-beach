@@ -17,6 +17,9 @@
     RewriteRule ^tgipay/callback(?:/.*)?$ laravel-app/public/index.php [L,QSA]
     RewriteRule ^webhooks/tgi(?:/.*)?$    laravel-app/public/index.php [L,QSA]
     RewriteRule ^verify-payment(?:/.*)?$  laravel-app/public/index.php [L,QSA]
+    RewriteRule ^login(?:/.*)?$           laravel-app/public/index.php [L,QSA]
+    RewriteRule ^logout(?:/.*)?$          laravel-app/public/index.php [L,QSA]
+    RewriteRule ^sanctum(?:/.*)?$         laravel-app/public/index.php [L,QSA]
     RewriteRule ^ticket(?:/.*)?$          laravel-app/public/index.php [L,QSA]
     RewriteRule ^ticket$                  laravel-app/public/index.php [L,QSA]
 
