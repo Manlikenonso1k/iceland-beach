@@ -334,10 +334,16 @@
                         sub = 'This ticket has not been paid. Entry denied.';
                         cardClass = 'result-unpaid';
                         break;
+                    case 'error':
+                        icon = '🚨';
+                        headline = 'SYSTEM ERROR';
+                        sub = data.message || 'An error occurred on the server.';
+                        cardClass = 'result-error';
+                        break;
                     default:
                         icon = '🚫';
                         headline = 'UNKNOWN STATUS';
-                        sub = 'Could not verify this ticket.';
+                        sub = data.message || 'Could not verify this ticket.';
                         cardClass = 'result-error';
                 }
 

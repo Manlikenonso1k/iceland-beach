@@ -309,51 +309,65 @@ class PaymentController extends Controller
      */
     public function verifyEntry(Request $request, string $uuid)
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        $ticket = Ticket::where('uuid', $uuid)->firstOrFail();
+            $ticket = Ticket::where('uuid', $uuid)->firstOrFail();
 
-        // Always increment scan_count on every scan — tracks fraud/sharing
-        $ticket->increment('scan_count');
-        $ticket->refresh();
+            // Always increment scan_count on every scan — tracks fraud/sharing
+            $ticket->increment('scan_count');
+            $ticket->refresh();
 
-        if (!$ticket->paid) {
-            $status = 'unpaid';
-        } elseif ($ticket->checked_in) {
-            $status = 'already';
-        } else {
-            $ticket->update([
-                'checked_in'    => true,
-                'checked_in_at' => now(),
+            if (!$ticket->paid) {
+                $status = 'unpaid';
+            } elseif ($ticket->checked_in) {
+                $status = 'already';
+            } else {
+                $ticket->update([
+                    'checked_in'    => true,
+                    'checked_in_at' => now(),
+                ]);
+                $status = 'ok';
+            }
+
+            TicketScanLog::create([
+                'ticket_id' => $ticket->id,
+                'user_id'   => $user?->id,
+                'status'    => $status,
             ]);
-            $status = 'ok';
+
+            // Support JSON response for admin scanner AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status'     => $status,
+                    'scan_count' => $ticket->scan_count,
+                    'ticket'     => [
+                        'name'        => $ticket->name,
+                        'email'       => $ticket->email,
+                        'ticket_type' => $ticket->ticket_type,
+                        'quantity'    => $ticket->quantity,
+                        'order_ref'   => $ticket->order_ref,
+                        'paid'        => $ticket->paid,
+                        'checked_in'  => $ticket->checked_in,
+                        'checked_in_at' => $ticket->checked_in_at?->format('d M Y, H:i'),
+                    ],
+                ]);
+            }
+
+            return view('ticket.verify', ['ticket' => $ticket, 'status' => $status]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Ticket not found in database.']);
+            }
+            abort(404, 'Ticket not found.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('QR Verification Error: ' . $e->getMessage());
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Server error: ' . $e->getMessage()]);
+            }
+            abort(500, 'Server error.');
         }
-
-        TicketScanLog::create([
-            'ticket_id' => $ticket->id,
-            'user_id'   => $user?->id,
-            'status'    => $status,
-        ]);
-
-        // Support JSON response for admin scanner AJAX
-        if ($request->expectsJson()) {
-            return response()->json([
-                'status'     => $status,
-                'scan_count' => $ticket->scan_count,
-                'ticket'     => [
-                    'name'        => $ticket->name,
-                    'email'       => $ticket->email,
-                    'ticket_type' => $ticket->ticket_type,
-                    'quantity'    => $ticket->quantity,
-                    'order_ref'   => $ticket->order_ref,
-                    'paid'        => $ticket->paid,
-                    'checked_in'  => $ticket->checked_in,
-                    'checked_in_at' => $ticket->checked_in_at?->format('d M Y, H:i'),
-                ],
-            ]);
-        }
-
-        return view('ticket.verify', ['ticket' => $ticket, 'status' => $status]);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
