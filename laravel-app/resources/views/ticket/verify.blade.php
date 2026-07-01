@@ -155,7 +155,7 @@
 {{-- ⚠️ Already checked in ─────────────────────────────────────────────────── --}}
 <div class="screen screen-already">
     <div class="icon">⚠️</div>
-    <h1 class="headline">ALREADY CHECKED IN</h1>
+    <h1 class="headline" style="font-size: 28px;">FRAUDULENT OR ALREADY SCANNED CODE</h1>
     <p class="sub">This ticket has already been used for entry. Do not admit again.</p>
 
     <div class="detail-card">
@@ -171,7 +171,7 @@
         ⚠️ This QR has been scanned {{ $scanCount }} {{ $scanCount === 1 ? 'time' : 'times' }}
     </div>
 
-    @if($scanCount > 2)
+    @if($scanCount > 1)
     <div class="fraud-alert">
         🚨 FRAUD WARNING: This QR code has been scanned {{ $scanCount }} times!
         Possible ticket sharing detected. Verify guest identity.

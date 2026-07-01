@@ -21,8 +21,10 @@ Route::get('/invoices/{id}/view', function ($id) {
 // so Laravel's router matches them first (most-specific wins).
 
 // QR scan / gate entry verify — this URL is embedded in the QR code
-Route::get('/ticket/verify/{uuid}', [PaymentController::class, 'verifyEntry'])
-    ->name('ticket.verify');
+Route::middleware('auth')->group(function () {
+    Route::get('/ticket/verify/{uuid}', [PaymentController::class, 'verifyEntry'])
+        ->name('ticket.verify');
+});
 
 // Success page (server-side rendered, works offline after first load)
 Route::get('/ticket/{uuid}/success', [PaymentController::class, 'success'])

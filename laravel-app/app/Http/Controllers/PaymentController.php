@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Mail\TicketReceiptMail;
 use App\Models\Ticket;
+use App\Models\TicketScanLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -307,6 +309,11 @@ class PaymentController extends Controller
      */
     public function verifyEntry(Request $request, string $uuid)
     {
+        $user = Auth::user();
+        if (!$user || !$user->hasAnyRole(['Scanner', 'Admin', 'Super Admin', 'Manager'])) {
+            abort(403, 'You do not have permission to scan tickets.');
+        }
+
         $ticket = Ticket::where('uuid', $uuid)->firstOrFail();
 
         // Always increment scan_count on every scan — tracks fraud/sharing
@@ -324,6 +331,12 @@ class PaymentController extends Controller
             ]);
             $status = 'ok';
         }
+
+        TicketScanLog::create([
+            'ticket_id' => $ticket->id,
+            'user_id'   => $user->id,
+            'status'    => $status,
+        ]);
 
         // Support JSON response for admin scanner AJAX
         if ($request->expectsJson()) {
