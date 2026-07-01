@@ -186,9 +186,18 @@ class PaymentController extends Controller
             return redirect()->back()->with('error', 'Could not initiate payment. Please try again.');
         }
 
-        $paymentUrl = data_get($response->json(), 'body.data.url');
+        Log::info('TGI Pay initiation response', [
+            'status' => $response->status(),
+            'body'   => $response->body(),
+            'json'   => $response->json(),
+        ]);
+
+        $paymentUrl = data_get($response->json(), 'body.data.url')
+                   ?? data_get($response->json(), 'data.url')
+                   ?? data_get($response->json(), 'url');
 
         if (!$paymentUrl) {
+            Log::error('TGI Pay: no payment URL found in response', ['json' => $response->json()]);
             return redirect()->back()->with('error', 'Gateway did not return a payment URL.');
         }
 
