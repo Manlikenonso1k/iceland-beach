@@ -293,10 +293,9 @@
             resultDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">⏳ Verifying...</div>';
 
             try {
-                // Use the full scanned URL but make it an AJAX request
-                const verifyUrl = fullUrl.includes('/ticket/verify/')
-                    ? fullUrl
-                    : `/ticket/verify/${uuid}`;
+                // ALWAYS use a relative URL to prevent CORS errors if the user 
+                // is scanning from admin.icelandbeach.com but the QR code says icelandbeach.com
+                const verifyUrl = `/ticket/verify/${uuid}`;
 
                 const response = await fetch(verifyUrl, {
                     headers: {
