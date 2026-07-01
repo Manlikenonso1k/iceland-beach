@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\TicketReceiptMail;
 use App\Models\Ticket;
-use  for the\Http\Request;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
