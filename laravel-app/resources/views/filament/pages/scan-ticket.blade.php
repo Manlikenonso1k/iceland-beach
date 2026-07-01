@@ -320,33 +320,41 @@
                         headline = 'VALID — Welcome!';
                         sub = 'Guest checked in successfully.';
                         cardClass = 'result-ok';
+                        playSound('success');
                         break;
                     case 'already':
                         icon = '⚠️';
                         headline = 'ALREADY CHECKED IN';
                         sub = 'This ticket has already been used. Do not admit.';
                         cardClass = 'result-already';
+                        playSound('error');
                         break;
                     case 'unpaid':
                         icon = '❌';
                         headline = 'INVALID — Not Paid';
                         sub = 'This ticket has not been paid. Entry denied.';
                         cardClass = 'result-unpaid';
+                        playSound('error');
                         break;
                     case 'error':
                         icon = '🚨';
                         headline = 'SYSTEM ERROR';
                         sub = data.message || 'An error occurred on the server.';
                         cardClass = 'result-error';
+                        playSound('error');
                         break;
                     default:
                         icon = '🚫';
                         headline = 'UNKNOWN STATUS';
                         sub = data.message || 'Could not verify this ticket.';
                         cardClass = 'result-error';
+                        playSound('error');
                 }
 
                 let scanBadgeClass = scanCount <= 1 ? 'scan-low' : (scanCount <= 2 ? 'scan-warn' : 'scan-danger');
+                if (scanCount > 2) {
+                    playSound('error'); // Play error sound again if it's a multi-scan fraud
+                }
 
                 let html = `
                     <div class="result-card ${cardClass}">
@@ -412,6 +420,38 @@
                     <span class="log-time">${item.time}</span>
                 </div>
             `).join('');
+        }
+        function playSound(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                if (type === 'success') {
+                    // Pleasant high-pitched "ding"
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'error') {
+                    // Harsh low-pitched buzz
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.3);
+                }
+            } catch (e) {
+                console.error("Audio playback failed", e);
+            }
         }
     </script>
 </x-filament-panels::page>
