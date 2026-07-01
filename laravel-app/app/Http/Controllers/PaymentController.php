@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\TicketReceiptMail;
 use App\Models\Ticket;
-use Illuminate\Http\Request;
+use  for the\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -360,12 +360,18 @@ class PaymentController extends Controller
         $content = route('ticket.verify', $ticket->uuid);
         $path    = "qrcodes/{$ticket->uuid}.svg";
 
-        QrCode::format('svg')
-            ->size(300)
-            ->errorCorrection('H')
-            ->generate($content, storage_path("app/public/{$path}"));
+        \Illuminate\Support\Facades\File::ensureDirectoryExists(storage_path('app/public/qrcodes'));
 
-        $ticket->update(['qr_code_path' => $path]);
+        try {
+            QrCode::format('svg')
+                ->size(300)
+                ->errorCorrection('H')
+                ->generate($content, storage_path("app/public/{$path}"));
+
+            $ticket->update(['qr_code_path' => $path]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('QR Generation failed', ['error' => $e->getMessage()]);
+        }
     }
 
     /**
