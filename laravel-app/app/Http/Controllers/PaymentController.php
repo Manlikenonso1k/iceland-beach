@@ -369,7 +369,7 @@ class PaymentController extends Controller
                 ->generate($content, storage_path("app/public/{$path}"));
 
             $ticket->update(['qr_code_path' => $path]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('QR Generation failed', ['error' => $e->getMessage()]);
         }
     }
@@ -405,6 +405,10 @@ class PaymentController extends Controller
      */
     private function sendReceiptEmail(Ticket $ticket): void
     {
-        Mail::to($ticket->email)->send(new TicketReceiptMail($ticket));
+        try {
+            Mail::to($ticket->email)->send(new TicketReceiptMail($ticket));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Receipt Email failed', ['error' => $e->getMessage()]);
+        }
     }
 }
