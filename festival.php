@@ -895,7 +895,7 @@ require_once "includes/header.php";
                         <li>Complimentary welcome drink</li>
                     </ul>
                     <a href="ticket.php" class="btn-ticket"
-                        style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Reserve
+                        style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Book
                         Buffet</a>
                 </div>
 
@@ -910,7 +910,7 @@ require_once "includes/header.php";
                         <li>Welcome drinks for two</li>
                     </ul>
                     <a href="ticket.php" class="btn-ticket"
-                        style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Reserve
+                        style="display: block; text-align: center; text-decoration: none; box-sizing: border-box;">Book
                         Couple</a>
                 </div>
             </div>
@@ -960,7 +960,8 @@ require_once "includes/header.php";
                     </ul>
                 </div>
 
-                <video src="static/redesign%20images/coconut%20festival.mp4" autoplay loop muted playsinline class="entertainment-image"></video>
+                <video src="static/redesign%20images/coconut%20festival.mp4" autoplay loop muted playsinline
+                    class="entertainment-image"></video>
             </div>
         </div>
     </section>
