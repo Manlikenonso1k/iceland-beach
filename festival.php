@@ -978,43 +978,99 @@ require_once "includes/header.php";
                 <li class="schedule-item">
                     <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
-                        <p>5:00 PM</p>
-                        <p>Gates Open & Welcome Reception</p>
+                        <p>12:00 PM - 1:00 PM</p>
+                        <p>Festival Opening & Welcome</p>
                     </div>
                 </li>
                 <li class="schedule-item">
                     <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
-                        <p>6:00 PM</p>
-                        <p>Culinary Experience Begins</p>
+                        <p>1:00 PM - 1:45 PM</p>
+                        <p>Live Music Set 1</p>
                     </div>
                 </li>
                 <li class="schedule-item">
                     <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
-                        <p>7:30 PM</p>
-                        <p>First Fashion Runway Show</p>
+                        <p>1:45 PM - 2:30 PM</p>
+                        <p>Red Carpet Segment & Cultural Performances</p>
                     </div>
                 </li>
                 <li class="schedule-item">
                     <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
-                        <p>8:00 PM</p>
-                        <p>Live Band Performance</p>
+                        <p>2:30 PM - 3:00 PM</p>
+                        <p>Games & Activities</p>
                     </div>
                 </li>
                 <li class="schedule-item">
                     <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
-                        <p>9:00 PM</p>
-                        <p>Second Runway Show</p>
+                        <p>3:00 PM - 3:45 PM</p>
+                        <p>Live Music Set 2 & Buffet Opening</p>
                     </div>
                 </li>
                 <li class="schedule-item">
                     <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
                     <div class="schedule-content">
-                        <p>10:00 PM</p>
-                        <p>Final Runway Show & Celebration</p>
+                        <p>3:45 PM - 4:30 PM</p>
+                        <p>Fashion Show (Buffet Continues)</p>
+                    </div>
+                </li>
+                <li class="schedule-item">
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
+                    <div class="schedule-content">
+                        <p>4:30 PM - 5:00 PM</p>
+                        <p>Interactive Segment (Buffet Continues)</p>
+                    </div>
+                </li>
+                <li class="schedule-item">
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
+                    <div class="schedule-content">
+                        <p>5:00 PM - 5:45 PM</p>
+                        <p>Live Music Set 3</p>
+                    </div>
+                </li>
+                <li class="schedule-item">
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
+                    <div class="schedule-content">
+                        <p>5:45 PM - 6:30 PM</p>
+                        <p>Fire Breathers Showcase</p>
+                    </div>
+                </li>
+                <li class="schedule-item">
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
+                    <div class="schedule-content">
+                        <p>6:30 PM - 7:00 PM</p>
+                        <p>Transition Period</p>
+                    </div>
+                </li>
+                <li class="schedule-item">
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
+                    <div class="schedule-content">
+                        <p>7:00 PM - 9:00 PM</p>
+                        <p>Pool Party</p>
+                    </div>
+                </li>
+                <li class="schedule-item">
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
+                    <div class="schedule-content">
+                        <p>9:00 PM - 10:00 PM</p>
+                        <p>Entertainment & Late-Night Bites</p>
+                    </div>
+                </li>
+                <li class="schedule-item">
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
+                    <div class="schedule-content">
+                        <p>10:00 PM - 11:30 PM</p>
+                        <p>Campfire & Acoustic by the Beach</p>
+                    </div>
+                </li>
+                <li class="schedule-item">
+                    <div class="schedule-time-icon"><span class="material-icons">schedule</span></div>
+                    <div class="schedule-content">
+                        <p>11:30 PM - 12:00 AM</p>
+                        <p>Festival Finale</p>
                     </div>
                 </li>
             </ul>

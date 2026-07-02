@@ -37,28 +37,38 @@ class TicketScanLogResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('ticket_id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('ticket.name')
+                    ->label('Ticket Holder')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('user_id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('ticket.order_ref')
+                    ->label('Order Ref')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Scanned By')
+                    ->default('System / Public')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'ok' => 'success',
+                        'already' => 'warning',
+                        'unpaid' => 'danger',
+                        default => 'gray',
+                    })
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Scanned At')
+                    ->dateTime('M j, Y H:i')
+                    ->sortable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                // No edit action for logs
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
