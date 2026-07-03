@@ -53,4 +53,20 @@ class Ticket extends Model
     {
         return '₦' . number_format($this->amount / 100, 2);
     }
+
+    /**
+     * All scan logs for this ticket.
+     */
+    public function scanLogs()
+    {
+        return $this->hasMany(TicketScanLog::class);
+    }
+
+    /**
+     * The most recent successful scan log (status = 'ok').
+     */
+    public function checkedInBy()
+    {
+        return $this->hasOne(TicketScanLog::class)->where('status', 'ok')->latestOfMany();
+    }
 }

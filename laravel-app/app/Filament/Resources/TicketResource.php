@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TicketResource\Pages;
 use App\Models\Ticket;
+use App\Models\TicketScanLog;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -15,6 +16,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class TicketResource extends Resource
 {
@@ -80,6 +82,13 @@ class TicketResource extends Resource
                     ->trueColor('success')
                     ->falseColor('gray'),
 
+                TextColumn::make('checkedInBy.user.name')
+                    ->label('Scanned By')
+                    ->default('—')
+                    ->badge()
+                    ->color('info')
+                    ->toggleable(),
+
                 TextColumn::make('payment_gateway')
                     ->badge()
                     ->label('Gateway'),
@@ -132,7 +141,19 @@ class TicketResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Confirm Check-In')
                     ->modalDescription(fn (Ticket $record) => "Mark {$record->name} as checked in?")
-                    ->action(fn (Ticket $record) => $record->update(['checked_in' => true]))
+                    ->action(function (Ticket $record) {
+                        $record->update([
+                            'checked_in'    => true,
+                            'checked_in_at' => now(),
+                        ]);
+                        $record->increment('scan_count');
+
+                        TicketScanLog::create([
+                            'ticket_id' => $record->id,
+                            'user_id'   => Auth::id(),
+                            'status'    => 'ok',
+                        ]);
+                    })
                     ->hidden(fn (Ticket $record) => $record->checked_in || !$record->paid)
                     ->successNotification(
                         Notification::make()->success()->title('Guest checked in successfully.')
