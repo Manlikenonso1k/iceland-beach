@@ -196,6 +196,13 @@ require_once "includes/header.php";
         color: white;
         margin-bottom: 1.5rem;
         text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        display: inline-block;
     }
 
     .festival-redesign-wrapper .hero h1 .accent {
@@ -208,6 +215,12 @@ require_once "includes/header.php";
         max-width: 32rem;
         margin-bottom: 2.5rem;
         text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
     }
 
     .festival-redesign-wrapper .hero-buttons {
@@ -789,12 +802,12 @@ require_once "includes/header.php";
                     <span>JULY 12, 2026 - ICELAND BEACH</span>
                 </div>
 
-                <h1 class="hero-content">
+                <h1>
                     Iceland beach Lagos Coconut Festival
                 </h1>
 
-                <p class="hero-content" An immersive cultural experience blending traditional coastal flavors, live
-                    entertainment, and high-end beachwear fashion.</p>
+                <p>An immersive cultural experience blending traditional coastal flavors, live entertainment, and
+                    high-end beachwear fashion.</p>
 
                 <div class="hero-buttons">
                     <button class="btn-primary"
