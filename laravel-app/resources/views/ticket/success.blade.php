@@ -152,14 +152,21 @@
 
         /* ── Print styles ────────────────────────────────────────────────── */
         @media print {
-            body { background: white; padding: 0; display: block; }
+            body { 
+                background: white; 
+                padding: 40px 0; 
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+            }
             .page-title, .print-btn { display: none !important; }
             #receipt {
                 box-shadow: none;
-                border: none;
-                border-radius: 0;
-                max-width: 100%;
-                padding: 20px;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                max-width: 480px;
+                margin: 0 auto;
+                padding: 40px;
             }
         }
     </style>

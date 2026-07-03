@@ -67,6 +67,11 @@ class Ticket extends Model
      */
     public function checkedInBy()
     {
-        return $this->hasOne(TicketScanLog::class)->where('status', 'ok')->latestOfMany();
+        return $this->hasOne(TicketScanLog::class)->ofMany(
+            ['id' => 'min'],
+            function ($query) {
+                $query->where('status', 'ok');
+            }
+        );
     }
 }
