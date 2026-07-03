@@ -790,9 +790,7 @@ require_once "includes/header.php";
                 </div>
 
                 <h1>
-                    Coconut Festival
-                    <br>
-                    <span class="accent">& Black Fragrance Pre-Launch</span>
+                    Icelandbeach Lagos Coconut Festival
                 </h1>
 
                 <p>An immersive cultural experience blending traditional coastal flavors, live entertainment, and
@@ -820,7 +818,7 @@ require_once "includes/header.php";
                 <div class="overview-content">
                     <h2>Experience the Tropics</h2>
                     <p>Join us for an unforgettable evening at Iceland Beach. The Coconut Festival is more than an
-                        event—it's a celebration of coastal lifestyle. We are also thrilled to host the exclusive
+                        event, it's a celebration of coastal lifestyle. We are also thrilled to host the exclusive
                         pre-launch of the <strong>Black Fragrance Beachwear Collection</strong>.</p>
 
                     <ul class="feature-list">
@@ -840,8 +838,8 @@ require_once "includes/header.php";
                 </div>
 
                 <div class="overview-images">
-                    <img src="static/redesign%20images/beachwear-fashion-showcase.png" alt="Fashion Showcase">
-                    <img src="static/redesign%20images/coconut-culinary-experience.png" alt="Culinary Experience">
+                    <img src="static/redesign%20images/beachwear-fashion-showcase1.png" alt="Fashion Showcase">
+                    <img src="static/redesign%20images/african%20festival.png" alt="Culinary Experience">
                 </div>
             </div>
         </div>
@@ -888,7 +886,6 @@ require_once "includes/header.php";
                 <div class="ticket-card">
                     <h3>Individual Buffet</h3>
                     <div class="ticket-price">₦25,000</div>
-                    <div class="ticket-note">₦20,000 Early Bird with promo</div>
                     <ul class="ticket-features">
                         <li>Exclusive buffet seating & service</li>
                         <li>Full coconut-inspired menu (7-10 PM)</li>
@@ -903,7 +900,6 @@ require_once "includes/header.php";
                 <div class="ticket-card">
                     <h3>Couple's Buffet</h3>
                     <div class="ticket-price">₦45,000</div>
-                    <div class="ticket-note">₦40,000 Early Bird with promo</div>
                     <ul class="ticket-features">
                         <li>Full buffet access for two</li>
                         <li>Exclusive seating for two</li>
