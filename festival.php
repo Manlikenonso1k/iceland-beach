@@ -789,12 +789,12 @@ require_once "includes/header.php";
                     <span>JULY 12, 2026 - ICELAND BEACH</span>
                 </div>
 
-                <h1>
-                    Icelandbeach Lagos Coconut Festival
+                <h1 class="hero-content">
+                    Iceland beach Lagos Coconut Festival
                 </h1>
 
-                <p>An immersive cultural experience blending traditional coastal flavors, live entertainment, and
-                    high-end beachwear fashion.</p>
+                <p class="hero-content" An immersive cultural experience blending traditional coastal flavors, live
+                    entertainment, and high-end beachwear fashion.</p>
 
                 <div class="hero-buttons">
                     <button class="btn-primary"
