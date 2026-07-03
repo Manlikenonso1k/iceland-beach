@@ -38,6 +38,12 @@ class RoleResource extends Resource
                     ->multiple()
                     ->preload()
                     ->searchable(),
+                Forms\Components\Select::make('users')
+                    ->relationship('users', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->searchable()
+                    ->label('Assign Users'),
             ]);
     }
 
