@@ -22,6 +22,7 @@
     RewriteRule ^sanctum(?:/.*)?$         laravel-app/public/index.php [L,QSA]
     RewriteRule ^ticket(?:/.*)?$          laravel-app/public/index.php [L,QSA]
     RewriteRule ^ticket$                  laravel-app/public/index.php [L,QSA]
+    RewriteRule ^vendor-spots(?:/.*)?$    laravel-app/public/index.php [L,QSA]
 
     # -----------------------------------------------------
     # 0. ALLOW STATIC FILES (VIDEOS, IMAGES, CSS, JS)
