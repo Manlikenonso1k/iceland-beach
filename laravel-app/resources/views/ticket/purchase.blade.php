@@ -220,11 +220,10 @@
                     <label class="form-label" for="pickup_location">Pickup Location *</label>
                     <select class="form-input" id="pickup_location" name="pickup_location">
                         <option value="" disabled selected>Select a location</option>
-                        <option value="Uni Lag" {{ old('pickup_location') === 'Uni Lag' ? 'selected' : '' }}>Uni Lag</option>
-                        <option value="Surulere" {{ old('pickup_location') === 'Surulere' ? 'selected' : '' }}>Surulere</option>
-                        <option value="Ikate" {{ old('pickup_location') === 'Ikate' ? 'selected' : '' }}>Ikate</option>
+                        <option value="Eko Atlantic entrance by Bar Beach" {{ old('pickup_location') === 'Eko Atlantic entrance by Bar Beach' ? 'selected' : '' }}>Eko Atlantic entrance by Bar Beach</option>
                         <option value="Ikeja" {{ old('pickup_location') === 'Ikeja' ? 'selected' : '' }}>Ikeja</option>
-                        <option value="Berger" {{ old('pickup_location') === 'Berger' ? 'selected' : '' }}>Berger</option>
+                        <option value="Surulere" {{ old('pickup_location') === 'Surulere' ? 'selected' : '' }}>Surulere</option>
+                        <option value="Akoka-Yaba" {{ old('pickup_location') === 'Akoka-Yaba' ? 'selected' : '' }}>Akoka-Yaba</option>
                     </select>
                 </div>
 
