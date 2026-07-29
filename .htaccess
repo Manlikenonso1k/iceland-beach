@@ -10,6 +10,9 @@
     RewriteRule ^livewire(?:/.*)?$ laravel-app/public/index.php [L,QSA]
     RewriteRule ^(css|js|build|storage)/filament(?:/.*)?$ laravel-app/public/$0 [L,QSA]
 
+    # Serve Laravel public assets (images, etc.)
+    RewriteRule ^images/(.*)$ laravel-app/public/images/$1 [L]
+
     # Route Payment and Ticketing URLs into Laravel
     # NOTE: ticket.php has been retired (renamed .bak). All /ticket/* and bare /ticket
     #       requests now go to the Laravel Blade view via the route GET /ticket.
