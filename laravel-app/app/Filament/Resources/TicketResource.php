@@ -49,11 +49,9 @@ class TicketResource extends Resource
                 TextColumn::make('ticket_type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'VIP'               => 'warning',
-                        'Regular'           => 'info',
-                        'Individual Buffet' => 'success',
-                        "Couple's Buffet"   => 'purple',
-                        default             => 'gray',
+                        'Access Ticket'      => 'info',
+                        'Access + Transport' => 'warning',
+                        default              => 'gray',
                     })
                     ->label('Type'),
 
@@ -122,10 +120,8 @@ class TicketResource extends Resource
 
                 SelectFilter::make('ticket_type')
                     ->options([
-                        'Regular'           => 'Regular',
-                        'VIP'               => 'VIP',
-                        'Individual Buffet' => 'Individual Buffet',
-                        "Couple's Buffet"   => "Couple's Buffet",
+                        'Access Ticket'      => 'Access Ticket',
+                        'Access + Transport' => 'Access + Transport',
                     ])
                     ->label('Ticket Type'),
 

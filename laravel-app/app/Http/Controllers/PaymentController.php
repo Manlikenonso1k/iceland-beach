@@ -94,10 +94,8 @@ class PaymentController extends Controller
         $promoCode  = strtoupper(trim($request->input('promo_code', '')));
 
         $prices = [
-            'Regular'           => 5000,
-            'VIP'               => 10000,
-            'Individual Buffet' => 25000,
-            "Couple's Buffet"   => 45000,
+            'Access Ticket'      => 5000,
+            'Access + Transport' => 10000,
         ];
 
         if (!array_key_exists($ticketType, $prices)) {
@@ -106,16 +104,7 @@ class PaymentController extends Controller
 
         $basePrice   = $prices[$ticketType];
         $isEarlyBird = false;
-
-        if ($promoCode === 'ICECOCONUT' && date('Y-m-d') <= '2026-06-28') {
-            if ($ticketType === 'Individual Buffet') {
-                $basePrice   = 20000;
-                $isEarlyBird = true;
-            } elseif ($ticketType === "Couple's Buffet") {
-                $basePrice   = 40000;
-                $isEarlyBird = true;
-            }
-        } elseif ($promoCode !== '') {
+        if ($promoCode !== '') {
             if ($promoCode === 'ICECOCONUT') {
                 return response()->json(['success' => false, 'error' => 'Promo code expired']);
             }
@@ -404,22 +393,11 @@ class PaymentController extends Controller
     private function getUnitPrice(string $ticketType, string $promoCode = ''): int
     {
         $prices = [
-            'Regular'          => 5000,
-            'VIP'              => 10000,
-            'Individual Buffet' => 25000,
-            "Couple's Buffet"  => 45000,
+            'Access Ticket'      => 5000,
+            'Access + Transport' => 10000,
         ];
 
         $unitPrice = $prices[$ticketType] ?? 5000;
-
-        // ICECOCONUT promo: early bird discount on buffet tiers only
-        if ($promoCode === 'ICECOCONUT' && date('Y-m-d') <= '2026-06-28') {
-            if ($ticketType === 'Individual Buffet') {
-                $unitPrice = 20000;
-            } elseif ($ticketType === "Couple's Buffet") {
-                $unitPrice = 40000;
-            }
-        }
 
         return $unitPrice;
     }

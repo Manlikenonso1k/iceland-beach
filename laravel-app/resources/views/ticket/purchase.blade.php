@@ -158,20 +158,12 @@
         {{-- Pricing reminder --}}
         <div class="mb-6 grid grid-cols-2 gap-3 text-center">
             <div class="bg-sky-50 border border-sky-100 rounded-lg p-3">
-                <div class="text-xs font-bold text-sky-700 uppercase tracking-widest mb-1">Regular</div>
+                <div class="text-xs font-bold text-sky-700 uppercase tracking-widest mb-1">Access Ticket</div>
                 <div class="text-xl font-bold text-slate-800" style="font-family:'Bodoni Moda',serif;">₦5,000</div>
             </div>
             <div class="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                <div class="text-xs font-bold text-amber-700 uppercase tracking-widest mb-1">VIP</div>
+                <div class="text-xs font-bold text-amber-700 uppercase tracking-widest mb-1">Access + Transport</div>
                 <div class="text-xl font-bold text-slate-800" style="font-family:'Bodoni Moda',serif;">₦10,000</div>
-            </div>
-            <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-                <div class="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-1">Individual Buffet</div>
-                <div class="text-xl font-bold text-slate-800" style="font-family:'Bodoni Moda',serif;">₦25,000</div>
-            </div>
-            <div class="bg-purple-50 border border-purple-100 rounded-lg p-3">
-                <div class="text-xs font-bold text-purple-700 uppercase tracking-widest mb-1">Couple's Buffet</div>
-                <div class="text-xl font-bold text-slate-800" style="font-family:'Bodoni Moda',serif;">₦45,000</div>
             </div>
         </div>
 
@@ -212,10 +204,8 @@
                     <div>
                         <label class="form-label" for="ticket_type">Ticket Type *</label>
                         <select class="form-input" id="ticket_type" name="ticket_type" required>
-                            <option value="Regular"           {{ old('ticket_type') === 'Regular'           ? 'selected' : '' }}>Regular — ₦5,000</option>
-                            <option value="VIP"               {{ old('ticket_type') === 'VIP'               ? 'selected' : '' }}>VIP — ₦10,000</option>
-                            <option value="Individual Buffet" {{ old('ticket_type') === 'Individual Buffet' ? 'selected' : '' }}>Individual Buffet — ₦25,000</option>
-                            <option value="Couple's Buffet"   {{ old('ticket_type') === "Couple's Buffet"   ? 'selected' : '' }}>Couple's Buffet — ₦45,000</option>
+                            <option value="Access Ticket"      {{ old('ticket_type') === 'Access Ticket'      ? 'selected' : '' }}>Access Ticket — ₦5,000</option>
+                            <option value="Access + Transport" {{ old('ticket_type') === 'Access + Transport' ? 'selected' : '' }}>Access + Transport — ₦10,000</option>
                         </select>
                     </div>
                     <div>
@@ -315,8 +305,7 @@
                 promoMsg.className   = 'text-xs mt-1 text-red-600 font-semibold block';
 
                 const backupPrices = {
-                    'Regular': 5000, 'VIP': 10000,
-                    'Individual Buffet': 25000, "Couple's Buffet": 45000
+                    'Access Ticket': 5000, 'Access + Transport': 10000
                 };
                 currentAmount = (backupPrices[typeEl.value] || 5000) * Math.max(1, parseInt(qtyEl.value) || 1);
                 display.textContent = '₦' + currentAmount.toLocaleString('en-NG', { minimumFractionDigits: 2 });

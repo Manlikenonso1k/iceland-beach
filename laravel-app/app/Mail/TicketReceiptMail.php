@@ -20,7 +20,7 @@ class TicketReceiptMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Iceland Beach Event Ticket — ' . $this->ticket->order_ref,
+            subject: 'Your Ticket for Inter-University Beach Blast 2026 — ' . $this->ticket->order_ref,
         );
     }
 
