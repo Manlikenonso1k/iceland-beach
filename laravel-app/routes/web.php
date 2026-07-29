@@ -21,6 +21,12 @@ Route::get('/vendor-spots', function () {
     return view('vendor-spots');
 })->name('vendor-spots');
 
+// Vendor Payment routes
+Route::get('/vendor-payment/{vendorRequest}', [\App\Http\Controllers\VendorPaymentController::class, 'show'])->name('vendor.payment.show');
+Route::post('/vendor-payment/{vendorRequest}/pay', [\App\Http\Controllers\VendorPaymentController::class, 'initiatePay'])->name('vendor.payment.initiate');
+Route::any('/vendor-payment/callback', [\App\Http\Controllers\VendorPaymentController::class, 'callback'])->name('vendor.payment.callback')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('/webhooks/vendor-tgi', [\App\Http\Controllers\VendorPaymentController::class, 'webhook'])->name('vendor.payment.webhook')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
 // ──────────────────────────────────────────────────────────────────────────────
 // TICKET PAYMENT ROUTES
 // ──────────────────────────────────────────────────────────────────────────────

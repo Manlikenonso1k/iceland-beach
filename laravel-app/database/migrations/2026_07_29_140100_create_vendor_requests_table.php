@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('address');
             $table->text('expected_to_sell');
+            $table->string('order_ref')->nullable();
             $table->enum('status', ['pending', 'approved', 'paid'])->default('pending');
             $table->timestamps();
         });

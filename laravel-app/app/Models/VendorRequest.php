@@ -13,6 +13,7 @@ class VendorRequest extends Model
         'email',
         'address',
         'expected_to_sell',
+        'order_ref',
         'status',
     ];
 

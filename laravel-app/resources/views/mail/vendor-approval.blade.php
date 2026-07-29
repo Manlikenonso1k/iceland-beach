@@ -42,8 +42,7 @@
                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                                 <tr>
                                     <td align="center" style="padding: 8px 0 24px;">
-                                        {{-- Replace '#' with your actual payment gateway URL --}}
-                                        <a href="#"
+                                        <a href="{{ url(route('vendor.payment.show', $vendorRequest)) }}"
                                            style="display: inline-block; padding: 14px 40px; background: linear-gradient(135deg, #d4af37, #f5d060); color: #000000; font-size: 16px; font-weight: 700; text-decoration: none; border-radius: 8px;">
                                             Pay ₦{{ $price }} Now
                                         </a>
@@ -55,8 +54,7 @@
                                 If the button above doesn't work, copy and paste this link into your browser:
                             </p>
                             <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #d4af37; word-break: break-all;">
-                                {{-- Replace with your actual payment link --}}
-                                https://your-payment-gateway.com/pay/placeholder
+                                {{ url(route('vendor.payment.show', $vendorRequest)) }}
                             </p>
                         </td>
                     </tr>
