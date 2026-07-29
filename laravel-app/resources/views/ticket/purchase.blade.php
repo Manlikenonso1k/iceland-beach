@@ -215,6 +215,19 @@
                     </div>
                 </div>
 
+                {{-- Pickup Location (Only for Transport ticket) --}}
+                <div id="pickup_location_container" class="hidden">
+                    <label class="form-label" for="pickup_location">Pickup Location *</label>
+                    <select class="form-input" id="pickup_location" name="pickup_location">
+                        <option value="" disabled selected>Select a location</option>
+                        <option value="Uni Lag" {{ old('pickup_location') === 'Uni Lag' ? 'selected' : '' }}>Uni Lag</option>
+                        <option value="Surulere" {{ old('pickup_location') === 'Surulere' ? 'selected' : '' }}>Surulere</option>
+                        <option value="Ikate" {{ old('pickup_location') === 'Ikate' ? 'selected' : '' }}>Ikate</option>
+                        <option value="Ikeja" {{ old('pickup_location') === 'Ikeja' ? 'selected' : '' }}>Ikeja</option>
+                        <option value="Berger" {{ old('pickup_location') === 'Berger' ? 'selected' : '' }}>Berger</option>
+                    </select>
+                </div>
+
                 {{-- Promo Code --}}
                 <div>
                     <label class="form-label" for="promo_code">Promo Code (Optional)</label>
@@ -273,6 +286,19 @@
 
     // ── Live amount calculation (server-side) ─────────────────────────────────
     async function updateDisplay() {
+        const type = typeEl.value;
+        const pickupContainer = document.getElementById('pickup_location_container');
+        const pickupSelect = document.getElementById('pickup_location');
+        
+        if (type === 'Access + Transport') {
+            pickupContainer.classList.remove('hidden');
+            pickupSelect.required = true;
+        } else {
+            pickupContainer.classList.add('hidden');
+            pickupSelect.required = false;
+            pickupSelect.value = '';
+        }
+
         const formData = new FormData();
         formData.append('ticket_type', typeEl.value);
         formData.append('quantity',    qtyEl.value);
@@ -333,6 +359,11 @@
 
         if (!name || !email || !phone) {
             alert('Please fill in your name, email, and phone number before proceeding.');
+            return;
+        }
+        
+        if (typeEl.value === 'Access + Transport' && !document.getElementById('pickup_location').value) {
+            alert('Please select a pickup location.');
             return;
         }
 

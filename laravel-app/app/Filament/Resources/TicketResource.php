@@ -55,6 +55,12 @@ class TicketResource extends Resource
                     })
                     ->label('Type'),
 
+                TextColumn::make('pickup_location')
+                    ->label('Pickup')
+                    ->badge()
+                    ->color('secondary')
+                    ->default('—'),
+
                 TextColumn::make('quantity')
                     ->label('Qty')
                     ->alignCenter(),
@@ -171,6 +177,7 @@ class TicketResource extends Resource
                 TextInput::make('email')->disabled(),
                 TextInput::make('phone')->disabled(),
                 TextInput::make('ticket_type')->disabled(),
+                TextInput::make('pickup_location')->disabled()->label('Pickup Location'),
                 TextInput::make('quantity')->disabled(),
                 TextInput::make('amount')
                     ->disabled()

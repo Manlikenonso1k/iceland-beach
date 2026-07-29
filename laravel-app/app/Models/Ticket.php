@@ -16,6 +16,7 @@ class Ticket extends Model
         'email',
         'phone',
         'ticket_type',
+        'pickup_location',
         'quantity',
         'amount',
         'order_ref',
