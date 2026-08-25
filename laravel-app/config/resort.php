@@ -1,17 +1,17 @@
 <?php
 
 return [
-    'booking_admin_recipients' => [
-        env('BOOKING_PRIMARY_EMAIL', 'booking@icelandbeach.com'),
-        env('BOOKING_DEV_EMAIL', 'v.chinonso@collegeofartslagos.com'),
-        env('BOOKING_ADMIN_EMAIL', 'akapo@icelandbeach.com'),
-        env('BOOKING_INFO_EMAIL', 'info@icelandbeach.com'),
-    ],
+    // Booking notifications use the email address configured in .env. Optional
+    // additional recipients remain opt-in: leave their env values blank to avoid copies.
+    'booking_admin_recipients' => array_values(array_filter([
+        env('BOOKING_PRIMARY_EMAIL', env('MAIL_FROM_ADDRESS')),
+        env('BOOKING_DEV_EMAIL'),
+        env('BOOKING_ADMIN_EMAIL'),
+        env('BOOKING_INFO_EMAIL'),
+    ])),
 
-    // Legacy app path used by data bridge seeders on local and production.
     'legacy_app_path' => env('LEGACY_APP_PATH', base_path('..')),
 
-    // Optional legacy DB connection used by LegacyRoomsSeeder.
     'legacy_db' => [
         'host' => env('LEGACY_DB_HOST'),
         'port' => (int) env('LEGACY_DB_PORT', 3306),
