@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "fraunces",
+        "createdAt": "2026-08-28T16:42:59.737Z",
+        "reason": "Same Fraunces choice, flagged again on the Google Fonts @import line"
+      }
+    ]
+  }
+}

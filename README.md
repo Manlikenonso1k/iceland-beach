@@ -28,17 +28,15 @@ It now includes a **full event ticketing system** — customers can purchase tic
 ## 🛠️ Technologies Used
 
 ### Frontend (Public Site)
-- **HTML5 / CSS3 / JavaScript (ES6+)**
-- **Bootstrap 5.3.2**: Responsive grid and components
-- **Tailwind CSS** (via CDN): Used on the events and ticketing pages
-- **Paystack Inline JS**: `PaystackPop.setup()` for card popup
+- **React 19 + React Router 7 + Vite 8**
+- **Tailwind CSS v4**: Utility-first styling for modernized components
+- **Framer Motion & GSAP**: Advanced animations and interactions
+- **Lucide React & Swiper**: Iconography and carousels
+- **Axios**: API communication with the Laravel backend
 
-### Backend — Public Site
-- **PHP Legacy**: Server-side scripting (`ticket.php`, `event.php`, etc.)
-
-### Backend — Admin & Ticketing
-- **Laravel 12**: Full-stack PHP framework (`laravel-app/`)
-- **Filament 3**: Admin panel with TicketResource, filters, check-in actions
+### Backend – Admin, Ticketing & API
+- **Laravel 12**: Full-stack PHP framework serving as API and Admin panel
+- **Filament 3**: Admin panel with TicketResource, room/service management, filters, check-in actions
 - **SQLite**: Database (production-ready, no MySQL needed)
 - **simplesoftwareio/simple-qrcode**: SVG QR code generation
 
@@ -55,36 +53,26 @@ It now includes a **full event ticketing system** — customers can purchase tic
 
 ```
 iceland-beach/
-├── ticket.php                  # 🎟️ Public ticket purchase form (PHP Legacy)
-├── event.php                   # Events listing page
-├── index.php                   # Homepage
-├── about.php                   # About page
-├── gallery.php                 # Gallery page
-├── includes/                   # Shared PHP components (header, footer)
-├── static/                     # CSS, JS, images
-├── admin/                      # Legacy admin tools
-├── RESULT.md                   # 📄 Full build documentation (read this!)
-│
-└── laravel-app/                # 🚀 Laravel 12 backend
-    ├── .env                    # Environment config (payment keys live here)
-    ├── config/services.php     # Paystack + Titan config
-    ├── routes/web.php          # All payment + ticketing routes
-    │
-    ├── database/migrations/
-    │   └── ..._create_tickets_table.php
-    │
-    ├── app/
-    │   ├── Models/Ticket.php
-    │   ├── Http/Controllers/PaymentController.php
-    │   ├── Mail/TicketReceiptMail.php
-    │   └── Filament/Resources/TicketResource.php
-    │
-    └── resources/views/
-        ├── ticket/
-        │   ├── success.blade.php   # Receipt page with QR code
-        │   └── verify.blade.php    # Gate scan result (green/red screen)
-        └── mail/
-            └── ticket-receipt.blade.php
+├── app/                  # Laravel 12 backend & API logic
+│   ├── Http/Controllers/ # API controllers (Rooms, Bookings, Services)
+│   ├── Models/           # Eloquent models
+│   └── Filament/         # Filament v3 admin resources
+├── config/               # Application configuration
+├── database/             # SQLite DB and seeders
+├── public/               # Static assets (images, legacy assets, index.php)
+├── resources/
+│   ├── css/              # Tailwind CSS and global styles
+│   ├── js/               # React SPA entry and routing (app.jsx)
+│   │   ├── components/   # Reusable UI components
+│   │   ├── pages/        # Page components (Home, Rooms, Services)
+│   └── views/            # Blade templates (SPA shell, emails, receipts)
+├── routes/
+│   ├── api.php           # API endpoints (React integration)
+│   └── web.php           # Admin routes and SPA fallback
+├── .env                  # Environment config
+├── artisan               # Laravel CLI tool
+├── package.json          # Node dependencies for React + Vite
+└── composer.json         # PHP dependencies
 ```
 
 > 📄 For full technical documentation of the ticketing system, see **[RESULT.md](RESULT.md)**
@@ -134,6 +122,7 @@ iceland-beach/
    ```bash
    php artisan serve
    ```
+   Email: admin@local.test | Password: password
 
 7. **Serve the PHP legacy site** (separate terminal)
    ```bash

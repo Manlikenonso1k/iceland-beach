@@ -1,0 +1,29 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-C_N68-Ka.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.jsx": {
+    "file": "assets/app-KVafC3Gz.js",
+    "name": "app",
+    "src": "resources/js/app.jsx",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/components/AuroraCanvas.jsx"
+    ]
+  },
+  "resources/js/components/AuroraCanvas.jsx": {
+    "file": "assets/AuroraCanvas-DAv15Kge.js",
+    "name": "AuroraCanvas",
+    "src": "resources/js/components/AuroraCanvas.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  }
+}

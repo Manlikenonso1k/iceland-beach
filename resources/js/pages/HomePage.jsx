@@ -1,0 +1,424 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import ScrollExpandMedia from '../components/ui/scroll-expansion-hero';
+import AuroraLayer from '../components/AuroraLayer';
+import {
+    ArrowRight,
+    CalendarDays,
+    ChevronLeft,
+    ChevronRight,
+    Smartphone,
+    Star,
+    Tag,
+    Users,
+    X,
+} from 'lucide-react';
+
+const revealUp = {
+    hidden: { opacity: 0, y: 28 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 1, ease: [0.16, 1, 0.3, 1] },
+    },
+};
+
+const staggerGrid = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.08 } },
+};
+
+/* ── Static data ──────────────────────────────────────── */
+
+const stayCards = [
+    {
+        title: 'Glacier Bay Suites',
+        desc: 'Oceanview rooms facing the black sand coastline',
+        img: '/legacy-images/Beach Front 2.jpeg',
+    },
+    {
+        title: 'The Hot Spring Collection',
+        desc: 'Rooms with private geothermal soaking pools',
+        img: '/legacy-images/gallery/imge (11).jpeg',
+    },
+    {
+        title: 'Northern Lights Lofts',
+        desc: 'Top-floor rooms with retractable skylight roofs',
+        img: '/legacy-images/prenium room.jpeg',
+    },
+    {
+        title: 'Fjord Family Villas',
+        desc: 'Multi-room villas for groups',
+        img: '/legacy-images/Coconut Cabana.jpeg',
+    },
+];
+
+const confidenceCards = [
+    {
+        Icon: Tag,
+        title: 'The best rate, guaranteed',
+        text: "Book directly on our site and you'll always get our lowest rate, with free changes up to 48 hours before arrival.",
+    },
+    {
+        Icon: Star,
+        title: 'Member perks',
+        text: 'Direct bookings earn credit toward future stays and unlock seasonal upgrades like late checkout and spa access.',
+    },
+    {
+        Icon: Smartphone,
+        title: 'Manage it all in one place',
+        text: 'Handle check-in, room requests, and check-out from your confirmation email — no app required.',
+    },
+];
+
+const photoStripCards = [
+    {
+        title: 'Geothermal stays',
+        text: 'Our signature soaking pools are steps from every room in this wing — the perfect way to end a day on the coast.',
+        cta: 'Explore geothermal rooms',
+        img: '/legacy-images/gallery/imge (5).jpeg',
+    },
+    {
+        title: 'Coastal stays',
+        text: 'Whether you want total quiet or an active base for hikes and boat tours, our coastal rooms flex to your pace.',
+        cta: 'Explore coastal rooms',
+        img: '/legacy-images/gallery/imge (13).jpeg',
+    },
+    {
+        title: 'Aurora stays',
+        text: 'Skylight ceilings, blackout curtains on demand, and a wake-up call the moment the lights appear overhead.',
+        cta: 'Explore aurora rooms',
+        img: '/legacy-images/gallery/nimage (5).jpg',
+    },
+    {
+        title: 'Family stays',
+        text: "Connecting rooms, a kids' pool deck, and gear rental for the whole group.",
+        cta: 'Explore family stays',
+        img: '/legacy-images/gallery/imge (4).jpeg',
+    },
+];
+
+/* ── Carousel scroll hook ─────────────────────────────── */
+
+function useCarousel(ref, cardWidth = 340) {
+    const [canPrev, setCanPrev] = useState(false);
+    const [canNext, setCanNext] = useState(true);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const check = () => {
+            setCanPrev(el.scrollLeft > 4);
+            setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+        };
+        el.addEventListener('scroll', check, { passive: true });
+        window.addEventListener('resize', check);
+        check();
+        return () => {
+            el.removeEventListener('scroll', check);
+            window.removeEventListener('resize', check);
+        };
+    }, []);
+
+    const scroll = (dir) => {
+        ref.current?.scrollBy({ left: dir * cardWidth, behavior: 'smooth' });
+    };
+
+    return { canPrev, canNext, prev: () => scroll(-1), next: () => scroll(1) };
+}
+
+/* ── HomePage ─────────────────────────────────────────── */
+
+export default function HomePage() {
+    const navigate = useNavigate();
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [checkIn, setCheckIn] = useState('');
+    const [checkOut, setCheckOut] = useState('');
+    const [guests, setGuests] = useState(1);
+
+    const staysRef = useRef(null);
+    const stays = useCarousel(staysRef);
+    const stripRef = useRef(null);
+    const strip = useCarousel(stripRef, 300);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        const p = new URLSearchParams();
+        if (checkIn) p.set('check_in', checkIn);
+        if (checkOut) p.set('check_out', checkOut);
+        if (guests > 1) p.set('guests', guests);
+        navigate(`/book?${p}`);
+    };
+
+    return (
+        <>
+            {/* ─── Hero (unchanged) ─── */}
+            <ScrollExpandMedia
+                mediaType="video"
+                mediaSrc="/legacy-video/icelandbeachhero.mp4"
+                posterSrc="/images/hero.jpg"
+                bgImageSrc="/images/hero.jpg"
+                title="Iceland Beach Resort"
+                date="Lagos, Nigeria"
+                scrollToExpand="Scroll to explore"
+                textBlend
+            />
+
+            {/* ─── 1  Search / Filter Bar ─── */}
+            <motion.div
+                className="hp-search-wrap"
+                initial={{ opacity: 0, y: 22 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+            >
+                {/* Mobile pill trigger */}
+                <button
+                    className="hp-search-pill"
+                    onClick={() => setSearchOpen(true)}
+                    aria-label="Open booking search"
+                >
+                    <CalendarDays size={16} />
+                    Find a stay
+                </button>
+
+                {/* Full search bar (always visible desktop, overlay on mobile) */}
+                <form
+                    className={`hp-search-bar${searchOpen ? ' open' : ''}`}
+                    onSubmit={handleSearch}
+                >
+                    <button
+                        type="button"
+                        className="hp-search-close"
+                        onClick={() => setSearchOpen(false)}
+                        aria-label="Close search"
+                    >
+                        <X size={22} />
+                    </button>
+
+                    <label className="hp-search-field">
+                        <span>Check-in</span>
+                        <input
+                            type="date"
+                            value={checkIn}
+                            onChange={(e) => setCheckIn(e.target.value)}
+                            required
+                        />
+                    </label>
+
+                    <label className="hp-search-field">
+                        <span>Check-out</span>
+                        <input
+                            type="date"
+                            value={checkOut}
+                            onChange={(e) => setCheckOut(e.target.value)}
+                            required
+                        />
+                    </label>
+
+                    <label className="hp-search-field">
+                        <span>Guests</span>
+                        <input
+                            type="number"
+                            min="1"
+                            max="20"
+                            value={guests}
+                            onChange={(e) => setGuests(+e.target.value)}
+                        />
+                    </label>
+
+                    <button type="submit" className="hp-search-cta">
+                        Find a stay
+                    </button>
+                </form>
+
+                {searchOpen && (
+                    <div
+                        className="hp-search-overlay"
+                        onClick={() => setSearchOpen(false)}
+                    />
+                )}
+            </motion.div>
+
+            {/* ─── 2  Explore Stays Carousel ─── */}
+            <motion.section
+                className="hp-stays"
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, amount: 0.2 }}
+                variants={revealUp}
+            >
+                <div className="hp-stays-intro">
+                    <h2>New ways to stay by the sea</h2>
+                    <p>
+                        We&apos;re expanding beyond the standard room from geothermal
+                        suites to skylight lofts built for aurora season, there&apos;s a
+                        new way to experience the coast every year.
+                    </p>
+                    <Link to="/rooms" className="hp-link">
+                        Explore new stays <ArrowRight size={16} />
+                    </Link>
+                </div>
+
+                <div className="hp-carousel-wrap">
+                    <div className="hp-carousel" ref={staysRef}>
+                        {stayCards.map((card) => (
+                            <Link
+                                to="/rooms"
+                                className="hp-stay-card"
+                                key={card.title}
+                            >
+                                <img src={card.img} alt={card.title} loading="lazy" />
+                                <span className="hp-stay-label">{card.title}</span>
+                            </Link>
+                        ))}
+                    </div>
+                    <div className="hp-carousel-nav">
+                        <button
+                            onClick={stays.prev}
+                            disabled={!stays.canPrev}
+                            aria-label="Previous stays"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button
+                            onClick={stays.next}
+                            disabled={!stays.canNext}
+                            aria-label="Next stays"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                </div>
+            </motion.section>
+
+            {/* ─── 3  Book With Confidence ─── */}
+            <motion.section
+                className="hp-confidence"
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, amount: 0.2 }}
+                variants={staggerGrid}
+            >
+                <AuroraLayer intensity={0.9} />
+                <motion.h2 variants={revealUp}>Book with confidence</motion.h2>
+                <motion.p className="hp-confidence-sub" variants={revealUp}>
+                    Book directly with us for the best rate, flexible changes, and a
+                    stay you can manage start to finish no third parties involved.
+                </motion.p>
+                <div className="hp-confidence-grid">
+                    {confidenceCards.map(({ Icon, title, text }) => (
+                        <motion.article key={title} variants={revealUp}>
+                            <Icon size={28} />
+                            <h3>{title}</h3>
+                            <p>{text}</p>
+                        </motion.article>
+                    ))}
+                </div>
+            </motion.section>
+
+            {/* ─── 4  Unlock Your Stay ─── */}
+            <section
+                className="hp-unlock"
+                style={{
+                    backgroundImage:
+                        'linear-gradient(90deg, rgba(16,59,55,.82), rgba(16,59,55,.35)), url("/legacy-images/img (15).jpg")',
+                }}
+            >
+                <motion.div
+                    className="hp-unlock-copy"
+                    initial={{ opacity: 0, y: 28 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                >
+                    <h2>Unlock the coast, every season</h2>
+                    <p>
+                        One property, four coastlines of experience from summer&apos;s
+                        midnight sun to winter&apos;s aurora skies. However you stay,
+                        there&apos;s a season here worth planning around.
+                    </p>
+                </motion.div>
+
+                <div className="hp-strip-wrap">
+                    <div className="hp-strip" ref={stripRef}>
+                        {photoStripCards.map((card) => (
+                            <article className="hp-strip-card" key={card.title}>
+                                <img src={card.img} alt={card.title} loading="lazy" />
+                                <div>
+                                    <h3>{card.title}</h3>
+                                    <p>{card.text}</p>
+                                    <Link to="/rooms">
+                                        {card.cta} <ArrowRight size={14} />
+                                    </Link>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                    <div className="hp-carousel-nav light">
+                        <button
+                            onClick={strip.prev}
+                            disabled={!strip.canPrev}
+                            aria-label="Previous"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button
+                            onClick={strip.next}
+                            disabled={!strip.canNext}
+                            aria-label="Next"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* ─── 5  Partners Crosssell ─── */}
+            <motion.section
+                className="hp-partners"
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            >
+                <div className="hp-partners-text">
+                    <h2>More ways to earn from your stay</h2>
+                    <p>
+                        Earn credit on transfers, tours, and dining with our local
+                        partners from glacier hikes to harborside restaurants and
+                        put it toward your next trip.
+                    </p>
+                    <Link to="/services" className="hp-link">
+                        See our partners <ArrowRight size={16} />
+                    </Link>
+                </div>
+                <img
+                    src="/legacy-images/gallery/imge (6).jpeg"
+                    alt="Iceland Beach partners"
+                    loading="lazy"
+                />
+            </motion.section>
+
+            {/* ─── 6  Footer Banner ─── */}
+            <motion.section
+                className="hp-banner"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.4 }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            >
+                <p>
+                    <strong>Great stays start with great people.</strong> Our
+                    team&apos;s care for every guest is what keeps people coming back
+                    season after season.{' '}
+                    <Link to="/book">Plan your next stay.</Link>
+                </p>
+            </motion.section>
+        </>
+    );
+}
