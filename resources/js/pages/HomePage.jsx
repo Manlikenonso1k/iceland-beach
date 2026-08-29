@@ -144,7 +144,25 @@ export default function HomePage() {
 
     useEffect(() => {
         window.scrollTo(0, 0);
+        // Restore last search from localStorage (UX: user doesn't have to re-enter)
+        try {
+            const saved = JSON.parse(localStorage.getItem('hp_search'));
+            if (saved?.checkIn) setCheckIn(saved.checkIn);
+            if (saved?.checkOut) setCheckOut(saved.checkOut);
+            if (saved?.guests) setGuests(saved.guests);
+        } catch (e) {
+            // localStorage unavailable or corrupted, no-op
+        }
     }, []);
+
+    // Save search params whenever they change
+    useEffect(() => {
+        try {
+            localStorage.setItem('hp_search', JSON.stringify({ checkIn, checkOut, guests }));
+        } catch (e) {
+            // localStorage quota or unavailable
+        }
+    }, [checkIn, checkOut, guests]);
 
     const handleSearch = (e) => {
         e.preventDefault();

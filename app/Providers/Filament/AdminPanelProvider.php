@@ -9,7 +9,8 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -27,9 +28,14 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(\App\Filament\Pages\Auth\Login::class)
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => '#e2924a',  // Ember amber
+                'danger' => '#d32f2f',
+                'gray' => '#6b7280',
+                'info' => '#3b82f6',
+                'success' => '#10b981',
+                'warning' => '#f59e0b',
             ])
             ->plugin(FilamentFullCalendarPlugin::make())
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -58,5 +64,34 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    /**
+     * Presentation-only overrides for the login screen.
+     *
+     * Each hook is scoped to the Login page, so the rest of the panel keeps
+     * Filament's stock chrome.
+     */
+    public function boot(): void
+    {
+        $login = \App\Filament\Pages\Auth\Login::class;
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_END,
+            fn (): string => view('filament.auth.theme')->render(),
+            scopes: $login,
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::SIMPLE_PAGE_START,
+            fn (): string => view('filament.auth.brand')->render(),
+            scopes: $login,
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::SIMPLE_PAGE_END,
+            fn (): string => view('filament.auth.foot')->render(),
+            scopes: $login,
+        );
     }
 }

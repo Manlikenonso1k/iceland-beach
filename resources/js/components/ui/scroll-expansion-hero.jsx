@@ -17,7 +17,9 @@ export default function ScrollExpandMedia({
     const [mediaFullyExpanded, setMediaFullyExpanded] = useState(false);
     const [touchStartY, setTouchStartY] = useState(0);
     const [isMobileState, setIsMobileState] = useState(false);
+    const [videoReady, setVideoReady] = useState(false);
     const sectionRef = useRef(null);
+    const videoRef = useRef(null);
 
     useEffect(() => {
         setScrollProgress(0);
@@ -112,6 +114,21 @@ export default function ScrollExpandMedia({
         return () => window.removeEventListener('resize', checkIfMobile);
     }, []);
 
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && videoRef.current && !videoReady) {
+                    setVideoReady(true);
+                    videoRef.current.play().catch(() => {});
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (sectionRef.current) observer.observe(sectionRef.current);
+        return () => observer.disconnect();
+    }, [videoReady]);
+
     const mediaWidth = 300 + scrollProgress * (isMobileState ? 650 : 1250);
     const mediaHeight = 400 + scrollProgress * (isMobileState ? 200 : 400);
     const textTranslateX = scrollProgress * (isMobileState ? 180 : 150);
@@ -131,6 +148,7 @@ export default function ScrollExpandMedia({
                         <img
                             src={bgImageSrc}
                             alt=""
+                            loading="lazy"
                             className="w-full h-full object-cover object-center"
                         />
                         <div className="absolute inset-0 bg-[#002a34]/25" />
@@ -151,13 +169,13 @@ export default function ScrollExpandMedia({
                                 {mediaType === 'video' ? (
                                     <div className="relative w-full h-full pointer-events-none">
                                         <video
+                                            ref={videoRef}
                                             src={mediaSrc}
                                             poster={posterSrc}
-                                            autoPlay
                                             muted
                                             loop
                                             playsInline
-                                            preload="auto"
+                                            preload="none"
                                             className="w-full h-full object-cover rounded-xl"
                                             controls={false}
                                             disablePictureInPicture

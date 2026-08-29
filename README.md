@@ -22,6 +22,7 @@ It now includes a **full event ticketing system** — customers can purchase tic
 - **💳 Dual Payment Gateways**: Paystack (inline popup) + TGI Titan (hosted redirect)
 - **📧 Automated Email Receipts**: QR code embedded in receipt email on payment success
 - **🛠️ Admin Dashboard**: Filament 3 admin panel for order management and QR check-in
+- **🌌 WebGL Aurora**: Custom Three.js shader layer, code-split and paused off-screen
 - **🔒 Secure Architecture**: UUID-based URLs, server-side payment verification, CSRF-safe webhooks
 - **🚀 Automated Deployment**: CI/CD pipeline for instant updates to production
 
@@ -31,6 +32,7 @@ It now includes a **full event ticketing system** — customers can purchase tic
 - **React 19 + React Router 7 + Vite 8**
 - **Tailwind CSS v4**: Utility-first styling for modernized components
 - **Framer Motion & GSAP**: Advanced animations and interactions
+- **Three.js**: Custom GLSL aurora shader (lazy-loaded into its own chunk)
 - **Lucide React & Swiper**: Iconography and carousels
 - **Axios**: API communication with the Laravel backend
 
@@ -75,7 +77,13 @@ iceland-beach/
 └── composer.json         # PHP dependencies
 ```
 
-> 📄 For full technical documentation of the ticketing system, see **[RESULT.md](RESULT.md)**
+### 📚 Further documentation
+
+| Document | Covers |
+|---|---|
+| **[RESULT.md](RESULT.md)** | Full technical documentation of the ticketing system |
+| **[FILAMENT_UI.md](FILAMENT_UI.md)** | How the Filament admin UI is customised — render hooks, DOM reference, pitfalls |
+| **[context.md](context.md)** | Working context: design system, current state, known issues, next steps |
 
 ## 🚀 Getting Started
 
@@ -107,9 +115,10 @@ iceland-beach/
    nano .env   # add your payment keys + mail config
    ```
 
-4. **Run migrations**
+4. **Run migrations and seed**
    ```bash
    php artisan migrate
+   php artisan db:seed     # creates the admin account — see below
    ```
 
 5. **Link storage** (for QR codes)
@@ -122,13 +131,43 @@ iceland-beach/
    ```bash
    php artisan serve
    ```
-   Email: admin@local.test | Password: password
 
 7. **Serve the PHP legacy site** (separate terminal)
    ```bash
    cd ..   # back to project root
    php -S localhost:8000
    ```
+
+### 🔑 Local admin login
+
+The `AdminUserSeeder` (run as part of `db:seed`) creates the admin account:
+
+| | |
+|---|---|
+| **URL** | http://127.0.0.1:8000/admin/login |
+| **Email** | `admin@local.test` |
+| **Password** | `password` |
+
+The account is granted **Super Admin** by the seeder. That role assignment
+matters — `User::canAccessPanel()` gates the panel on role, so an account
+without one can authenticate and still be refused entry.
+
+Re-create or reset it at any time (idempotent, safe to re-run):
+
+```bash
+php artisan db:seed --class=AdminUserSeeder
+```
+
+> ⚠️ **Local only.** `password` is a development convenience. Override it
+> anywhere that is not your machine by setting these before seeding:
+> ```bash
+> ADMIN_EMAIL=you@example.com
+> ADMIN_PASSWORD=<a-strong-password>
+> ```
+> To change the password on an existing install:
+> ```bash
+> php artisan tinker --execute="\App\Models\User::where('email','admin@local.test')->update(['password' => Hash::make('new-password')]);"
+> ```
 
 ## 🔄 Deployment (Production)
 
@@ -160,6 +199,58 @@ php artisan view:cache
 ```
 
 > ⚠️ `php artisan storage:link` fails on this Hostinger server (`exec()` is disabled). Always use the `ln -sf` command above instead.
+
+## 🆕 Recent Updates
+
+### Geothermal-coast redesign — August 2026
+
+A visual overhaul of the public site and admin login, plus several
+correctness and performance fixes found along the way.
+
+**Design system**
+
+A single palette and motion language now runs across the site, defined as CSS
+custom properties in `resources/css/app.css`:
+
+| Token | Value | Use |
+|---|---|---|
+| `--ib-basalt` | `#0b0f0e` | Dark ground |
+| `--ib-glacier` | `#f4f7f6` | Light text |
+| `--ib-teal` | `#6fb8bc` | Focus rings, active states |
+| `--ib-ember` | `#e2924a` | Primary CTAs |
+
+Type is **Fraunces** (serif headings) + **Hanken Grotesk** (UI). Motion uses
+`cubic-bezier(0.16, 1, 0.3, 1)` at 0.8–1.6s, with scroll reveals via Framer
+Motion `whileInView`. Everything respects `prefers-reduced-motion`.
+
+**Pages redesigned**
+
+- **Header / Footer** — frosted glass header that solidifies on scroll; footer on dark basalt with an aurora accent
+- **Homepage** — every post-hero section restyled with scroll reveals and glass cards *(the scroll-expansion hero was deliberately left untouched)*
+- **About / Contact** — extracted from inline definitions in `app.jsx` into `resources/js/pages/AboutPage.jsx` and `ContactPage.jsx`
+- **Admin login** — full-bleed resort photography with a dark glass card — see **[FILAMENT_UI.md](FILAMENT_UI.md)**
+
+**New components**
+
+- `components/AuroraCanvas.jsx` — WebGL aurora: a 5-octave fbm-noise GLSL shader driving drifting curtains over a fog bank. Pauses via `IntersectionObserver` when off-screen, caps DPR at 1.5, renders one static frame under reduced motion, and falls back to a CSS gradient without WebGL.
+- `components/AuroraLayer.jsx` — lazy wrapper so Three.js is code-split rather than shipped in the main bundle.
+
+**Fixes**
+
+- **Mobile layout blowout (320px)** — carousel rails are flex rows of fixed-width cards inside grid items. With the default `min-width: auto` they refused to shrink, forcing the document to **1027px** at a 320px viewport. Because the header is `position: fixed`, it inherited that width and pushed the hamburger to `x=987` — off-screen and unreachable. Fixed with `min-width: 0` on the rail wrappers so their own `overflow-x: auto` engages.
+- **Hero video** — was `preload="auto"`, pulling **36 MB** on every page load. Now `preload="none"` with `IntersectionObserver`-triggered playback.
+- **Bundle size** — Three.js moved out of the main chunk; app bundle is **459 kB** (147 kB gzipped), with the aurora as a separate on-demand chunk.
+- **Search persistence** — check-in / check-out / guests survive a reload via `localStorage`, wrapped in try/catch for private browsing.
+- **Nav CTA colour** — a legacy `.nav-cta { background: #005b7f !important }` was silently overriding the ember gradient.
+- **Text encoding** — repaired double-mojibake apostrophes in the contact copy.
+
+**Verified** at 320 / 375 / 414 / 1440px with Playwright: no horizontal bleed
+on any route, hamburger hit-tests correctly and opens all 7 links, admin login
+renders and still rejects bad credentials.
+
+**Known open items** — see [context.md](context.md):
+- `/gallery` has a `grid-cols-3` element overflowing both edges (clipped, no page bleed) in the pre-existing animated-gallery component
+- `.git` history carries ~1.27 GB of large binary assets; shrinking it needs a history rewrite
 
 ## 🖼️ Screenshots
 
