@@ -27,7 +27,7 @@ export default function RoomsPage() {
   }, []);
 
   const visible = useMemo(() => rooms.filter((room) => category === 'All rooms' || categoryFor(room) === category), [rooms, category]);
-  const soldOut = visible.filter((room) => room.is_booked && room.is_booked !== 'no').length;
+  const soldOut = visible.filter((room) => room.is_booked === 'booked').length;
   const toggleComparison = (id) => setSelected((current) => current.includes(id) ? current.filter((roomId) => roomId !== id) : [...current, id]);
 
   return <main className="room-selection-page">
@@ -59,7 +59,7 @@ export default function RoomsPage() {
       <div className="room-selection-grid">
         {loading ? Array.from({ length: 4 }).map((_, index) => <article className="room-selection-card loading" key={index}><div /><div /><div /></article>) : visible.map((room) => {
           const roomAmenities = amenities[room.room_category] || ['Beach access', 'Comfort stay', 'On-site support', 'Wi-Fi'];
-          const isSoldOut = room.is_booked && room.is_booked !== 'no';
+          const isSoldOut = room.is_booked === 'booked';
           const isSelected = selected.includes(room.id);
           return <article className={`room-selection-card ${isSoldOut ? 'sold-out' : ''} ${isSelected ? 'selected' : ''}`} key={room.id}>
             <div className="room-photo-wrap"><img src={room.room_image || '/legacy-images/Double Bed (2).jpeg'} onError={(event) => { event.currentTarget.src = '/legacy-images/Double Bed (2).jpeg'; }} alt={room.room_name} />{isSoldOut && <span>Sold out</span>}</div>

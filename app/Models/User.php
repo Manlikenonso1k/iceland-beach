@@ -51,10 +51,22 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    /** A referral partner's tracking code, if this user is one. */
+    public function referral(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Referral::class);
+    }
+
+    public function isReferralPartner(): bool
+    {
+        return $this->hasRole('Referral')
+            && ! $this->hasAnyRole(['Super Admin', 'Admin', 'Manager']);
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->email === 'victorynonso9@gmail.com'
-            || $this->hasAnyRole(['Super Admin', 'super_admin', 'admin', 'Manager', 'Front Desk', 'frontdesk', 'Scanner']);
+            || $this->hasAnyRole(['Super Admin', 'super_admin', 'admin', 'Manager', 'Front Desk', 'frontdesk', 'Scanner', 'Referral']);
     }
 }
 

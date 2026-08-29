@@ -25,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Credits referral partners when a ticket is paid, from whichever
+        // gateway path got there. See App\Observers\TicketObserver.
+        \App\Models\Ticket::observe(\App\Observers\TicketObserver::class);
+
         Event::listen(Login::class, function (Login $event): void {
             ActivityLogService::log(
                 event: 'login',

@@ -20,6 +20,7 @@ class Ticket extends Model
         'quantity',
         'amount',
         'order_ref',
+        'referral_code',
         'payment_gateway',
         'payment_ref',
         'paid',

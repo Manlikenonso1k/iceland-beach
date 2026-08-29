@@ -227,9 +227,13 @@
                     </select>
                 </div>
 
-                {{-- Promo Code --}}
+                {{-- Referral / promo code.
+                     The input keeps the name "promo_code" so the existing
+                     pricing endpoint and payment flow are untouched; the value
+                     is also stored on the ticket as referral_code so
+                     TicketObserver can credit a partner once payment succeeds. --}}
                 <div>
-                    <label class="form-label" for="promo_code">Promo Code (Optional)</label>
+                    <label class="form-label" for="promo_code">Referral Code (Optional)</label>
                     <div class="flex gap-2">
                         <input class="form-input flex-1" type="text" id="promo_code" name="promo_code"
                             placeholder="Enter code here" autocomplete="off"

@@ -17,6 +17,8 @@ class RoleSeeder extends Seeder
             'Front Desk',
             'Waiter',
             'Scanner',
+            // Referral partners: read-only access to their own code and sales.
+            'Referral',
         ];
 
         foreach ($roles as $role) {

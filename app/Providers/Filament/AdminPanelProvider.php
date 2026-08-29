@@ -49,6 +49,7 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\FilamentInfoWidget::class,
                 \App\Filament\Widgets\MostBookedRoomsWidget::class,
                 \App\Filament\Widgets\BookingCalendarWidget::class,
+                \App\Filament\Widgets\PendingBookingsWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

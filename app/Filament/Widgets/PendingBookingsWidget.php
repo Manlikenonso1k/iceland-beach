@@ -14,6 +14,13 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class PendingBookingsWidget extends BaseWidget
 {
+    /**
+     * Excluded from panel auto-discovery — see BookingCalendarWidget.
+     * Registered explicitly on the Dashboard and in
+     * BookingCalendar::getHeaderWidgets().
+     */
+    protected static bool $isDiscovered = false;
+
     protected static ?string $heading = 'Pending Bookings';
 
     protected static ?string $pollingInterval = '30s';

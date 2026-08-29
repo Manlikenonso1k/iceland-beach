@@ -21,6 +21,9 @@ It now includes a **full event ticketing system** — customers can purchase tic
 - **🎟️ Event Ticketing System**: Full purchase → payment → QR receipt → gate check-in flow
 - **💳 Dual Payment Gateways**: Paystack (inline popup) + TGI Titan (hosted redirect)
 - **📧 Automated Email Receipts**: QR code embedded in receipt email on payment success
+- **🤝 Referral Programme**: Partner codes at checkout, credited only on successful payment, with a self-service partner view
+- **📬 Newsletter Opt-in**: Explicit, unticked consent captured on the booking form
+- **✅ Staff Booking Approval**: Pending requests never hold a room — only a confirmed booking does
 - **🛠️ Admin Dashboard**: Filament 3 admin panel for order management and QR check-in
 - **🌌 WebGL Aurora**: Custom Three.js shader layer, code-split and paused off-screen
 - **🔒 Secure Architecture**: UUID-based URLs, server-side payment verification, CSRF-safe webhooks
@@ -58,6 +61,8 @@ iceland-beach/
 ├── app/                  # Laravel 12 backend & API logic
 │   ├── Http/Controllers/ # API controllers (Rooms, Bookings, Services)
 │   ├── Models/           # Eloquent models
+│   ├── Observers/        # TicketObserver — referral attribution on payment
+│   ├── Services/         # ReservationService, payment & workflow services
 │   └── Filament/         # Filament v3 admin resources
 ├── config/               # Application configuration
 ├── database/             # SQLite DB and seeders
@@ -184,6 +189,10 @@ composer install --no-dev --optimize-autoloader
 # Run any new migrations
 php artisan migrate --force
 
+# Sync roles (adds the Referral role introduced with the referral programme).
+# Idempotent — findOrCreate, safe to re-run on every deploy.
+php artisan db:seed --class=RoleSeeder --force
+
 # Fix storage symlink (exec() disabled on this host — use ln directly)
 ln -sf /home/u519226541/domains/icelandbeach.com/public_html/laravel-app/storage/app/public \
         /home/u519226541/domains/icelandbeach.com/public_html/laravel-app/public/storage
@@ -201,6 +210,67 @@ php artisan view:cache
 > ⚠️ `php artisan storage:link` fails on this Hostinger server (`exec()` is disabled). Always use the `ln -sf` command above instead.
 
 ## 🆕 Recent Updates
+
+### Booking workflow, referrals & admin fixes — August 2026
+
+**Pending bookings no longer hold a room.** The `bookings` table is now the
+canonical reservation record, so staff approval and room availability are
+finally the same system.
+
+- `bookings` gained `room_id` (FK) and `check_out` — it previously stored only a
+  `room_type` string and a single `check_in`, so it could not be joined to a room
+  or tested for a date overlap.
+- `Booking::scopeBlocking()` defines the rule in one place: **only `confirmed`
+  bookings hold a room.** `pending` and `rejected` never do.
+- A public booking creates a **pending** row and deliberately leaves
+  `room.is_booked = 'no'` — which is exactly what `PendingBookingsWidget`
+  already treats as awaiting review. Confirming in Filament is what actually
+  holds the room; rejecting releases it.
+- Fixed on the front end: `RoomsPage` treated *any* `is_booked` value other than
+  `'no'` as unavailable, so **`rejected` and `expired` bookings were blocking
+  rooms**.
+- `GET /api/rooms` now accepts optional `check_in` / `check_out` and returns an
+  `is_available` flag for that exact range.
+
+**Newsletter opt-in.** The booking form has an explicit, unticked consent box —
+`bookings.email_opt_in` defaults to `false`, so consent is never implied. Staff
+see who opted in as a column and a toggle in the Filament booking record.
+
+**Referral programme.** Ticket buyers can enter a partner's code at checkout and
+the partner is credited once the payment actually succeeds.
+
+- New tables: `referrals` (partner + unique code) and `referral_ticket_sales`
+  (one row per credited ticket); `tickets` gained `referral_code`.
+- A ticket can reach `paid = true` from four places — Paystack verify, the TGI
+  callback, the TGI webhook, and the background refresh service. Attribution
+  therefore lives in **`App\Observers\TicketObserver`**, not in the payment
+  code, so no path can be missed and the payment flow is untouched.
+- A `unique` index on `referral_ticket_sales.ticket_id` is what prevents double
+  credit on a repeated callback — not caller discipline.
+- Failed or pending payments are never credited. Unknown and deactivated codes
+  are ignored silently and never block a purchase.
+- New **Referral** role. Partners sign in to `/admin` and see only their own code
+  and sales — scoping is applied in `getEloquentQuery()`, so a partner cannot
+  reach another's record by editing the URL. Sales are read-only.
+- The ticket page's "Promo Code" field is relabelled **"Referral Code"**. The
+  input keeps its `promo_code` name so the existing discount and pricing
+  endpoint still work; the referral layer sits on top.
+
+**Admin fixes**
+
+- `/admin/bookings` showed **4 widgets** (two calendars, two pending lists).
+  `booking-calendar.blade.php` was calling `<x-filament-widgets::widgets>`
+  *inside* `<x-filament-panels::page>`, which already renders header widgets.
+  Now 1 of each.
+- `BookingResource` declared `$model = Room::class` while its whole table was
+  written against `Booking`'s columns — so list columns rendered empty and
+  **Confirm/Reject were permanently invisible** (`$record->status` is always null
+  on a Room). Now bound to `Booking`.
+- Rooms and Spaces are full-bleed on desktop; the shared `.room-selection-page`
+  cap was removed.
+
+> ⚠️ `BookingResource`'s form now edits **booking** fields rather than room
+> fields. Room price, category and image are managed at `/admin/rooms`.
 
 ### Geothermal-coast redesign — August 2026
 

@@ -8,6 +8,14 @@ use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 
 class BookingCalendarWidget extends FullCalendarWidget
 {
+    /**
+     * Excluded from panel auto-discovery so it renders only where it is
+     * explicitly registered. Without this it was discovered panel-wide AND
+     * listed in BookingCalendar::getHeaderWidgets(), rendering twice on
+     * /admin/bookings.
+     */
+    protected static bool $isDiscovered = false;
+
     protected int|string|array $columnSpan = [
         'md' => 8,
         'xl' => 9,

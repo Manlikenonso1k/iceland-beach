@@ -56,6 +56,7 @@ class PaymentController extends Controller
             'quantity'         => $quantity,
             'amount'           => $amountKobo,
             'order_ref'        => uniqid('BEACH_'),
+            'referral_code'    => $promoCode !== '' ? $promoCode : null,
             'payment_gateway'  => 'paystack',
             'payment_ref'      => $ref,
             'paid'             => true,
@@ -150,6 +151,7 @@ class PaymentController extends Controller
             'quantity'        => $quantity,
             'amount'          => $amountKobo,
             'order_ref'       => $orderRef,
+            'referral_code'   => $promoCode !== '' ? $promoCode : null,
             'payment_gateway' => 'tgipay',
             'paid'            => false,
         ]);
