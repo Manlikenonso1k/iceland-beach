@@ -607,9 +607,11 @@
 .site-header .nav-cta {
   /* legacy `.nav-cta{background:#002F61!important}` needs !important to beat */
   background: linear-gradient(135deg, var(--ib-brand), var(--ib-brand-deep)) !important;
-  color: var(--ib-basalt) !important;
+  /* White, not basalt: this read fine on the old amber CTA but became
+     near-black text on navy once the brand token changed. */
+  color: #ffffff !important;
   opacity: 1;
-  box-shadow: 0 6px 20px rgba(226, 146, 74, 0.32);
+  box-shadow: 0 6px 20px rgba(0, 47, 97, 0.32);
   transition:
     transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1),
@@ -617,7 +619,7 @@
 }
 .site-header .nav-cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(226, 146, 74, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 47, 97, 0.45);
   filter: brightness(1.05);
 }
 .site-header .nav-cta:focus-visible {
@@ -719,7 +721,7 @@
 .social-links a:hover {
   border-color: var(--ib-brand);
   color: var(--ib-brand);
-  background: rgba(226, 146, 74, 0.1);
+  background: rgba(0, 47, 97, 0.1);
   transform: translateY(-3px);
 }
 .social-links a:focus-visible {
@@ -777,7 +779,8 @@
 }
 .hp-search-cta {
   background: linear-gradient(135deg, var(--ib-brand), var(--ib-brand-deep));
-  box-shadow: 0 6px 20px rgba(226, 146, 74, 0.3);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 47, 97, 0.3);
   transition:
     transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1),
@@ -786,7 +789,7 @@
 .hp-search-cta:hover {
   background: linear-gradient(135deg, var(--ib-brand), var(--ib-brand-deep));
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 10px 26px rgba(226, 146, 74, 0.42);
+  box-shadow: 0 10px 26px rgba(0, 47, 97, 0.42);
   filter: brightness(1.03);
 }
 
@@ -1073,7 +1076,8 @@
 }
 .contact-page .button.full {
   background: linear-gradient(135deg, var(--ib-brand), var(--ib-brand-deep));
-  box-shadow: 0 8px 22px rgba(226, 146, 74, 0.32);
+  color: #ffffff;
+  box-shadow: 0 8px 22px rgba(0, 47, 97, 0.32);
   transition:
     transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1),
@@ -1081,7 +1085,7 @@
 }
 .contact-page .button.full:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(226, 146, 74, 0.42);
+  box-shadow: 0 12px 30px rgba(0, 47, 97, 0.42);
   filter: brightness(1.03);
 }
 

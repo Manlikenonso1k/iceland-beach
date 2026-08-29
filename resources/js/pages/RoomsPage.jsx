@@ -4,8 +4,9 @@ import { BedDouble, Check, ChevronDown, ExternalLink, MapPin, Users, Wifi } from
 import axios from 'axios';
 
 const api = axios.create({ baseURL: '/api', headers: { Accept: 'application/json' } });
-const categories = ['All rooms', 'Silver Rooms', 'Premium Rooms', 'Gold Rooms', 'Beach Apartment'];
-const categoryFor = (room) => room.room_category === 'Basic' ? 'Silver Rooms' : room.room_category;
+// Display label for a room's category. 'Basic' is shown as 'Silver Rooms' for
+// historical reasons; everything else shows its stored value verbatim.
+const categoryFor = (room) => (room.room_category === 'Basic' ? 'Silver Rooms' : room.room_category);
 const amenities = {
   Basic: ['Free swimming', 'Comfort stay', 'Beach access', 'Wi-Fi'],
   Premium: ['Free swimming', 'Comfort stay', 'Beach access', 'Wi-Fi'],
@@ -26,6 +27,13 @@ export default function RoomsPage() {
     api.get('/rooms').then(({ data }) => setRooms(data)).finally(() => setLoading(false));
   }, []);
 
+  // Derived from real data, not hardcoded. The old fixed list read
+  // 'Gold Rooms' / 'Premium Rooms' while the database stores 'Gold' / 'Premium',
+  // so only 'All rooms' and 'Beach Apartment' ever matched anything.
+  const categories = useMemo(
+    () => ['All rooms', ...Array.from(new Set(rooms.map(categoryFor).filter(Boolean)))],
+    [rooms],
+  );
   const visible = useMemo(() => rooms.filter((room) => category === 'All rooms' || categoryFor(room) === category), [rooms, category]);
   const soldOut = visible.filter((room) => room.is_booked === 'booked').length;
   const toggleComparison = (id) => setSelected((current) => current.includes(id) ? current.filter((roomId) => roomId !== id) : [...current, id]);

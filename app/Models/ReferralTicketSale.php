@@ -10,13 +10,19 @@ class ReferralTicketSale extends Model
     protected $fillable = [
         'referral_id',
         'ticket_id',
+        'buyer_name',
+        'buyer_email',
         'amount',
+        'commission_amount',
+        'commission_rate',
         'quantity',
         'status',
     ];
 
     protected $casts = [
         'amount' => 'integer',
+        'commission_amount' => 'integer',
+        'commission_rate' => 'decimal:2',
         'quantity' => 'integer',
     ];
 

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\BookingResource\Pages;
 
 use App\Filament\Resources\BookingResource;
 use App\Filament\Widgets\BookingCalendarWidget;
+use App\Filament\Widgets\ConfirmedBookingsWidget;
 use App\Filament\Widgets\PendingBookingsWidget;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
@@ -33,6 +34,7 @@ class BookingCalendar extends Page
         return [
             BookingCalendarWidget::class,
             PendingBookingsWidget::class,
+            ConfirmedBookingsWidget::class,
         ];
     }
 }

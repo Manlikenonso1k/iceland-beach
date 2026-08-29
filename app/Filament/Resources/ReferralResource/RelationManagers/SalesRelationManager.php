@@ -24,12 +24,22 @@ class SalesRelationManager extends RelationManager
         return $table
             ->columns([
                 TextColumn::make('ticket.order_ref')->label('Order')->searchable(),
-                TextColumn::make('ticket.name')->label('Buyer')->searchable(),
+                TextColumn::make('buyer_name')
+                    ->label('Buyer')
+                    ->searchable()
+                    ->description(fn ($record): ?string => $record->buyer_email)
+                    // Older rows predate the buyer snapshot; fall back to the ticket.
+                    ->formatStateUsing(fn ($state, $record): string => $state ?: ($record->ticket?->name ?: '—')),
                 TextColumn::make('ticket.ticket_type')->label('Type'),
                 TextColumn::make('quantity')->label('Qty'),
                 TextColumn::make('amount')
                     ->label('Amount')
                     ->formatStateUsing(fn ($state) => 'NGN ' . number_format(((int) $state) / 100, 2))
+                    ->sortable(),
+                TextColumn::make('commission_amount')
+                    ->label('Commission')
+                    ->formatStateUsing(fn ($state) => 'NGN ' . number_format(((int) $state) / 100, 2))
+                    ->description(fn ($record): string => rtrim(rtrim((string) $record->commission_rate, '0'), '.') . '%')
                     ->sortable(),
                 TextColumn::make('status')->badge()->color('success'),
                 TextColumn::make('created_at')->label('Recorded')->dateTime()->sortable(),

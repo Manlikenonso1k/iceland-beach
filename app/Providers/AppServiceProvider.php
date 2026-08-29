@@ -29,7 +29,19 @@ class AppServiceProvider extends ServiceProvider
         // gateway path got there. See App\Observers\TicketObserver.
         \App\Models\Ticket::observe(\App\Observers\TicketObserver::class);
 
+        // Audit trail for records staff edit directly (price changes, room and
+        // space edits, referral creation). Booking transitions are logged with
+        // richer context inside BookingWorkflowService.
+        foreach ([\App\Models\Room::class, \App\Models\ServiceBooking::class, \App\Models\Referral::class] as $auditable) {
+            $auditable::observe(\App\Observers\AuditObserver::class);
+        }
+
         Event::listen(Login::class, function (Login $event): void {
+            // Referral partners get a last-seen stamp for the admin list.
+            \App\Models\Referral::query()
+                ->where('user_id', $event->user->getAuthIdentifier())
+                ->update(['last_login_at' => now()]);
+
             ActivityLogService::log(
                 event: 'login',
                 description: 'User logged in',

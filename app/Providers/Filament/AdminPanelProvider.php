@@ -29,6 +29,12 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(\App\Filament\Pages\Auth\Login::class)
+            ->brandName('Iceland Beach Resort')
+            ->brandLogo(asset('images/iceland-logo.png'))
+            ->brandLogoHeight('2.25rem')
+            ->favicon(asset('favicon.ico'))
+            // Lets staff reclaim horizontal space on smaller laptops.
+            ->sidebarCollapsibleOnDesktop()
             ->colors([
                 // Brand navy. success/danger/warning below stay semantic —
                 // they signal booking state, not brand.
@@ -82,6 +88,13 @@ class AdminPanelProvider extends PanelProvider
      */
     public function boot(): void
     {
+        // Panel-wide CSS (mobile sidebar width). Unscoped, so it applies to
+        // every page in the panel rather than just the login screen.
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_END,
+            fn (): string => view('filament.panel.styles')->render(),
+        );
+
         $login = \App\Filament\Pages\Auth\Login::class;
 
         FilamentView::registerRenderHook(

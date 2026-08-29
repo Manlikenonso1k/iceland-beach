@@ -111,6 +111,16 @@ class ReferralResource extends Resource
                 ->helperText('Auto-generated. Guests type this at checkout.')
                 ->dehydrateStateUsing(fn (?string $state) => strtoupper(trim((string) $state))),
 
+            TextInput::make('commission_rate')
+                ->label('Commission rate')
+                ->numeric()
+                ->suffix('%')
+                ->minValue(0)
+                ->maxValue(100)
+                ->default(10)
+                ->required()
+                ->helperText('Percentage of each ticket sale this partner earns. Changing it affects future sales only — past commission is snapshotted.'),
+
             Toggle::make('is_active')
                 ->label('Active')
                 ->default(true)
@@ -122,9 +132,10 @@ class ReferralResource extends Resource
                 ->label('Performance')
                 ->content(fn (?Referral $record) => $record
                     ? sprintf(
-                        '%d successful sale(s) — NGN %s',
+                        '%d successful sale(s) — NGN %s gross, NGN %s commission earned',
                         $record->successfulSalesCount(),
                         number_format($record->totalAmount() / 100, 2),
+                        number_format($record->totalCommission() / 100, 2),
                     )
                     : 'Available once saved.'),
         ]);
@@ -142,6 +153,18 @@ class ReferralResource extends Resource
                     ->label('Successful sales')
                     ->counts(['sales' => fn (Builder $q) => $q->where('status', 'successful')])
                     ->sortable(),
+                TextColumn::make('commission_rate')
+                    ->label('Rate')
+                    ->formatStateUsing(fn ($state): string => rtrim(rtrim((string) $state, '0'), '.') . '%')
+                    ->sortable(),
+                TextColumn::make('commission_earned')
+                    ->label('Commission earned')
+                    ->getStateUsing(fn (Referral $record): string => 'NGN ' . number_format($record->totalCommission() / 100, 2)),
+                TextColumn::make('last_login_at')
+                    ->label('Last login')
+                    ->dateTime('M j, Y H:i')
+                    ->placeholder('Never')
+                    ->toggleable(),
                 TextColumn::make('sales_sum_amount')
                     ->label('Total earned')
                     ->sum(['sales' => fn (Builder $q) => $q->where('status', 'successful')], 'amount')

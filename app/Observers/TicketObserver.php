@@ -39,11 +39,20 @@ class TicketObserver
             return;
         }
 
+        $amount = (int) $ticket->amount;
+        $rate = (float) $referral->commission_rate;
+
         try {
             ReferralTicketSale::create([
                 'referral_id' => $referral->id,
                 'ticket_id' => $ticket->id,
-                'amount' => (int) $ticket->amount,
+                'buyer_name' => $ticket->name ?: 'Guest',
+                'buyer_email' => (string) $ticket->email,
+                'amount' => $amount,
+                // Snapshotted, not derived on read: the partner's rate may change
+                // later and historical payouts must not move with it.
+                'commission_rate' => $rate,
+                'commission_amount' => (int) round($amount * $rate / 100),
                 'quantity' => (int) ($ticket->quantity ?: 1),
                 'status' => 'successful',
             ]);

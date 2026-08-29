@@ -16,6 +16,10 @@ class ServiceBooking extends Model
         'service_category',
         'service_price',
         'service_image',
+        'main_image',
+        'gallery_images',
+        'description',
+        'capacity',
         'is_booked',
         'customers_name',
         'customers_email',
@@ -32,6 +36,42 @@ class ServiceBooking extends Model
             'signin' => 'datetime',
             'signout' => 'datetime',
             'mailsent' => 'boolean',
+            'gallery_images' => 'array',
         ];
+    }
+
+    /**
+     * Public URL for the space's main photo.
+     *
+     * Prefers a Filament upload on the `public` disk; falls back to the legacy
+     * `service_image` public path. Mirrors Room::displayImage().
+     */
+    public function displayImage(): ?string
+    {
+        if (filled($this->main_image)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->main_image);
+        }
+
+        $legacy = preg_replace('/(\\[rn]|\s)+$/', '', (string) $this->service_image) ?? '';
+
+        return $legacy !== '' ? $legacy : null;
+    }
+
+    /** @return list<string> */
+    public function galleryUrls(): array
+    {
+        $urls = [];
+
+        if ($main = $this->displayImage()) {
+            $urls[] = $main;
+        }
+
+        foreach ((array) ($this->gallery_images ?? []) as $path) {
+            if (filled($path)) {
+                $urls[] = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+            }
+        }
+
+        return array_values(array_unique($urls));
     }
 }

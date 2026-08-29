@@ -19,6 +19,9 @@ class CreateReferral extends CreateRecord
 
         $data['code'] = strtoupper(trim($data['code']));
 
+        // Who provisioned this partner account.
+        $data['created_by'] ??= \Filament\Facades\Filament::auth()->id();
+
         return $data;
     }
 }

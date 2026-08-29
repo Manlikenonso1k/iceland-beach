@@ -12,17 +12,27 @@ class Referral extends Model
     protected $fillable = [
         'user_id',
         'code',
+        'commission_rate',
         'is_active',
         'notes',
+        'created_by',
+        'last_login_at',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'commission_rate' => 'decimal:2',
+        'last_login_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function sales(): HasMany
@@ -70,10 +80,16 @@ class Referral extends Model
         return $code;
     }
 
-    /** Total kobo credited to this referral. */
+    /** Gross ticket value credited to this referral, in kobo. */
     public function totalAmount(): int
     {
         return (int) $this->sales()->where('status', 'successful')->sum('amount');
+    }
+
+    /** Commission actually earned, in kobo. Summed from the per-sale snapshots. */
+    public function totalCommission(): int
+    {
+        return (int) $this->sales()->where('status', 'successful')->sum('commission_amount');
     }
 
     public function successfulSalesCount(): int

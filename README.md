@@ -193,9 +193,11 @@ php artisan migrate --force
 # Idempotent — findOrCreate, safe to re-run on every deploy.
 php artisan db:seed --class=RoleSeeder --force
 
-# Fix storage symlink (exec() disabled on this host — use ln directly)
-ln -sf /home/u519226541/domains/icelandbeach.com/public_html/laravel-app/storage/app/public \
-        /home/u519226541/domains/icelandbeach.com/public_html/laravel-app/public/storage
+# Fix storage symlink (symlink() and exec() are both disabled on this host,
+# so `php artisan storage:link` cannot work — link it directly).
+# $PWD keeps this correct in staging as well as production.
+# -n prevents a nested public/storage/public link if re-run.
+ln -sfn "$PWD/storage/app/public" "$PWD/public/storage"
 
 # Ensure QR folder exists
 mkdir -p storage/app/public/qrcodes
@@ -207,7 +209,11 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-> ⚠️ `php artisan storage:link` fails on this Hostinger server (`exec()` is disabled). Always use the `ln -sf` command above instead.
+> ⚠️ `php artisan storage:link` **cannot** work on this Hostinger server. Both
+> `symlink()` and `exec()` are disabled, so Laravel's fallback path fails too
+> (`Call to undefined function Illuminate\Filesystem\exec()`). Always use the
+> `ln -sfn` command above instead — run it from the app root (staging or
+> production), then verify with `ls -l public/storage`.
 
 ## 🆕 Recent Updates
 
