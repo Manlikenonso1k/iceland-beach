@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Filament\Resources\BookingResource;
 use App\Models\Booking;
 use App\Models\Room;
+use Illuminate\Support\Collection;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 
 class BookingCalendarWidget extends FullCalendarWidget
@@ -17,19 +18,38 @@ class BookingCalendarWidget extends FullCalendarWidget
      */
     protected static bool $isDiscovered = false;
 
+    /**
+     * Wraps the package view so a room-colour legend can sit under the
+     * calendar. The blade re-declares the package's Alpine mount verbatim.
+     */
+    protected static string $view = 'filament.widgets.booking-calendar-widget';
+
     protected int|string|array $columnSpan = [
         'md' => 8,
         'xl' => 9,
     ];
 
+    /** Neutral slate for bookings that are not yet confirmed. */
+    public const PENDING_COLOR = '#94a3b8';
+
     /**
-     * Calendar events.
+     * Distinct hues so a month with every room booked stays readable.
+     * Assigned by room position rather than a hardcoded id map, so the palette
+     * keeps working if rooms are added, removed, or renumbered.
+     */
+    private const ROOM_PALETTE = [
+        '#002F61', '#0ea5e9', '#f59e0b', '#10b981',
+        '#8b5cf6', '#ef4444', '#f97316', '#06b6d4',
+        '#84cc16', '#ec4899', '#6366f1', '#14b8a6',
+    ];
+
+    private ?array $roomColorCache = null;
+
+    /**
+     * Calendar events — both pending and confirmed.
      *
-     * Reads Booking, and shows BOTH pending and confirmed. It previously
-     * queried rooms with is_booked='booked', so a calendar full of unreviewed
-     * requests rendered completely empty — the reason no date indicators showed.
-     *
-     * Colour carries the status: amber = awaiting review, teal = confirmed.
+     * This previously queried rooms with is_booked='booked', so a calendar of
+     * unreviewed requests rendered completely empty.
      */
     public function fetchEvents(array $fetchInfo): array
     {
@@ -45,32 +65,94 @@ class BookingCalendarWidget extends FullCalendarWidget
             })
             ->get()
             ->map(function (Booking $booking): array {
-                $isConfirmed = $booking->status === 'confirmed';
-
-                [$backgroundColor, $borderColor, $textColor] = $isConfirmed
-                    ? ['#0f766e', '#115e59', '#ffffff']   // teal — held
-                    : ['#e2924a', '#c97b33', '#1f1300'];  // amber — awaiting review
+                $color = $this->getRoomColor($booking->room_id, (string) $booking->status);
 
                 $roomLabel = $booking->room
                     ? $this->abbreviateRoomName($booking->room)
                     : ($booking->room_type ?: 'Room');
 
-                $end = $booking->check_out ?: optional($booking->check_in)->copy()?->addDay();
+                // check_out holds the DEPARTURE day and FullCalendar's `end` is
+                // exclusive, so it maps across directly — adding a day here
+                // would over-run the stay by one night.
+                $end = $booking->check_out ?: $booking->check_in?->copy()->addDay();
 
                 return [
                     'id' => $booking->id,
                     'title' => trim(($booking->guest_name ?: 'Guest') . ' — ' . $roomLabel),
-                    'start' => optional($booking->check_in)?->toIso8601String(),
-                    'end' => $end?->toIso8601String(),
+                    // Date-only strings make these all-day events. Full ISO
+                    // datetimes made FullCalendar treat them as *timed* events,
+                    // which render as a single time-prefixed entry on the start
+                    // day instead of a bar spanning the stay — that was the
+                    // "3-day booking only highlights the first day" bug.
+                    'start' => $booking->check_in?->format('Y-m-d'),
+                    'end' => $end?->format('Y-m-d'),
+                    'allDay' => true,
                     'url' => BookingResource::getUrl('edit', ['record' => $booking]),
                     'shouldOpenUrlInNewTab' => false,
                     'display' => 'block',
-                    'backgroundColor' => $backgroundColor,
-                    'borderColor' => $borderColor,
-                    'textColor' => $textColor,
+                    'backgroundColor' => $color,
+                    'borderColor' => $color,
+                    'textColor' => '#ffffff',
+                    'extendedProps' => [
+                        'status' => $booking->status,
+                        'room' => $booking->room?->room_name ?: $booking->room_type,
+                    ],
                 ];
             })
             ->all();
+    }
+
+    /**
+     * Colour for a booking bar.
+     *
+     * Only confirmed stays get a room colour — anything still awaiting review
+     * stays neutral grey, so staff can tell a held room from a request without
+     * reading the label.
+     */
+    public function getRoomColor(?int $roomId, string $status): string
+    {
+        if ($status !== 'confirmed') {
+            return self::PENDING_COLOR;
+        }
+
+        return $this->getAllRoomColors()[$roomId] ?? self::ROOM_PALETTE[0];
+    }
+
+    /** @return array<int, string> room id => hex colour */
+    public function getAllRoomColors(): array
+    {
+        if ($this->roomColorCache !== null) {
+            return $this->roomColorCache;
+        }
+
+        $palette = self::ROOM_PALETTE;
+
+        return $this->roomColorCache = Room::query()
+            ->orderBy('id')
+            ->pluck('id')
+            ->values()
+            ->mapWithKeys(fn ($id, int $index): array => [
+                (int) $id => $palette[$index % count($palette)],
+            ])
+            ->all();
+    }
+
+    /**
+     * Rooms paired with their legend colour.
+     *
+     * @return Collection<int, array{name: string, color: string}>
+     */
+    public function getLegendRooms(): Collection
+    {
+        $colors = $this->getAllRoomColors();
+
+        return Room::query()
+            ->orderBy('id')
+            ->get(['id', 'room_name'])
+            ->map(fn (Room $room): array => [
+                'name' => $room->room_name ?: ('Room ' . $room->id),
+                'color' => $colors[$room->id] ?? self::ROOM_PALETTE[0],
+            ]);
     }
 
     public function config(): array
@@ -84,6 +166,7 @@ class BookingCalendarWidget extends FullCalendarWidget
                 'right' => 'dayGridMonth,timeGridWeek,timeGridDay',
             ],
             'height' => 'auto',
+            'displayEventTime' => false,
         ];
     }
 

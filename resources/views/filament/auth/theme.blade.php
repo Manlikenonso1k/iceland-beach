@@ -9,8 +9,8 @@
         --ib-basalt: #0b0f0e;
         --ib-glacier: #f4f7f6;
         --ib-teal: #6fb8bc;
-        --ib-ember: #e2924a;
-        --ib-ember-deep: #d9701f;
+        --ib-brand: #002F61;
+        --ib-brand-deep: #00234a;
         --ib-glass-border: rgba(244, 247, 246, 0.14);
     }
 
@@ -101,7 +101,7 @@
         font-weight: 700;
         letter-spacing: 0.22em;
         text-transform: uppercase;
-        color: var(--ib-ember);
+        color: var(--ib-brand);
     }
 
     .ib-title {
@@ -192,7 +192,7 @@
     /* ── Primary action ────────────────────────────────────────── */
     .fi-simple-main .fi-btn.fi-color-primary,
     .fi-simple-main .fi-btn-color-primary {
-        background: linear-gradient(135deg, var(--ib-ember), var(--ib-ember-deep)) !important;
+        background: linear-gradient(135deg, var(--ib-brand), var(--ib-brand-deep)) !important;
         color: #1a1005 !important;
         border: 0 !important;
         border-radius: 12px !important;

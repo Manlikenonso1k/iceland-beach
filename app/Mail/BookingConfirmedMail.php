@@ -65,8 +65,37 @@ class BookingConfirmedMail extends Mailable
             'nights' => ($checkIn && $checkOut)
                 ? Carbon::parse($checkIn)->startOfDay()->diffInDays(Carbon::parse($checkOut)->startOfDay())
                 : null,
-            'logoUrl' => asset('images/iceland-logo.png'),
+            'logoUrl' => $this->inlineLogo(),
             'siteUrl' => url('/'),
         ];
+    }
+
+    /**
+     * Logo as an inline base64 data URI.
+     *
+     * A URL would point at APP_URL — on a local or private host that is
+     * unreachable from Gmail/Outlook, so the logo renders as a broken image.
+     * Embedding the bytes sidesteps hosting entirely.
+     *
+     * PNG/JPEG only: base64 SVG does not render in Outlook.
+     */
+    private function inlineLogo(): string
+    {
+        // Email-specific copy: 300px wide, 64-colour palette PNG. The full
+        // logo base64s to ~87 KB, which pushed the message past Gmail's
+        // ~102 KB clipping threshold; this one is ~18 KB.
+        $path = public_path('images/iceland-logo-email.png');
+
+        if (! is_file($path)) {
+            $path = public_path('images/iceland-logo.png');
+        }
+
+        if (! is_file($path)) {
+            return '';
+        }
+
+        $mime = @mime_content_type($path) ?: 'image/png';
+
+        return 'data:' . $mime . ';base64,' . base64_encode((string) file_get_contents($path));
     }
 }

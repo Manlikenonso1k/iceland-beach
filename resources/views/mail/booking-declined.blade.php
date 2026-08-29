@@ -24,15 +24,15 @@
   <table width="600" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;">
 
     <tr>
-      <td align="center" bgcolor="#103b37" style="background-color:#103b37;padding:32px 40px;text-align:center;">
+      <td align="center" bgcolor="#002F61" style="background-color:#002F61;padding:32px 40px;text-align:center;">
         <img src="{{ $logoUrl }}" alt="Iceland Beach Resort" width="150" style="display:block;margin:0 auto 16px auto;width:150px;max-width:150px;height:auto;border:0;outline:none;text-decoration:none;">
-        <p style="margin:0;color:#e2924a;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;">Booking update</p>
+        <p style="margin:0;color:#a9c7e8;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;">Booking update</p>
       </td>
     </tr>
 
     <tr>
       <td style="padding:36px 40px 0 40px;">
-        <h1 style="margin:0 0 12px 0;font-size:24px;line-height:31px;font-weight:bold;color:#103b37;">
+        <h1 style="margin:0 0 12px 0;font-size:24px;line-height:31px;font-weight:bold;color:#002F61;">
           Hello {{ $guestName }},
         </h1>
         <p style="margin:0;font-size:16px;line-height:1.65;color:#607773;">
@@ -47,11 +47,11 @@
           <tr>
             <td style="padding:22px 24px;">
               <p style="margin:0;font-size:11px;color:#8fa3a0;text-transform:uppercase;letter-spacing:1px;">Requested room</p>
-              <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#103b37;">{{ $roomName }}</p>
+              <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#002F61;">{{ $roomName }}</p>
 
               @if ($checkIn)
               <p style="margin:16px 0 0 0;font-size:11px;color:#8fa3a0;text-transform:uppercase;letter-spacing:1px;">Requested check-in</p>
-              <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#103b37;">{{ $checkIn->format('D, M j Y') }}</p>
+              <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#002F61;">{{ $checkIn->format('D, M j Y') }}</p>
               @endif
 
               @if (! empty($reason))
@@ -77,7 +77,7 @@
       <td style="padding:28px 40px 36px 40px;" align="center">
         <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 auto;">
           <tr>
-            <td bgcolor="#e2924a" style="background-color:#e2924a;border-radius:50px;">
+            <td bgcolor="#002F61" style="background-color:#002F61;border-radius:50px;">
               <a href="{{ $siteUrl }}" style="display:inline-block;padding:15px 36px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:50px;letter-spacing:0.5px;">
                 Explore other rooms
               </a>

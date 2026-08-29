@@ -39,9 +39,9 @@
 
     <!-- Logo band -->
     <tr>
-      <td align="center" bgcolor="#103b37" style="background-color:#103b37;padding:32px 40px;text-align:center;">
+      <td align="center" bgcolor="#002F61" style="background-color:#002F61;padding:32px 40px;text-align:center;">
         <img src="{{ $logoUrl }}" alt="Iceland Beach Resort" width="150" style="display:block;margin:0 auto 16px auto;width:150px;max-width:150px;height:auto;border:0;outline:none;text-decoration:none;">
-        <p style="margin:0;color:#e2924a;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;">Your stay is confirmed</p>
+        <p style="margin:0;color:#a9c7e8;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;">Your stay is confirmed</p>
       </td>
     </tr>
 
@@ -49,11 +49,11 @@
     <tr>
       <td style="padding:40px 40px 0 40px;text-align:center;">
         <div style="font-size:44px;line-height:48px;margin-bottom:12px;">🥂</div>
-        <h1 style="margin:0 0 10px 0;font-size:27px;line-height:34px;font-weight:bold;color:#103b37;">
+        <h1 style="margin:0 0 10px 0;font-size:27px;line-height:34px;font-weight:bold;color:#002F61;">
           Welcome, {{ $guestName }}!
         </h1>
         <p style="margin:0;font-size:16px;line-height:1.6;color:#607773;">
-          Your reservation at <strong style="color:#103b37;">Iceland Beach Resort</strong> is confirmed.<br>
+          Your reservation at <strong style="color:#002F61;">Iceland Beach Resort</strong> is confirmed.<br>
           We can't wait to host you.
         </p>
       </td>
@@ -74,23 +74,23 @@
                 <tr>
                   <td width="50%" style="padding:12px 0 0 0;vertical-align:top;">
                     <p style="margin:0;font-size:11px;color:#8fa3a0;text-transform:uppercase;letter-spacing:1px;">Booking ref</p>
-                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#103b37;">#{{ $reference }}</p>
+                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#002F61;">#{{ $reference }}</p>
                   </td>
                   <td width="50%" style="padding:12px 0 0 0;vertical-align:top;">
                     <p style="margin:0;font-size:11px;color:#8fa3a0;text-transform:uppercase;letter-spacing:1px;">Room</p>
-                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#103b37;">{{ $roomName }}</p>
+                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#002F61;">{{ $roomName }}</p>
                   </td>
                 </tr>
                 <tr>
                   <td width="50%" style="padding:16px 0 0 0;vertical-align:top;">
                     <p style="margin:0;font-size:11px;color:#8fa3a0;text-transform:uppercase;letter-spacing:1px;">Check-in</p>
-                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#103b37;">
+                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#002F61;">
                       {{ $checkIn ? $checkIn->format('D, M j Y') : 'To be confirmed' }}
                     </p>
                   </td>
                   <td width="50%" style="padding:16px 0 0 0;vertical-align:top;">
                     <p style="margin:0;font-size:11px;color:#8fa3a0;text-transform:uppercase;letter-spacing:1px;">Check-out</p>
-                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#103b37;">
+                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#002F61;">
                       {{ $checkOut ? $checkOut->format('D, M j Y') : 'To be confirmed' }}
                     </p>
                   </td>
@@ -99,7 +99,7 @@
                   @if ($nights)
                   <td width="50%" style="padding:16px 0 0 0;vertical-align:top;">
                     <p style="margin:0;font-size:11px;color:#8fa3a0;text-transform:uppercase;letter-spacing:1px;">Length of stay</p>
-                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#103b37;">{{ $nights }} {{ \Illuminate\Support\Str::plural('night', $nights) }}</p>
+                    <p style="margin:4px 0 0 0;font-size:16px;font-weight:bold;color:#002F61;">{{ $nights }} {{ \Illuminate\Support\Str::plural('night', $nights) }}</p>
                   </td>
                   @endif
                   <td width="50%" style="padding:16px 0 0 0;vertical-align:top;">
@@ -121,24 +121,24 @@
     <!-- What to expect -->
     <tr>
       <td style="padding:0 40px 32px 40px;">
-        <h2 style="margin:0 0 16px 0;font-size:18px;line-height:24px;font-weight:bold;color:#103b37;">What to expect 🌴</h2>
+        <h2 style="margin:0 0 16px 0;font-size:18px;line-height:24px;font-weight:bold;color:#002F61;">What to expect 🌴</h2>
         <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
           <tr>
             <td width="36" style="vertical-align:top;padding-top:2px;font-size:20px;">🏖️</td>
             <td style="padding:0 0 14px 12px;font-size:15px;color:#607773;line-height:1.6;">
-              <strong style="color:#103b37;">Private beach access</strong> — wake up steps from the water every morning of your stay.
+              <strong style="color:#002F61;">Private beach access</strong> — wake up steps from the water every morning of your stay.
             </td>
           </tr>
           <tr>
             <td width="36" style="vertical-align:top;padding-top:2px;font-size:20px;">🎵</td>
             <td style="padding:0 0 14px 12px;font-size:15px;color:#607773;line-height:1.6;">
-              <strong style="color:#103b37;">Live events &amp; entertainment</strong> — check our events page closer to your arrival for the latest lineup.
+              <strong style="color:#002F61;">Live events &amp; entertainment</strong> — check our events page closer to your arrival for the latest lineup.
             </td>
           </tr>
           <tr>
             <td width="36" style="vertical-align:top;padding-top:2px;font-size:20px;">📍</td>
             <td style="padding:0 0 0 12px;font-size:15px;color:#607773;line-height:1.6;">
-              <strong style="color:#103b37;">Easy check-in</strong> — show this email at the front desk. Check-in starts at 2:00 PM.
+              <strong style="color:#002F61;">Easy check-in</strong> — show this email at the front desk. Check-in starts at 2:00 PM.
             </td>
           </tr>
         </table>
@@ -150,7 +150,7 @@
       <td style="padding:0 40px 36px 40px;" align="center">
         <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 auto;">
           <tr>
-            <td bgcolor="#e2924a" style="background-color:#e2924a;border-radius:50px;">
+            <td bgcolor="#002F61" style="background-color:#002F61;border-radius:50px;">
               <a href="{{ $siteUrl }}" style="display:inline-block;padding:16px 40px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:50px;letter-spacing:0.5px;">
                 🌊 Visit our website
               </a>
@@ -178,7 +178,7 @@
     </tr>
 
     <tr>
-      <td bgcolor="#103b37" align="center" style="background-color:#103b37;padding:14px 0;text-align:center;font-size:22px;line-height:26px;letter-spacing:4px;">
+      <td bgcolor="#002F61" align="center" style="background-color:#002F61;padding:14px 0;text-align:center;font-size:22px;line-height:26px;letter-spacing:4px;">
         🌊 🌴 🌊 🌴 🌊 🌴 🌊
       </td>
     </tr>

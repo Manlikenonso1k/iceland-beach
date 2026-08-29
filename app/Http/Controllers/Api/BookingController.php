@@ -29,7 +29,7 @@ class BookingController extends Controller
         ]);
 
         $rooms = Room::query()
-            ->select(['id', 'room_name', 'room_category', 'room_price', 'room_image', 'is_booked'])
+            ->select(['id', 'room_name', 'room_category', 'room_price', 'room_image', 'main_image', 'gallery_images', 'is_booked'])
             ->orderBy('room_category')
             ->orderBy('room_name')
             ->get();
@@ -50,6 +50,11 @@ class BookingController extends Controller
                 ! $heldOnRoomRecord && ! in_array($room->id, $heldRoomIds, true),
             );
             $room->setAttribute('availability_checked_for_dates', (bool) ($start && $end));
+
+            // Resolved URLs so the front-end never has to know whether an image
+            // came from a Filament upload or the legacy public path.
+            $room->setAttribute('image_url', $room->displayImage());
+            $room->setAttribute('gallery_urls', $room->galleryUrls());
         });
 
         return response()->json($rooms);

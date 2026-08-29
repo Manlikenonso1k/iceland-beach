@@ -41,7 +41,7 @@ class BookingCalendarWidgetTest extends TestCase
         ]);
     }
 
-    public function test_calendar_shows_pending_and_confirmed_bookings_colour_coded_by_status(): void
+    public function test_calendar_shows_pending_and_confirmed_bookings_colour_coded_by_room(): void
     {
         $deluxe = $this->room('Deluxe Room 101', 'Deluxe');
         $suite = $this->room('Suite Room 305', 'Suite');
@@ -65,9 +65,23 @@ class BookingCalendarWidgetTest extends TestCase
         // A rejected booking is not a live hold and must not occupy the calendar.
         $this->assertArrayNotHasKey($rejected->id, $eventById);
 
-        // Colour is the status indicator: teal held, amber awaiting review.
-        $this->assertSame('#0f766e', $eventById[$confirmed->id]['backgroundColor']);
-        $this->assertSame('#e2924a', $eventById[$pending->id]['backgroundColor']);
+        // Confirmed stays take their room's colour; anything awaiting review
+        // stays neutral grey regardless of room.
+        $widget = app(BookingCalendarWidget::class);
+        $this->assertSame(
+            $widget->getAllRoomColors()[$deluxe->id],
+            $eventById[$confirmed->id]['backgroundColor'],
+        );
+        $this->assertSame(
+            BookingCalendarWidget::PENDING_COLOR,
+            $eventById[$pending->id]['backgroundColor'],
+        );
+
+        // All-day, date-only events so a multi-night stay renders as one bar
+        // rather than a single time-prefixed entry on the start day.
+        $this->assertTrue($eventById[$confirmed->id]['allDay']);
+        $this->assertSame($confirmed->check_in->format('Y-m-d'), $eventById[$confirmed->id]['start']);
+        $this->assertSame($confirmed->check_out->format('Y-m-d'), $eventById[$confirmed->id]['end']);
 
         // Titles name the guest so staff can read the calendar at a glance.
         $this->assertStringContainsString('Ada Lovelace', $eventById[$confirmed->id]['title']);

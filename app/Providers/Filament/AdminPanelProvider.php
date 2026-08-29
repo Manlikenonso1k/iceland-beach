@@ -30,7 +30,14 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->colors([
-                'primary' => '#e2924a',  // Ember amber
+                // Brand navy. success/danger/warning below stay semantic —
+                // they signal booking state, not brand.
+                'primary' => [
+                    50 => '#e6edf7', 100 => '#ccdaee', 200 => '#99b5de',
+                    300 => '#6690cd', 400 => '#336bbc', 500 => '#002F61',
+                    600 => '#002655', 700 => '#001e44', 800 => '#001533',
+                    900 => '#000d22', 950 => '#000611',
+                ],
                 'danger' => '#d32f2f',
                 'gray' => '#6b7280',
                 'info' => '#3b82f6',

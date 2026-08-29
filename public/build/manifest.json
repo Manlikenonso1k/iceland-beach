@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-C1C1a5yM.css",
+    "file": "assets/app-D6QLaHgk.css",
     "name": "app",
     "names": [
       "app.css"
@@ -9,7 +9,7 @@
     "isEntry": true
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-CEnIio2-.js",
+    "file": "assets/app-BfNcLhKW.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
@@ -18,7 +18,7 @@
     ]
   },
   "resources/js/components/AuroraCanvas.jsx": {
-    "file": "assets/AuroraCanvas-CA5-DHBK.js",
+    "file": "assets/AuroraCanvas-B0ewBdqK.js",
     "name": "AuroraCanvas",
     "src": "resources/js/components/AuroraCanvas.jsx",
     "isDynamicEntry": true,

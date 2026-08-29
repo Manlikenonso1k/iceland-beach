@@ -62,7 +62,7 @@ export default function RoomsPage() {
           const isSoldOut = room.is_booked === 'booked';
           const isSelected = selected.includes(room.id);
           return <article className={`room-selection-card ${isSoldOut ? 'sold-out' : ''} ${isSelected ? 'selected' : ''}`} key={room.id}>
-            <div className="room-photo-wrap"><img src={room.room_image || '/legacy-images/Double Bed (2).jpeg'} onError={(event) => { event.currentTarget.src = '/legacy-images/Double Bed (2).jpeg'; }} alt={room.room_name} />{isSoldOut && <span>Sold out</span>}</div>
+            <div className="room-photo-wrap"><img src={room.image_url || room.room_image || '/legacy-images/Double Bed (2).jpeg'} onError={(event) => { event.currentTarget.src = '/legacy-images/Double Bed (2).jpeg'; }} alt={room.room_name} />{isSoldOut && <span>Sold out</span>}</div>
             <div className="room-card-body"><p className="room-category-label">{categoryFor(room)}</p><h2>{room.room_name}</h2><a href={`#room-${room.id}`}>View room details</a><ul>{roomAmenities.map((amenity, index) => <li key={amenity}>{index === 0 ? <Users size={15} /> : index === 1 ? <BedDouble size={15} /> : <Wifi size={15} />}{amenity}</li>)}</ul><strong>{formatMoney(room.room_price, currency)} <small>per night</small></strong><div className="room-card-actions">{compareMode && <label><input type="checkbox" checked={isSelected} onChange={() => toggleComparison(room.id)} /> Compare</label>}<Link to={`/book?room=${room.id}`} className="select-room-button" aria-disabled={isSoldOut}>{isSoldOut ? 'Unavailable' : 'Select room'}</Link></div></div>
           </article>;
         })}
