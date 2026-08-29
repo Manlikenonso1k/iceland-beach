@@ -38,7 +38,7 @@ class BookingWorkflowServiceTest extends TestCase
         $this->assertTrue((bool) $room->mailsent);
 
         Mail::assertSent(BookingConfirmedMail::class, function (BookingConfirmedMail $mail) use ($room): bool {
-            return $mail->room->is($room);
+            return $mail->record->is($room);
         });
     }
 
@@ -66,7 +66,7 @@ class BookingWorkflowServiceTest extends TestCase
         $this->assertTrue((bool) $room->mailsent);
 
         Mail::assertSent(BookingDeclinedMail::class, function (BookingDeclinedMail $mail) use ($room): bool {
-            return $mail->room->is($room)
+            return $mail->record->is($room)
                 && $mail->reason === 'No inventory for selected dates';
         });
     }

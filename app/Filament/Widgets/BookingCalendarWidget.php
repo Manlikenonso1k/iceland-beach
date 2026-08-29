@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\BookingResource;
+use App\Models\Booking;
 use App\Models\Room;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 
@@ -21,24 +22,47 @@ class BookingCalendarWidget extends FullCalendarWidget
         'xl' => 9,
     ];
 
+    /**
+     * Calendar events.
+     *
+     * Reads Booking, and shows BOTH pending and confirmed. It previously
+     * queried rooms with is_booked='booked', so a calendar full of unreviewed
+     * requests rendered completely empty — the reason no date indicators showed.
+     *
+     * Colour carries the status: amber = awaiting review, teal = confirmed.
+     */
     public function fetchEvents(array $fetchInfo): array
     {
-        return Room::query()
-            ->where('is_booked', 'booked')
-            ->whereNotNull('start_date')
-            ->whereNotNull('end_date')
-            ->where('start_date', '<', $fetchInfo['end'])
-            ->where('end_date', '>', $fetchInfo['start'])
+        return Booking::query()
+            ->with('room')
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereNotNull('check_in')
+            ->where('check_in', '<', $fetchInfo['end'])
+            ->where(function ($query) use ($fetchInfo): void {
+                // Bookings predating the check_out column have a null end date.
+                $query->where('check_out', '>', $fetchInfo['start'])
+                    ->orWhereNull('check_out');
+            })
             ->get()
-            ->map(function (Room $room): array {
-                [$backgroundColor, $borderColor, $textColor] = $this->roomTypeColors($room);
+            ->map(function (Booking $booking): array {
+                $isConfirmed = $booking->status === 'confirmed';
+
+                [$backgroundColor, $borderColor, $textColor] = $isConfirmed
+                    ? ['#0f766e', '#115e59', '#ffffff']   // teal — held
+                    : ['#e2924a', '#c97b33', '#1f1300'];  // amber — awaiting review
+
+                $roomLabel = $booking->room
+                    ? $this->abbreviateRoomName($booking->room)
+                    : ($booking->room_type ?: 'Room');
+
+                $end = $booking->check_out ?: optional($booking->check_in)->copy()?->addDay();
 
                 return [
-                    'id' => $room->id,
-                    'title' => $this->abbreviateRoomName($room),
-                    'start' => optional($room->start_date)?->toIso8601String(),
-                    'end' => optional($room->end_date)?->toIso8601String(),
-                    'url' => BookingResource::getUrl('edit', ['record' => $room]),
+                    'id' => $booking->id,
+                    'title' => trim(($booking->guest_name ?: 'Guest') . ' — ' . $roomLabel),
+                    'start' => optional($booking->check_in)?->toIso8601String(),
+                    'end' => $end?->toIso8601String(),
+                    'url' => BookingResource::getUrl('edit', ['record' => $booking]),
                     'shouldOpenUrlInNewTab' => false,
                     'display' => 'block',
                     'backgroundColor' => $backgroundColor,
@@ -91,19 +115,5 @@ class BookingCalendarWidget extends FullCalendarWidget
         }
 
         return $initials !== '' ? $initials : 'RM';
-    }
-
-    private function roomTypeColors(Room $room): array
-    {
-        $type = strtolower((string) ($room->room_category ?? ''));
-        $name = strtolower((string) ($room->room_name ?? ''));
-
-        return match (true) {
-            str_contains($type, 'deluxe') || str_contains($name, 'deluxe') => ['#2563eb', '#1d4ed8', '#ffffff'],
-            str_contains($type, 'suite') || str_contains($name, 'suite') => ['#d4a017', '#b8860b', '#111827'],
-            str_contains($type, 'executive') || str_contains($name, 'executive') => ['#0f766e', '#115e59', '#ffffff'],
-            str_contains($type, 'family') || str_contains($name, 'family') => ['#7c3aed', '#6d28d9', '#ffffff'],
-            default => ['#334155', '#1e293b', '#ffffff'],
-        };
     }
 }

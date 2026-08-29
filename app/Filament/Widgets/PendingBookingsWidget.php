@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Room;
+use App\Models\Booking;
 use App\Services\BookingWorkflowService;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Textarea;
@@ -33,24 +33,45 @@ class PendingBookingsWidget extends BaseWidget
     public function table(Table $table): Table
     {
         return $table
+            // Reads Booking, not Room. Previously this queried rooms with
+            // is_booked='no' + dates, which only ever surfaced requests that had
+            // been staged onto a room — bookings created any other way never
+            // appeared, and the guest name came from the room's copy of it.
             ->query(
-                Room::query()
-                    ->where('is_booked', 'no')
-                    ->whereNotNull('start_date')
-                    ->orderBy('start_date')
+                Booking::query()
+                    ->with('room')
+                    ->where('status', 'pending')
+                    ->orderBy('check_in')
             )
+            ->emptyStateHeading('No bookings awaiting review')
+            ->emptyStateDescription('New requests from the website appear here.')
             ->columns([
-                TextColumn::make('room_name')
+                TextColumn::make('guest_name')
+                    ->label('Guest')
+                    ->searchable()
+                    ->weight('medium')
+                    ->description(fn (Booking $record): ?string => $record->guest_email)
+                    ->limit(24),
+                TextColumn::make('room_type')
                     ->label('Room')
                     ->searchable()
                     ->limit(20),
-                TextColumn::make('customer_name')
-                    ->label('Guest')
-                    ->placeholder('-')
-                    ->limit(20),
-                TextColumn::make('start_date')
+                TextColumn::make('check_in')
                     ->label('Check-in')
-                    ->dateTime('M j, H:i'),
+                    ->date('M j, Y')
+                    ->sortable(),
+                TextColumn::make('check_out')
+                    ->label('Check-out')
+                    ->date('M j, Y')
+                    ->placeholder('—'),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'confirmed' => 'success',
+                        'rejected' => 'danger',
+                        default => 'warning',
+                    }),
             ])
             ->actions([
                 Action::make('confirm')
@@ -58,13 +79,13 @@ class PendingBookingsWidget extends BaseWidget
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn (Room $record): bool => $this->canManage($record))
-                    ->action(function (Room $record, BookingWorkflowService $bookingWorkflow): void {
-                        $bookingWorkflow->confirm($record);
+                    ->visible(fn (Booking $record): bool => $this->canManage($record))
+                    ->action(function (Booking $record, BookingWorkflowService $bookingWorkflow): void {
+                        $bookingWorkflow->confirmBooking($record);
 
                         Notification::make()
                             ->title('Booking confirmed')
-                            ->body('Status updated and confirmation email processed.')
+                            ->body('Room held and confirmation email sent.')
                             ->success()
                             ->send();
 
@@ -74,19 +95,20 @@ class PendingBookingsWidget extends BaseWidget
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
+                    ->requiresConfirmation()
                     ->form([
                         Textarea::make('reason')
                             ->label('Reason (optional)')
                             ->rows(3)
                             ->maxLength(1000),
                     ])
-                    ->visible(fn (Room $record): bool => $this->canManage($record))
-                    ->action(function (Room $record, array $data, BookingWorkflowService $bookingWorkflow): void {
-                        $bookingWorkflow->reject($record, $data['reason'] ?? null);
+                    ->visible(fn (Booking $record): bool => $this->canManage($record))
+                    ->action(function (Booking $record, array $data, BookingWorkflowService $bookingWorkflow): void {
+                        $bookingWorkflow->rejectBooking($record, $data['reason'] ?? null);
 
                         Notification::make()
                             ->title('Booking rejected')
-                            ->body('Status updated and decline email processed.')
+                            ->body('Room released and decline email sent.')
                             ->success()
                             ->send();
 
@@ -97,12 +119,12 @@ class PendingBookingsWidget extends BaseWidget
             ->paginated([5, 10, 20]);
     }
 
-    private function canManage(Room $record): bool
+    private function canManage(Booking $record): bool
     {
         /** @var \App\Models\User|null $user */
         $user = Filament::auth()->user();
 
-        return $record->is_booked === 'no'
+        return $record->status === 'pending'
             && $user !== null
             && method_exists($user, 'hasAnyRole')
             && $user->hasAnyRole(['Super Admin', 'Manager']);

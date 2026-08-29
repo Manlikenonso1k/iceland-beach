@@ -3,64 +3,107 @@
 namespace Tests\Feature;
 
 use App\Filament\Widgets\BookingCalendarWidget;
+use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * The calendar previously read rooms with is_booked='booked', so a calendar of
+ * unreviewed requests rendered empty — no date indicators at all. It now reads
+ * bookings and shows pending alongside confirmed, distinguished by colour.
+ */
 class BookingCalendarWidgetTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_calendar_shows_only_confirmed_bookings_with_abbreviations_and_colors(): void
+    private function room(string $name, string $category): Room
     {
-        $deluxe = Room::query()->create([
-            'room_name' => 'Deluxe Room 101',
-            'room_category' => 'Deluxe',
-            'room_price' => 80000,
-            'is_booked' => 'booked',
-            'start_date' => now()->addDays(1),
-            'end_date' => now()->addDays(2),
-        ]);
-
-        $suite = Room::query()->create([
-            'room_name' => 'Suite Room 305',
-            'room_category' => 'Suite',
-            'room_price' => 130000,
-            'is_booked' => 'booked',
-            'start_date' => now()->addDays(3),
-            'end_date' => now()->addDays(4),
-        ]);
-
-        $pending = Room::query()->create([
-            'room_name' => 'Deluxe Room 999',
-            'room_category' => 'Deluxe',
+        return Room::query()->create([
+            'room_name' => $name,
+            'room_category' => $category,
             'room_price' => 80000,
             'is_booked' => 'no',
-            'start_date' => now()->addDays(1),
-            'end_date' => now()->addDays(2),
         ]);
+    }
 
-        $widget = app(BookingCalendarWidget::class);
+    private function booking(Room $room, string $guest, string $status, int $inDays): Booking
+    {
+        return Booking::query()->create([
+            'room_id' => $room->id,
+            'guest_name' => $guest,
+            'guest_email' => strtolower(str_replace(' ', '.', $guest)) . '@example.test',
+            'guest_phone' => '08000000000',
+            'room_type' => $room->room_name,
+            'check_in' => now()->addDays($inDays),
+            'check_out' => now()->addDays($inDays + 2),
+            'status' => $status,
+        ]);
+    }
 
-        $events = $widget->fetchEvents([
+    public function test_calendar_shows_pending_and_confirmed_bookings_colour_coded_by_status(): void
+    {
+        $deluxe = $this->room('Deluxe Room 101', 'Deluxe');
+        $suite = $this->room('Suite Room 305', 'Suite');
+
+        $confirmed = $this->booking($deluxe, 'Ada Lovelace', 'confirmed', 1);
+        $pending = $this->booking($suite, 'Grace Hopper', 'pending', 3);
+        $rejected = $this->booking($suite, 'Rejected Guest', 'rejected', 5);
+
+        $events = app(BookingCalendarWidget::class)->fetchEvents([
             'start' => now()->subMonth()->startOfMonth()->toIso8601String(),
             'end' => now()->addMonth()->endOfMonth()->toIso8601String(),
         ]);
 
+        $eventById = collect($events)->keyBy('id');
+
+        // Pending must appear — that was the whole bug.
         $this->assertCount(2, $events);
+        $this->assertArrayHasKey($confirmed->id, $eventById);
+        $this->assertArrayHasKey($pending->id, $eventById);
+
+        // A rejected booking is not a live hold and must not occupy the calendar.
+        $this->assertArrayNotHasKey($rejected->id, $eventById);
+
+        // Colour is the status indicator: teal held, amber awaiting review.
+        $this->assertSame('#0f766e', $eventById[$confirmed->id]['backgroundColor']);
+        $this->assertSame('#e2924a', $eventById[$pending->id]['backgroundColor']);
+
+        // Titles name the guest so staff can read the calendar at a glance.
+        $this->assertStringContainsString('Ada Lovelace', $eventById[$confirmed->id]['title']);
+        $this->assertStringContainsString('Grace Hopper', $eventById[$pending->id]['title']);
+
+        // Room abbreviation is retained to keep month-view titles compact.
+        $this->assertStringContainsString('DR-101', $eventById[$confirmed->id]['title']);
+        $this->assertStringContainsString('ST-305', $eventById[$pending->id]['title']);
+
+        $this->assertSame('block', $eventById[$confirmed->id]['display']);
+    }
+
+    public function test_booking_without_check_out_still_renders(): void
+    {
+        // Rows predating the check_out column have a null end date.
+        $room = $this->room('Deluxe Room 101', 'Deluxe');
+
+        $booking = Booking::query()->create([
+            'room_id' => $room->id,
+            'guest_name' => 'Legacy Guest',
+            'guest_email' => 'legacy@example.test',
+            'guest_phone' => '08000000000',
+            'room_type' => $room->room_name,
+            'check_in' => now()->addDays(2),
+            'check_out' => null,
+            'status' => 'pending',
+        ]);
+
+        $events = app(BookingCalendarWidget::class)->fetchEvents([
+            'start' => now()->subMonth()->startOfMonth()->toIso8601String(),
+            'end' => now()->addMonth()->endOfMonth()->toIso8601String(),
+        ]);
 
         $eventById = collect($events)->keyBy('id');
 
-        $this->assertArrayHasKey($deluxe->id, $eventById);
-        $this->assertArrayHasKey($suite->id, $eventById);
-        $this->assertArrayNotHasKey($pending->id, $eventById);
-
-        $this->assertSame('DR-101', $eventById[$deluxe->id]['title']);
-        $this->assertSame('#2563eb', $eventById[$deluxe->id]['backgroundColor']);
-        $this->assertSame('block', $eventById[$deluxe->id]['display']);
-
-        $this->assertSame('ST-305', $eventById[$suite->id]['title']);
-        $this->assertSame('#d4a017', $eventById[$suite->id]['backgroundColor']);
-        $this->assertSame('block', $eventById[$suite->id]['display']);
+        $this->assertArrayHasKey($booking->id, $eventById);
+        $this->assertNotNull($eventById[$booking->id]['end']);
     }
 }

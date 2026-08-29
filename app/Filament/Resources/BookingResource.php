@@ -16,7 +16,6 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Illuminate\Support\Facades\Mail;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
@@ -102,40 +101,40 @@ class BookingResource extends Resource
                     ->default('pending'),
             ])
             ->actions([
+                // Both this and PendingBookingsWidget delegate to
+                // BookingWorkflowService so status, room sync, activity log and
+                // email stay identical wherever staff act on a booking.
                 Action::make('confirm')
                     ->label('Confirm')
-                    ->visible(fn($record) => $record->status === 'pending')
-                    ->action(function ($record) {
-                        $record->status = 'confirmed';
-                        $record->save();
+                    ->icon('heroicon-o-check-circle')
+                    ->requiresConfirmation()
+                    ->visible(fn (Booking $record): bool => $record->status === 'pending')
+                    ->action(function (Booking $record, BookingWorkflowService $bookingWorkflow): void {
+                        $bookingWorkflow->confirmBooking($record);
 
-                        // Confirming is what actually holds the room. The calendar
-                        // widget reads the room record, so keep it in step.
-                        $record->room?->forceFill([
-                            'is_booked' => 'booked',
-                            'customer_name' => $record->guest_name,
-                            'email' => $record->guest_email,
-                            'start_date' => $record->check_in,
-                            'end_date' => $record->check_out,
-                        ])->save();
-
-                        Mail::to($record->guest_email)->send(new \App\Mail\BookingConfirmedMail($record));
+                        Notification::make()
+                            ->title('Booking confirmed')
+                            ->body('Room held and confirmation email sent.')
+                            ->success()
+                            ->send();
                     })
                     ->color('success'),
                 Action::make('reject')
                     ->label('Reject')
-                    ->visible(fn($record) => $record->status === 'pending')
+                    ->icon('heroicon-o-x-circle')
+                    ->requiresConfirmation()
+                    ->visible(fn (Booking $record): bool => $record->status === 'pending')
                     ->form([
                         Textarea::make('rejection_reason')->label('Reason')->required(),
                     ])
-                    ->action(function ($record, $data) {
-                        $record->status = 'rejected';
-                        $record->rejection_reason = $data['rejection_reason'];
-                        $record->save();
+                    ->action(function (Booking $record, array $data, BookingWorkflowService $bookingWorkflow): void {
+                        $bookingWorkflow->rejectBooking($record, $data['rejection_reason']);
 
-                        // Releasing the room again so a rejection never leaves it held.
-                        $record->room?->forceFill(['is_booked' => 'no'])->save();
-                        Mail::to($record->guest_email)->send(new \App\Mail\BookingDeclinedMail($record, $data['rejection_reason']));
+                        Notification::make()
+                            ->title('Booking rejected')
+                            ->body('Room released and decline email sent.')
+                            ->success()
+                            ->send();
                     })
                     ->color('danger'),
                 EditAction::make(),
