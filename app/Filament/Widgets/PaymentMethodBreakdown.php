@@ -7,6 +7,8 @@ use Filament\Widgets\ChartWidget;
 
 class PaymentMethodBreakdown extends ChartWidget
 {
+    protected static bool $isDiscovered = false;
+
     protected static ?string $heading = 'Payment Method Breakdown';
 
     protected function getData(): array
