@@ -261,18 +261,26 @@
                         <label style="flex:1;min-width:150px;cursor:pointer;">
                             <input type="radio" name="selected_gateway" value="tgipay" id="gw_tgipay" checked style="display:none;">
                             <div id="label_tgipay" style="border:2px solid #002F61;border-radius:12px;padding:14px;text-align:center;background:#002F61;color:#fff;transition:all .2s;">
-                                <div style="font-size:20px;line-height:1;">&#127974;</div>
-                                <div style="font-weight:700;margin-top:6px;">Bank Transfer</div>
-                                <div style="font-size:12px;opacity:.85;">TGI Titan</div>
+                                {{-- Logo sits on a white chip so it reads the same whether the
+                                     card is selected (navy) or not (white). --}}
+                                <span style="display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 10px;background:#fff;border-radius:8px;color:#002F61;font-weight:800;font-size:13px;">
+                                    <img src="{{ asset('images/gateways/tgipay.png') }}" alt="TGI Pay"
+                                         style="height:22px;width:auto;display:block;"
+                                         onerror="this.style.display='none';this.parentNode.textContent='TGI';">
+                                </span>
+                                <div style="font-weight:700;margin-top:8px;">Pay with TGI</div>
                             </div>
                         </label>
 
                         <label style="flex:1;min-width:150px;cursor:pointer;">
                             <input type="radio" name="selected_gateway" value="paystack" id="gw_paystack" style="display:none;">
                             <div id="label_paystack" style="border:2px solid #ccc;border-radius:12px;padding:14px;text-align:center;background:#fff;color:#002F61;transition:all .2s;">
-                                <div style="font-size:20px;line-height:1;">&#128179;</div>
-                                <div style="font-weight:700;margin-top:6px;">Card Payment</div>
-                                <div style="font-size:12px;color:#666;">Paystack</div>
+                                <span style="display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 10px;background:#fff;border-radius:8px;color:#002F61;font-weight:800;font-size:13px;">
+                                    <img src="{{ asset('images/gateways/paystack.png') }}" alt="Paystack"
+                                         style="height:20px;width:auto;display:block;"
+                                         onerror="this.style.display='none';this.parentNode.textContent='Paystack';">
+                                </span>
+                                <div style="font-weight:700;margin-top:8px;">Pay With Paystack</div>
                             </div>
                         </label>
                     </div>

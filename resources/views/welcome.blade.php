@@ -9,7 +9,7 @@
         // Social scrapers (WhatsApp, Telegram, Facebook, X) never execute JS and
         // never resolve relative paths, so these must be absolute URLs built
         // from APP_URL. If previews look wrong in production, check APP_URL.
-        $ogTitle = 'Iceland Beach Resort — A private escape in Lagos';
+        $ogTitle = 'Iceland Beach Resort A private escape in Lagos';
         $ogDescription = 'Beachfront rooms, private cabanas and event spaces on the Lagos coastline. Book direct for the best rate.';
         $ogImage = asset('images/og-image.jpg');
         $ogUrl = url()->current();
