@@ -11,6 +11,22 @@ class SalesOverview extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
+        // Guarded so a missing/legacy sales or products table cannot 500 the
+        // whole dashboard — one widget failing should degrade, not crash.
+        try {
+            return $this->buildStats();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('SalesOverview failed: ' . $e->getMessage());
+
+            return [
+                Stat::make('Sales', '—')->description('Temporarily unavailable'),
+            ];
+        }
+    }
+
+    /** @return array<int, Stat> */
+    private function buildStats(): array
+    {
         $todaySales = Sale::query()->whereDate('sale_date', now()->toDateString());
         $lowStock = Product::query()->whereColumn('stock_quantity', '<=', 'low_stock_threshold')->count();
 

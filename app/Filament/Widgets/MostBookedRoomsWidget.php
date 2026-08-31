@@ -14,11 +14,20 @@ class MostBookedRoomsWidget extends Widget
     public function mount()
     {
         // Replace 'bookings' and 'rooms' with your actual table names/columns
-        $this->rooms = DB::table('bookings')
-            ->select('room_id', DB::raw('count(*) as total'))
-            ->groupBy('room_id')
-            ->orderByDesc('total')
-            ->limit(5)
-            ->get();
+        // Guarded: bookings.room_id is a relatively recent column, so an
+        // environment whose database predates it would otherwise 500 the
+        // entire dashboard rather than just this panel.
+        try {
+            $this->rooms = DB::table('bookings')
+                ->select('room_id', DB::raw('count(*) as total'))
+                ->whereNotNull('room_id')
+                ->groupBy('room_id')
+                ->orderByDesc('total')
+                ->limit(5)
+                ->get();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('MostBookedRoomsWidget failed: ' . $e->getMessage());
+            $this->rooms = collect();
+        }
     }
 }

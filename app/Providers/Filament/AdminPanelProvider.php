@@ -58,6 +58,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                // sort = 1, so revenue leads the dashboard.
+                \App\Filament\Widgets\RevenueStatsWidget::class,
+                \App\Filament\Widgets\RoomSalesPieChart::class,
+                \App\Filament\Widgets\RoomBreakdownPieChart::class,
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
                 \App\Filament\Widgets\MostBookedRoomsWidget::class,

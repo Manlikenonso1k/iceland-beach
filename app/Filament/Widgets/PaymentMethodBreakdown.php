@@ -11,10 +11,17 @@ class PaymentMethodBreakdown extends ChartWidget
 
     protected function getData(): array
     {
-        $summary = Sale::query()
-            ->selectRaw('payment_method, SUM(total_amount) as total')
-            ->groupBy('payment_method')
-            ->pluck('total', 'payment_method');
+        // Guarded for the same reason as SalesOverview. An empty collection
+        // renders a zeroed chart rather than taking the dashboard down.
+        try {
+            $summary = Sale::query()
+                ->selectRaw('payment_method, SUM(total_amount) as total')
+                ->groupBy('payment_method')
+                ->pluck('total', 'payment_method');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('PaymentMethodBreakdown failed: ' . $e->getMessage());
+            $summary = collect();
+        }
 
         return [
             'datasets' => [
