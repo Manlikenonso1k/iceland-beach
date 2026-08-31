@@ -253,8 +253,33 @@
                     <div class="amount-display" id="amount-display">₦5,000.00</div>
                 </div>
 
-                {{-- Payment method is always TGI Pay --}}
-                <input type="hidden" name="payment_method" value="tgipay">
+                {{-- Payment method. TGI stays selected by default, so the live
+                     flow is unchanged for anyone who does not touch this. --}}
+                <div style="margin-top:4px;">
+                    <label class="form-label">Payment method</label>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;">
+                        <label style="flex:1;min-width:150px;cursor:pointer;">
+                            <input type="radio" name="selected_gateway" value="tgipay" id="gw_tgipay" checked style="display:none;">
+                            <div id="label_tgipay" style="border:2px solid #002F61;border-radius:12px;padding:14px;text-align:center;background:#002F61;color:#fff;transition:all .2s;">
+                                <div style="font-size:20px;line-height:1;">&#127974;</div>
+                                <div style="font-weight:700;margin-top:6px;">Bank Transfer</div>
+                                <div style="font-size:12px;opacity:.85;">TGI Titan</div>
+                            </div>
+                        </label>
+
+                        <label style="flex:1;min-width:150px;cursor:pointer;">
+                            <input type="radio" name="selected_gateway" value="paystack" id="gw_paystack" style="display:none;">
+                            <div id="label_paystack" style="border:2px solid #ccc;border-radius:12px;padding:14px;text-align:center;background:#fff;color:#002F61;transition:all .2s;">
+                                <div style="font-size:20px;line-height:1;">&#128179;</div>
+                                <div style="font-weight:700;margin-top:6px;">Card Payment</div>
+                                <div style="font-size:12px;color:#666;">Paystack</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <input type="hidden" name="payment_method" id="payment_method" value="tgipay">
+                <input type="hidden" name="paystack_ref" id="paystack_ref" value="">
 
                 {{-- Submit --}}
                 <div id="success-msg" class="success-alert">
@@ -272,7 +297,12 @@
     </p>
 </div>
 
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
+    // Blank or placeholder disables the card option gracefully.
+    const PAYSTACK_PUBLIC_KEY = @json(config('services.paystack.public_key') ?? '');
+    const VERIFY_URL  = @json(url('/verify-payment'));
+    const TGIPAY_URL  = @json(url('/initiate-tgipay'));
     const CALCULATE_URL = "{{ route('ticket.calculate') }}";
     const CSRF_TOKEN    = "{{ csrf_token() }}";
 
@@ -370,12 +400,74 @@
             return;
         }
 
+        var gateway = (document.querySelector('input[name="selected_gateway"]:checked') || {}).value || 'tgipay';
+        document.getElementById('payment_method').value = gateway;
+
+        if (gateway === 'paystack') {
+            if (!PAYSTACK_PUBLIC_KEY || PAYSTACK_PUBLIC_KEY.indexOf('pk_') !== 0 || typeof PaystackPop === 'undefined') {
+                alert('Card payment is unavailable right now. Please choose Bank Transfer.');
+                return;
+            }
+
+            payBtn.disabled = true;
+            payBtn.textContent = 'Opening secure checkout...';
+
+            // Amount here is for the popup only. paystackVerify() recalculates
+            // it server-side from ticket_type before the ticket is created.
+            PaystackPop.setup({
+                key: PAYSTACK_PUBLIC_KEY,
+                email: document.getElementById('email').value.trim(),
+                amount: paystackAmountKobo(),
+                currency: 'NGN',
+                onSuccess: function (t) { finishPaystack(t.reference); },
+                callback: function (r) { finishPaystack(r.reference); },
+                onCancel: resetPayButton,
+                onClose: resetPayButton
+            }).openIframe();
+
+            return;
+        }
+
         payBtn.disabled    = true;
-        payBtn.textContent = 'Initiating payment…';
+        payBtn.textContent = 'Initiating payment...';
 
         // Submit to /initiate-tgipay — @csrf token is already in the hidden _token field
+        form.setAttribute('action', TGIPAY_URL);
         form.submit();
     });
+
+    function finishPaystack(reference) {
+        document.getElementById('paystack_ref').value = reference;
+        form.setAttribute('action', VERIFY_URL);
+        form.submit();
+    }
+
+    function resetPayButton() {
+        payBtn.disabled = false;
+        payBtn.textContent = 'Pay with Card';
+    }
+
+    function paystackAmountKobo() {
+        var prices = { 'Access Ticket': 5000, 'Access + Transport': 10000 };
+        var type = document.getElementById('ticket_type').value;
+        var qty  = parseInt(document.getElementById('quantity').value, 10) || 1;
+        return (prices[type] || 5000) * qty * 100;
+    }
+
+    document.querySelectorAll('input[name="selected_gateway"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            var paystack = this.value === 'paystack';
+            styleGateway(document.getElementById('label_paystack'), paystack);
+            styleGateway(document.getElementById('label_tgipay'), !paystack);
+            payBtn.textContent = paystack ? 'Pay with Card' : 'Proceed to Payment →';
+        });
+    });
+
+    function styleGateway(el, active) {
+        el.style.background  = active ? '#002F61' : '#fff';
+        el.style.color       = active ? '#fff' : '#002F61';
+        el.style.borderColor = active ? '#002F61' : '#ccc';
+    }
 </script>
 
 </body>

@@ -68,6 +68,32 @@ Route::post('/webhooks/tgi', [PaymentController::class, 'tgiPayWebhook'])
     ->name('tgipay.webhook')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
+// ── Paystack: ROOM BOOKING payments ──────────────────────────────────────
+// Separate from the /ticket Paystack flow, which uses the inline popup and
+// POSTs to /verify-payment. Do not merge the two.
+//
+// The callback carries no booking id — it resolves the booking from the
+// `reference` query parameter Paystack appends, so the single callback URL
+// registered in the Paystack dashboard works for every transaction.
+Route::get('/booking/payment/callback', [\App\Http\Controllers\BookingPaymentController::class, 'callback'])
+    ->name('booking.payment.callback');
+
+// Paystack webhook. Paystack accepts ONE URL per mode, and sends every event
+// to it, so a single endpoint dispatches to tickets or bookings by reference
+// prefix. The two aliases below point at the same handler so whichever URL is
+// already registered in the dashboard keeps working.
+Route::post('/webhooks/paystack', [\App\Http\Controllers\PaystackWebhookController::class, 'handle'])
+    ->name('paystack.webhook')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+Route::post('/webhooks/paystack/booking', [\App\Http\Controllers\PaystackWebhookController::class, 'handle'])
+    ->name('booking.payment.webhook')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+Route::post('/webhooks/paystack/tickets', [\App\Http\Controllers\PaystackWebhookController::class, 'handle'])
+    ->name('ticket.payment.webhook')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
 // React public-site routes. Kept after all server-rendered ticket, payment, and vendor routes.
 Route::view('/about', 'welcome');
 Route::view('/rooms', 'welcome');

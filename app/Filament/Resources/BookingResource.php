@@ -85,11 +85,29 @@ class BookingResource extends Resource
                 TextColumn::make('room_type')->label('Room'),
                 TextColumn::make('check_in')->label('Check In')->dateTime(),
                 TextColumn::make('check_out')->label('Check Out')->dateTime(),
-                TextColumn::make('status')->label('Status')->badge()->color(fn($state) => match($state) {
-                    'pending' => 'warning',
-                    'confirmed' => 'success',
-                    'rejected' => 'danger',
-                }),
+                TextColumn::make('payment_status')
+                    ->label('Payment')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state ? ucfirst($state) : 'Not required')
+                    ->color(fn (?string $state): string => match ($state) {
+                        'paid' => 'success',
+                        'pending' => 'warning',
+                        'failed' => 'danger',
+                        default => 'gray',
+                    })
+                    ->toggleable(),
+                TextColumn::make('status')->label('Status')->badge()
+                    // A default arm is required: the payment flow adds
+                    // 'pending_payment' and 'payment_failed', and an unmatched
+                    // value would throw UnhandledMatchError and break the table.
+                    ->formatStateUsing(fn (?string $state): string => ucfirst(str_replace('_', ' ', (string) $state)))
+                    ->color(fn (?string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'confirmed' => 'success',
+                        'rejected', 'payment_failed' => 'danger',
+                        'pending_payment' => 'info',
+                        default => 'gray',
+                    }),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -97,6 +115,8 @@ class BookingResource extends Resource
                         'pending' => 'Pending',
                         'confirmed' => 'Confirmed',
                         'rejected' => 'Rejected',
+                        'pending_payment' => 'Awaiting payment',
+                        'payment_failed' => 'Payment failed',
                     ])
                     ->default('pending'),
             ])

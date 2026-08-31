@@ -64,6 +64,16 @@ class PendingBookingsWidget extends BaseWidget
                     ->label('Check-out')
                     ->date('M j, Y')
                     ->placeholder('—'),
+                TextColumn::make('payment_status')
+                    ->label('Payment')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state ? ucfirst($state) : '—')
+                    ->color(fn (?string $state): string => match ($state) {
+                        'paid' => 'success',
+                        'pending' => 'warning',
+                        'failed' => 'danger',
+                        default => 'gray',
+                    }),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()

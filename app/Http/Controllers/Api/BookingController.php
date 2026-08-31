@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Room;
+use App\Models\Setting;
+use App\Services\PaystackService;
 use App\Services\ReservationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 class BookingController extends Controller
@@ -73,28 +76,92 @@ class BookingController extends Controller
             'email_opt_in' => ['nullable', 'boolean'],
         ]);
 
+        $room = Room::query()->findOrFail($data['room_id']);
+        $checkIn = Carbon::parse($data['check_in'])->startOfDay();
+        $checkOut = Carbon::parse($data['check_out'])->startOfDay();
+
+        // Toggled by Super Admin at /admin/manage-settings. When off, the flow
+        // below is byte-for-byte what it has always been.
+        $paymentRequired = Setting::get('booking_payment_required', false)
+            && app(PaystackService::class)->isConfigured();
+
         try {
             $booking = $reservations->requestBooking(
-                Room::query()->findOrFail($data['room_id']),
+                $room,
                 $data['guest_name'],
                 $data['guest_email'],
                 $data['guest_phone'] ?? null,
                 $data['guests'] ?? null,
-                Carbon::parse($data['check_in'])->startOfDay(),
-                Carbon::parse($data['check_out'])->startOfDay(),
+                $checkIn,
+                $checkOut,
                 (bool) ($data['email_opt_in'] ?? false),
+                // Suppress the "request received" email until payment lands;
+                // BookingPaymentController sends it once Paystack confirms.
+                sendEmails: ! $paymentRequired,
             );
         } catch (InvalidArgumentException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }
 
+        if (! $paymentRequired) {
+            return response()->json([
+                'requires_payment' => false,
+                'message' => 'Your booking request has been received. A confirmation email has been sent.',
+                'booking' => [
+                    'id' => $booking->id,
+                    'room_name' => $booking->room_type,
+                    'status' => $booking->status,
+                ],
+            ], 201);
+        }
+
+        // --- Payment flow -------------------------------------------------
+        $paystack = app(PaystackService::class);
+        $reference = $paystack->generateReference('BOOK');
+
+        // Held out of the staff queue until Paystack confirms.
+        $booking->update([
+            'status' => 'pending_payment',
+            'payment_status' => 'pending',
+            'payment_reference' => $reference,
+        ]);
+
+        // room_price is the nightly rate; Paystack expects kobo.
+        $nights = max(1, $checkIn->diffInDays($checkOut));
+        $amountKobo = (int) round(((float) $room->room_price) * $nights * 100);
+
+        try {
+            $init = $paystack->initialize(
+                email: $data['guest_email'],
+                amountKobo: $amountKobo,
+                reference: $reference,
+                callbackUrl: route('booking.payment.callback'),
+                metadata: [
+                    'booking_id' => $booking->id,
+                    'room' => $room->room_name,
+                    'guest_name' => $data['guest_name'],
+                    'check_in' => $checkIn->toDateString(),
+                    'check_out' => $checkOut->toDateString(),
+                    'nights' => $nights,
+                ],
+            );
+        } catch (\Throwable $exception) {
+            Log::error('Paystack init failed for booking ' . $booking->id . ': ' . $exception->getMessage());
+
+            // Leave no orphan holding a reference the guest can never pay.
+            $booking->delete();
+
+            return response()->json([
+                'message' => 'We could not start the payment. Please try again.',
+            ], 502);
+        }
+
         return response()->json([
-            'message' => 'Your booking request has been received. A confirmation email has been sent.',
-            'booking' => [
-                'id' => $booking->id,
-                'room_name' => $booking->room_type,
-                'status' => $booking->status,
-            ],
+            'requires_payment' => true,
+            'authorization_url' => $init['authorization_url'] ?? null,
+            'reference' => $reference,
+            'amount' => $amountKobo / 100,
+            'booking' => ['id' => $booking->id, 'room_name' => $booking->room_type],
         ], 201);
     }
 }
