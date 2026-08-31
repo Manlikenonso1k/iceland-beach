@@ -344,7 +344,7 @@ export default function HomePage() {
                 className="hp-unlock"
                 style={{
                     backgroundImage:
-                        'linear-gradient(90deg, rgba(16,59,55,.82), rgba(16,59,55,.35)), url("/legacy-images/img (15).jpg")',
+                        'linear-gradient(90deg, rgba(0,26,54,.88), rgba(0,26,54,.62)), url("/legacy-images/img (15).jpg")',
                 }}
             >
                 <motion.div
@@ -405,14 +405,12 @@ export default function HomePage() {
                 transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
             >
                 <div className="hp-partners-text">
-                    <h2>More ways to earn from your stay</h2>
+                    <h2>Find your perfect spot</h2>
                     <p>
-                        Earn credit on transfers, tours, and dining with our local
-                        partners from glacier hikes to harborside restaurants and
-                        put it toward your next trip.
+                        From shaded cabana beds to open-air loungers, our beachside spaces are designed for pure relaxation. Reserve your spot and make the most of your time at Iceland Beach Resort.
                     </p>
                     <Link to="/services" className="hp-link">
-                        See our partners <ArrowRight size={16} />
+                        Explore Our Spaces <ArrowRight size={16} />
                     </Link>
                 </div>
                 <img

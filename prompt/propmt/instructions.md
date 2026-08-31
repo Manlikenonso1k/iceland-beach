@@ -1,625 +1,514 @@
 You are working inside a Laravel 12 + Filament 3 + ReactJS project for Iceland Beach Resort.
-Brand colors: #002F61 (navy), white. No green, no orange on brand elements.
+Brand: #002F61 navy, white.
 
-=== STEP 0: MAP BEFORE TOUCHING ANYTHING ===
+=== STEP 0: MAP EVERYTHING BEFORE TOUCHING ANYTHING ===
 
-Run ALL of these and read every result before writing a single line:
+1. `cat composer.json | grep -i "reverb\|pusher\|soketi\|broadcasting\|websocket\|echo\|livewire"`
+2. `cat package.json | grep -i "echo\|pusher\|reverb\|socket\|broadcast"`
+3. `cat config/broadcasting.php`
+4. `cat .env | grep -i "broadcast\|pusher\|reverb\|websocket\|queue"`
+5. `find app/Events -type f -name "*.php" 2>/dev/null | sort`
+6. `find app/Listeners -type f -name "*.php" 2>/dev/null | sort`
+7. `find app/Filament/Widgets -type f -name "*.php" | sort`
+8. `find app/Filament/Resources/BookingResource -type f -name "*.php" | sort`
+9. `grep -rn "dispatch\|event\|notify\|notification" app/Http/Controllers --include="*.php" | grep -i book | head -20`
+10. `grep -rn "getHeaderWidgets\|getFooterWidgets\|getWidgets" app/Filament --include="*.php"`
+11. `php artisan tinker --execute="echo implode(', ', \Schema::getColumnListing('bookings'));"`
+12. `php artisan tinker --execute="echo implode(', ', \Schema::getColumnListing('notifications')) ?? 'no table';"`
+13. `cat config/queue.php | grep -i "default\|driver"`
+14. `php artisan reverb:start --help 2>/dev/null && echo "reverb available" || echo "reverb not installed"`
 
-1. `find resources/js/Pages -name "*.jsx" | sort`
-2. `find app/Filament/Resources -type f -name "*.php" | sort`
-3. `find app/Filament/Widgets -type f -name "*.php" | sort`
-4. `find app/Models -type f -name "*.php" | sort`
-5. `find database/migrations -name "*.php" | sort`
-6. `php artisan tinker --execute="echo implode(', ', \Schema::getColumnListing('rooms'));"`
-7. `php artisan tinker --execute="echo implode(', ', \Schema::getColumnListing('bookings'));"`
-8. `php artisan tinker --execute="echo implode(', ', \Schema::getColumnListing('referrals')) ?? 'no table';"`
-9. `grep -rn "your stay\|book-btn\|booking.*button\|btn.*book" resources/js --include="*.jsx" -i | head -20`
-10. `grep -rn "filter\|All Rooms\|Beach Apartment\|category" resources/js/Pages/rooms.jsx resources/js/Pages/spaces.jsx 2>/dev/null`
-11. `cat app/Providers/Filament/AdminPanelProvider.php`
-12. `grep -rn "navigation\|logo\|brand" app/Providers/Filament/AdminPanelProvider.php`
-13. `grep -rn "ReferralResource\|referral" app/Filament/Resources --include="*.php" -l 2>/dev/null`
-14. Read rooms.jsx fully, spaces.jsx fully, AdminPanelProvider.php fully, and every existing Filament resource file.
+Read every result fully before writing a single line of code.
+Understand: what broadcasting driver is configured, what queue driver is set, what events already exist.
 
-DO NOT write any code until all reads are complete and you understand the full structure.
+=== DECISION POINT — Choose Broadcasting Approach ===
 
-=== TASK 1: Fix "Your Stay" Button — White Text ===
+After reading Step 0, determine which approach to use:
 
-PROBLEM: The "Book Your Stay" (or similar CTA) button has a blue background but black text.
+IF Laravel Reverb is already installed (reverb in composer.json):
+→ Use Reverb. Skip Reverb installation step, just configure.
 
-1. From Step 0 search results, find the exact button element in rooms.jsx (or the booking modal/form component).
-2. Find the className or inline style on that button.
-3. It likely has `bg-[#002F61]` or `bg-blue-900` but is missing `text-white`.
-4. Add `text-white` to the Tailwind className, or `color: '#ffffff'` to the inline style.
-5. Also check: `hover:text-white` if the hover state reverts to black.
-6. Check every primary CTA button across ALL JSX pages and ensure they all have white text on blue backgrounds.
-   Search: `grep -rn "bg-\[#002F61\]\|bg-blue-900\|bg-blue-800" resources/js --include="*.jsx" -r`
-   For each match, confirm `text-white` is present. Add it where missing.
+IF Pusher credentials exist in .env:
+→ Use Pusher driver. Skip Reverb installation.
 
-=== TASK 2: Confirmed Bookings Widget in Filament ===
+IF neither — this is the default for a fresh Laravel project:
+→ Install Laravel Reverb (free, self-hosted, no third-party account needed).
+→ Run: `php artisan install:broadcasting`
+   This installs Reverb + sets up Echo automatically. Answer yes to all prompts.
+→ Then: `composer require laravel/reverb`
+→ Then: `npm install --save-dev laravel-echo pusher-js`
 
-PROBLEM: Only a calendar widget and pending bookings widget exist. Need a third widget showing confirmed bookings with cancel action.
+Document which path was taken before proceeding.
 
-STEP 1 — Create the widget:
-`php artisan make:filament-widget ConfirmedBookingsWidget --table`
+=== TASK 1: Booking Created Event ===
 
-STEP 2 — Implement the widget class (app/Filament/Widgets/ConfirmedBookingsWidget.php):
+STEP 1 — Create the event:
+`php artisan make:event BookingCreated`
 
 ```php
 <?php
-
-namespace App\Filament\Widgets;
+namespace App\Events;
 
 use App\Models\Booking;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Widgets\TableWidget as BaseWidget;
-use Filament\Notifications\Notification;
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
 
-class ConfirmedBookingsWidget extends BaseWidget
+class BookingCreated implements ShouldBroadcast
 {
-    protected static ?int $sort = 3;
-    protected int|string|array $columnSpan = 'full';
-    protected static bool $isDiscovered = false;
-    protected static ?string $heading = 'Confirmed Bookings';
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function table(Table $table): Table
+    public function __construct(public Booking $booking) {}
+
+    public function broadcastOn(): array
     {
-        return $table
-            ->query(
-                Booking::query()
-                    ->where('status', 'confirmed')
-                    ->with('room')
-                    ->latest('check_in')
-            )
-            ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('Ref')
-                    ->formatStateUsing(fn ($state) => '#' . str_pad($state, 6, '0', STR_PAD_LEFT))
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('guest_name') // adjust to actual column name
-                    ->label('Guest')
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('guest_email') // adjust to actual column name
-                    ->label('Email')
-                    ->searchable()
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('guest_phone') // adjust to actual column name
-                    ->label('Phone')
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('room.name')
-                    ->label('Room')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('check_in')
-                    ->label('Check-in')
-                    ->date('M j, Y')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('check_out')
-                    ->label('Check-out')
-                    ->date('M j, Y')
-php artisan tinker --execute="echo implode(', ', \Schema::getColumnListing('referrals'));"
-php artisan tinker --execute="echo implode(', ', \Schema::getColumnListing('referral_ticket_sales'));"
-grep -rn "Referral" app/Models app/Filament --include="*.php" -l
-
-
-Read everything that exists before adding anything. Build on top — do not recreate.
-
-STEP 2 — Migration additions (only if columns don't already exist):
-
-For `referrals` table, ensure these columns exist:
-- `id`, `name`, `email` (unique), `phone` (nullable), `password` (hashed)
-- `code` (unique string, auto-generated)
-- `commission_rate` (decimal 5,2, default 10.00) — percentage the referral earns
-- `is_active` (boolean, default true)
-- `created_by` (FK to users — the super admin who created them)
-- `last_login_at` (nullable timestamp)
-- timestamps
-
-For `referral_ticket_sales` table, ensure:
-- `id`, `referral_id` (FK), `ticket_id` (unique FK), `buyer_name`, `buyer_email`
-- `ticket_amount` (decimal — full ticket price), `commission_amount` (decimal — calculated at time of sale)
-- `status` (enum: successful — only successful ever written here)
-- timestamps
-
-Run migrations if needed.
-
-STEP 3 — Referral model (app/Models/Referral.php):
-```php
-<?php
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-
-class Referral extends Authenticatable
-{
-    protected $fillable = [
-        'name', 'email', 'phone', 'password', 'code',
-        'commission_rate', 'is_active', 'created_by', 'last_login_at',
-    ];
-
-    protected $hidden = ['password'];
-
-    protected $casts = [
-        'password' => 'hashed',
-        'is_active' => 'boolean',
-        'commission_rate' => 'decimal:2',
-        'last_login_at' => 'datetime',
-    ];
-
-    public function sales()
-    {
-        return $this->hasMany(ReferralTicketSale::class);
+        return [new Channel('bookings')]; // public channel — admin is already authenticated
     }
 
-    public function totalEarned(): float
+    public function broadcastAs(): string
     {
-        return $this->sales()->sum('commission_amount');
+        return 'booking.created';
     }
 
-    public function totalTicketsSold(): int
-    {
-        return $this->sales()->count();
-    }
-
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-}
-```
-
-STEP 4 — Update TicketObserver to calculate and store commission_amount at time of sale:
-```php
-// When writing to referral_ticket_sales:
-$commissionAmount = ($referral->commission_rate / 100) * $ticketAmount;
-
-ReferralTicketSale::create([
-    'referral_id'       => $referral->id,
-    'ticket_id'         => $ticket->id,
-    'buyer_name'        => $ticket->buyer_name ?? $ticket->name ?? 'Guest',
-    'buyer_email'       => $ticket->buyer_email ?? $ticket->email ?? '',
-    'ticket_amount'     => $ticketAmount,
-    'commission_amount' => $commissionAmount,
-    'status'            => 'successful',
-]);
-```
-
-STEP 5 — Filament ReferralResource for super admin (app/Filament/Resources/ReferralResource.php):
-
-```php
-<?php
-namespace App\Filament\Resources;
-
-use App\Models\Referral;
-use Filament\Forms;
-use Filament\Tables;
-use Filament\Resources\Resource;
-use Illuminate\Support\Str;
-
-class ReferralResource extends Resource
-{
-    protected static ?string $model = Referral::class;
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationLabel = 'Referrals';
-    protected static ?string $navigationGroup = 'Marketing';
-
-    public static function canAccess(): bool
-    {
-        return auth()->user()?->hasRole('super_admin') ?? false;
-    }
-
-    public static function form(Forms\Form $form): Forms\Form
-    {
-        return $form->schema([
-            Forms\Components\Section::make('Referral Account')->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()->maxLength(255),
-
-                Forms\Components\TextInput::make('email')
-                    ->email()->required()->unique(ignoreRecord: true),
-
-                Forms\Components\TextInput::make('phone')
-                    ->tel()->nullable(),
-
-                Forms\Components\TextInput::make('password')
-                    ->password()
-                    ->required(fn ($context) => $context === 'create')
-                    ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
-                    ->dehydrated(fn ($state) => filled($state))
-                    ->helperText('Leave blank when editing to keep current password'),
-
-                Forms\Components\TextInput::make('code')
-                    ->label('Referral Code')
-                    ->unique(ignoreRecord: true)
-                    ->helperText('Auto-generated if left blank')
-                    ->nullable(),
-
-                Forms\Components\TextInput::make('commission_rate')
-                    ->label('Commission Rate (%)')
-                    ->numeric()
-                    ->minValue(0)
-                    ->maxValue(100)
-                    ->default(10)
-                    ->suffix('%')
-                    ->required()
-                    ->helperText('Percentage of each ticket sale the referral earns'),
-
-                Forms\Components\Toggle::make('is_active')
-                    ->label('Active')
-                    ->default(true),
-            ]),
-        ]);
-    }
-
-    public static function table(Tables\Table $table): Tables\Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('email')->searchable(),
-                Tables\Columns\TextColumn::make('phone')->toggleable(),
-                Tables\Columns\TextColumn::make('code')
-                    ->label('Referral Code')
-                    ->copyable()
-                    ->badge()
-                    ->color('info'),
-                Tables\Columns\TextColumn::make('commission_rate')
-                    ->label('Commission')
-                    ->formatStateUsing(fn ($state) => $state . '%'),
-                Tables\Columns\TextColumn::make('sales_count')
-                    ->label('Tickets Sold')
-                    ->counts('sales')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('total_earned')
-                    ->label('Total Earned')
-                    ->getStateUsing(fn ($record) => '₦' . number_format($record->totalEarned(), 2))
-                    ->sortable(),
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('Active')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('last_login_at')
-                    ->label('Last Login')
-                    ->dateTime('M j, Y H:i')
-                    ->toggleable(),
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-            ]);
-    }
-
-    // Auto-generate code before creating
-    public static function mutateFormDataBeforeCreate(array $data): array
-    {
-        if (empty($data['code'])) {
-            do {
-                $code = 'ICE-' . strtoupper(Str::random(6));
-            } while (Referral::where('code', $code)->exists());
-            $data['code'] = $code;
-        }
-        $data['created_by'] = auth()->id();
-        return $data;
-    }
-
-    public static function getPages(): array
+    public function broadcastWith(): array
     {
         return [
-            'index'  => Pages\ListReferrals::route('/'),
-            'create' => Pages\CreateReferral::route('/create'),
-            'edit'   => Pages\EditReferral::route('/{record}/edit'),
+            'id'         => $this->booking->id,
+            'guest_name' => $this->booking->guest_name // adjust to actual column
+                            ?? $this->booking->name
+                            ?? 'A guest',
+            'room'       => $this->booking->room->name ?? 'a room',
+            'check_in'   => \Carbon\Carbon::parse($this->booking->check_in)->format('M j, Y'),
+            'check_out'  => \Carbon\Carbon::parse($this->booking->check_out)->format('M j, Y'),
+            'status'     => $this->booking->status,
         ];
     }
 }
 ```
-Run: `php artisan make:filament-resource Referral` and replace the generated file with the above.
 
-STEP 6 — Referral user dashboard (separate Filament panel OR a scoped page).
+STEP 2 — Create BookingStatusChanged event (fires on approve/reject/cancel):
+`php artisan make:event BookingStatusChanged`
 
-Best approach for a clean separation: create a second Filament panel for referrals.
-`php artisan make:filament-panel referral`
-
-In the generated ReferralPanelProvider, configure:
 ```php
-->id('referral')
-->path('referral') // logs in at /referral instead of /admin
-->login()
-->authModel(\App\Models\Referral::class) // referral users authenticate separately
-->colors(['primary' => \Filament\Support\Colors\Color::hex('#002F61')])
-->brandName('Iceland Beach Resort — Partner Portal')
-->brandLogo(asset('images/iceland-logo.png'))
-->discoverWidgets(in: app_path('Filament/Referral/Widgets'), for: 'App\\Filament\\Referral\\Widgets')
-->discoverPages(in: app_path('Filament/Referral/Pages'), for: 'App\\Filament\\Referral\\Pages')
-```
+<?php
+namespace App\Events;
 
-STEP 7 — Create the referral dashboard widgets in app/Filament/Referral/Widgets/:
+use App\Models\Booking;
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
 
-A) SalesSummaryWidget — stats overview:
-```php
-// StatsOverviewWidget with 3 stats:
-// - Total tickets sold (count)
-// - Total commission earned (sum of commission_amount formatted as ₦)
-// - Commission rate (%)
-// All scoped to: ReferralTicketSale::where('referral_id', auth('referral')->id())
-```
-
-B) SalesChartWidget — pie chart of sales by event/ticket type if that data exists, else a monthly bar chart of sales count:
-```php
-// Use Filament's ChartWidget
-// protected static string $chartType = 'pie'; (or 'bar' for monthly)
-// Query: group referral_ticket_sales by month or by ticket type
-// Colors: shades of #002F61
-```
-
-C) BuyersTableWidget — list of buyers who purchased through this referral:
-```php
-// Table widget showing: buyer_name, buyer_email, ticket_amount, commission_amount, created_at
-// Scoped to current referral's sales only
-// Read-only — no actions
-```
-
-STEP 8 — Record last_login_at when referral logs in. Add to ReferralPanelProvider or a LoginListener:
-```php
-// In a boot() listener or authenticated() event:
-auth('referral')->user()->update(['last_login_at' => now()]);
-```
-
-=== TASK 4: Fix Filter Buttons in rooms.jsx ===
-
-PROBLEM: Only "All Rooms" and "Beach Apartment" filters work. Other category filters are broken.
-
-STEP 1 — Read the filter implementation in rooms.jsx fully.
-
-STEP 2 — Find where room categories come from:
-- Are they hardcoded strings in the JSX?
-- Or fetched from the API/Inertia props?
-
-STEP 3 — Find the filter logic. It likely looks like:
-```jsx
-const filtered = rooms.filter(room => 
-    activeFilter === 'all' || room.category === activeFilter
-);
-```
-
-Common causes of broken filters:
-a) Category string mismatch — button says "Deluxe" but room.category is "deluxe" (case mismatch)
-   Fix: normalize both to lowercase before comparing
-```jsx
-   room.category?.toLowerCase() === activeFilter?.toLowerCase()
-```
-
-b) Category field name wrong — room.category vs room.type vs room.room_type
-   Check with: `php artisan tinker --execute="dd(\App\Models\Room::first()->toArray());"`
-   Use the actual field name.
-
-c) Filters are hardcoded but rooms have different category values in the DB
-   Fix: generate filters dynamically from actual room data:
-```jsx
-   const categories = ['All Rooms', ...new Set(rooms.map(r => r.category).filter(Boolean))];
-```
-
-STEP 4 — Rebuild the filter bar cleanly:
-```jsx
-const [activeFilter, setActiveFilter] = useState('All Rooms');
-
-const categories = ['All Rooms', ...new Set(rooms.map(r => r.category).filter(Boolean))];
-
-const filteredRooms = activeFilter === 'All Rooms'
-    ? rooms
-    : rooms.filter(r => r.category === activeFilter);
-
-// Render:
-<div className="flex flex-wrap gap-3 mb-8">
-    {categories.map(cat => (
-        <button
-            key={cat}
-            onClick={() => setActiveFilter(cat)}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-                activeFilter === cat
-                    ? 'bg-[#002F61] text-white shadow-md'
-                    : 'bg-white text-[#002F61] border border-[#002F61] hover:bg-[#002F61] hover:text-white'
-            }`}
-        >
-            {cat}
-        </button>
-    ))}
-</div>
-```
-
-=== TASK 5: Spaces CRUD from Filament (Super Admin Only) ===
-
-PROBLEM: Rooms can be managed from Filament but Spaces cannot. Need full create/delete/edit for Spaces.
-
-STEP 1 — Check if a Space model and SpaceResource exist:
-
-find app/Models -name "Space*" 2>/dev/null
-find app/Filament/Resources -name "Space*" 2>/dev/null
-php artisan tinker --execute="echo implode(', ', \Schema::getColumnListing('spaces'));" 2>/dev/null || echo "No spaces table"
-
-
-STEP 2 — If no spaces table exists, create model + migration:
-`php artisan make:model Space -m`
-
-Migration schema:
-```php
-$table->id();
-$table->string('name');
-$table->string('slug')->unique();
-$table->text('description')->nullable();
-$table->string('category')->nullable();
-$table->decimal('price', 10, 2)->nullable();
-$table->integer('capacity')->nullable();
-$table->string('main_image')->nullable();
-$table->json('gallery_images')->nullable();
-$table->boolean('is_active')->default(true);
-$table->timestamps();
-```
-
-STEP 3 — Space model:
-```php
-protected $fillable = [
-    'name','slug','description','category','price',
-    'capacity','main_image','gallery_images','is_active'
-];
-protected $casts = ['gallery_images' => 'array', 'is_active' => 'boolean'];
-```
-
-STEP 4 — Create SpaceResource:
-`php artisan make:filament-resource Space --generate`
-
-Configure with same form structure as RoomResource (name, description, price, capacity, main_image FileUpload, gallery_images FileUpload multiple). Add canAccess() restricted to super_admin same as RoomResource.
-
-STEP 5 — Update spaces.jsx to read from API/Inertia props (spaces data from DB) instead of any hardcoded array. Update the controller/route that serves spaces.jsx to pass Space::where('is_active', true)->get() as a prop.
-
-=== TASK 6: Activity Log — Who Did What, When, From Where ===
-
-REQUIREMENT: Track every significant admin action: booking approve/reject/cancel, price changes, room/space edits, referral creation. Show staff member name, action, timestamp, device/IP.
-
-STEP 1 — Install Spatie Activity Log:
-composer require spatie/laravel-activitylog
-php artisan vendor:publish --provider="Spatie\Activitylog\ActivitylogServiceProvider" --tag="activitylog-migrations"
-php artisan migrate
-
-STEP 2 — Add the HasActivity trait to models you want to track:
-In app/Models/Booking.php:
-```php
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-
-class Booking extends Model
+class BookingStatusChanged implements ShouldBroadcast
 {
-    use LogsActivity;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function getActivitylogOptions(): LogOptions
+    public function __construct(
+        public Booking $booking,
+        public string $oldStatus,
+    ) {}
+
+    public function broadcastOn(): array
     {
-        return LogOptions::defaults()
-            ->logOnly(['status', 'room_id', 'check_in', 'check_out'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs()
-            ->setDescriptionForEvent(fn(string $eventName) => "Booking {$eventName}");
+        return [new Channel('bookings')];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'booking.status.changed';
+    }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'id'         => $this->booking->id,
+            'guest_name' => $this->booking->guest_name ?? $this->booking->name ?? 'Guest',
+            'room'       => $this->booking->room->name ?? 'Room',
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->booking->status,
+        ];
     }
 }
 ```
 
-Add the same trait to: Room, Space, Referral models — adjusting logOnly() fields per model.
+=== TASK 2: Dispatch Events at the Right Points ===
 
-STEP 3 — Capture IP and user agent. Create an observer or middleware that adds this to activity log properties:
+STEP 1 — Find exactly where bookings are created. Check:
+grep -rn "Booking::create|booking->save|BookingController|store(" app/Http/Controllers app/Filament --include="*.php" | head -20
 
-In AppServiceProvider boot():
+In the BookingController store() method (or wherever new bookings are saved), add AFTER the booking is saved:
+
 ```php
-\Spatie\Activitylog\Models\Activity::saving(function ($activity) {
-    $activity->properties = $activity->properties->merge([
-        'ip'         => request()->ip(),
-        'user_agent' => request()->userAgent(),
-        'device'     => \Jenssegers\Agent\Agent::class // or simple UA parse
-    ]);
+// After: $booking = Booking::create([...]);
+$booking->load('room'); // ensure room relationship is loaded
+\App\Events\BookingCreated::dispatch($booking);
+```
+
+STEP 2 — Find exactly where status is changed (confirm/reject/cancel actions in Filament widgets).
+Check the PendingBookingsWidget and ConfirmedBookingsWidget action closures.
+
+In EACH action closure where status is updated, capture old status first:
+
+```php
+->action(function (Booking $record) {
+    $oldStatus = $record->status; // capture BEFORE update
+    $record->update(['status' => 'confirmed']); // or rejected / cancelled
+    $record->load('room');
+    \App\Events\BookingStatusChanged::dispatch($record, $oldStatus);
+    
+    // existing notification code stays here unchanged
+    \Filament\Notifications\Notification::make()
+        ->title('Booking confirmed')
+        ->success()
+        ->send();
+}),
+```
+
+Do the same for reject and cancel actions. Do NOT remove any existing logic — only add the event dispatch after the update.
+
+STEP 3 — If a BookingObserver exists, check it:
+find app/Observers -name "Booking*" 2>/dev/null
+If a BookingObserver handles status changes, dispatch the events there instead to avoid double-firing.
+If no observer exists, the controller/widget dispatch from above is correct.
+
+=== TASK 3: Database Notifications for Filament (the WhatsApp-style bell) ===
+
+Filament 3 has a built-in database notification bell. Wire it up properly.
+
+STEP 1 — Ensure notifications table exists:
+php artisan tinker --execute="\Schema::hasTable('notifications') ? print('exists') : print('run migration');"`
+If missing: `php artisan notifications:table && php artisan migrate`
+
+STEP 2 — Send a database notification to ALL admin users when a booking is created.
+
+Create the notification class:
+`php artisan make:notification NewBookingNotification`
+
+```php
+<?php
+namespace App\Notifications;
+
+use App\Models\Booking;
+use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\DatabaseMessage;
+
+class NewBookingNotification extends Notification
+{
+    public function __construct(public Booking $booking) {}
+
+    public function via(object $notifiable): array
+    {
+        return ['database']; // Filament reads from database channel
+    }
+
+    public function toDatabase(object $notifiable): array
+    {
+        return [
+            'title'   => '🏖️ New Booking Received',
+            'body'    => ($this->booking->guest_name ?? $this->booking->name ?? 'A guest')
+                         . ' booked '
+                         . ($this->booking->room->name ?? 'a room')
+                         . ' — '
+                         . \Carbon\Carbon::parse($this->booking->check_in)->format('M j')
+                         . ' to '
+                         . \Carbon\Carbon::parse($this->booking->check_out)->format('M j, Y'),
+            'icon'    => 'heroicon-o-calendar-days',
+            'color'   => 'info',
+            'actions' => [
+                [
+                    'label' => 'View Booking',
+                    'url'   => '/admin/bookings/' . $this->booking->id . '/edit',
+                ],
+            ],
+        ];
+    }
+}
+```
+
+STEP 3 — Create BookingStatusNotification:
+`php artisan make:notification BookingStatusNotification`
+
+```php
+<?php
+namespace App\Notifications;
+
+use App\Models\Booking;
+use Illuminate\Notifications\Notification;
+
+class BookingStatusNotification extends Notification
+{
+    public function __construct(
+        public Booking $booking,
+        public string $oldStatus,
+    ) {}
+
+    public function via(object $notifiable): array
+    {
+        return ['database'];
+    }
+
+    public function toDatabase(object $notifiable): array
+    {
+        $status = $this->booking->status;
+        $icon   = match($status) {
+            'confirmed'  => 'heroicon-o-check-circle',
+            'rejected'   => 'heroicon-o-x-circle',
+            'cancelled'  => 'heroicon-o-trash',
+            default      => 'heroicon-o-arrow-path',
+        };
+        $color = match($status) {
+            'confirmed' => 'success',
+            'rejected'  => 'danger',
+            'cancelled' => 'warning',
+            default     => 'info',
+        };
+        $guestName = $this->booking->guest_name ?? $this->booking->name ?? 'Guest';
+
+        return [
+            'title' => ucfirst($status) . ': ' . $guestName,
+            'body'  => "Booking #{$this->booking->id} for "
+                       . ($this->booking->room->name ?? 'a room')
+                       . " changed from {$this->oldStatus} → {$status}",
+            'icon'  => $icon,
+            'color' => $color,
+        ];
+    }
+}
+```
+
+STEP 4 — Create a listener that sends these database notifications to all admin users:
+`php artisan make:listener SendBookingNotificationToAdmins --event=BookingCreated`
+
+```php
+<?php
+namespace App\Listeners;
+
+use App\Events\BookingCreated;
+use App\Models\User;
+use App\Notifications\NewBookingNotification;
+
+class SendBookingNotificationToAdmins
+{
+    public function handle(BookingCreated $event): void
+    {
+        // Notify all users with admin roles — adjust role names to match yours
+        $admins = User::role(['super_admin', 'admin', 'staff'])
+            ->get();
+
+        foreach ($admins as $admin) {
+            $admin->notify(new NewBookingNotification($event->booking));
+        }
+    }
+}
+```
+
+`php artisan make:listener SendStatusNotificationToAdmins --event=BookingStatusChanged`
+
+```php
+<?php
+namespace App\Listeners;
+
+use App\Events\BookingStatusChanged;
+use App\Models\User;
+use App\Notifications\BookingStatusNotification;
+
+class SendStatusNotificationToAdmins
+{
+    public function handle(BookingStatusChanged $event): void
+    {
+        $admins = User::role(['super_admin', 'admin', 'staff'])->get();
+
+        foreach ($admins as $admin) {
+            $admin->notify(new BookingStatusNotification(
+                $event->booking,
+                $event->oldStatus,
+            ));
+        }
+    }
+}
+```
+
+STEP 5 — Register events + listeners in app/Providers/EventServiceProvider.php:
+```php
+protected $listen = [
+    \App\Events\BookingCreated::class => [
+        \App\Listeners\SendBookingNotificationToAdmins::class,
+    ],
+    \App\Events\BookingStatusChanged::class => [
+        \App\Listeners\SendStatusNotificationToAdmins::class,
+    ],
+];
+```
+
+STEP 6 — Enable the Filament notification bell in AdminPanelProvider.php:
+```php
+->databaseNotifications()
+->databaseNotificationsPolling('10s') // polls every 10 seconds for new notifications
+```
+
+This gives you the WhatsApp-style bell icon in the Filament top bar that shows unread count and notification list.
+
+=== TASK 4: Auto-Refresh Widgets After Booking Actions ===
+
+PROBLEM: After confirming/rejecting/cancelling a booking, the widgets don't refresh — you have to manually reload.
+
+APPROACH: Use Filament's built-in widget polling + Livewire event dispatch. No custom JS needed. No risk of breaking existing logic.
+
+STEP 1 — Add polling to all three booking widgets (PendingBookingsWidget, ConfirmedBookingsWidget, BookingCalendarWidget).
+
+In each widget class, add:
+```php
+protected static ?string $pollingInterval = '10s'; // refreshes every 10 seconds automatically
+```
+
+This alone solves the stale data problem for most cases.
+
+STEP 2 — For instant refresh after an action (so you don't wait 10 seconds), dispatch a Livewire event after each action closure:
+
+In PendingBookingsWidget, after each action:
+```php
+->action(function (Booking $record) {
+    $oldStatus = $record->status;
+    $record->update(['status' => 'confirmed']);
+    $record->load('room');
+    \App\Events\BookingStatusChanged::dispatch($record, $oldStatus);
+
+    \Filament\Notifications\Notification::make()
+        ->title('Booking confirmed')
+        ->success()
+        ->send();
+
+    // Dispatch Livewire event to refresh sibling widgets
+    $this->dispatch('booking-status-updated');
+}),
+```
+
+STEP 3 — Make each widget listen for that event and refresh:
+
+In PendingBookingsWidget:
+```php
+protected function getListeners(): array
+{
+    return [
+        'booking-status-updated' => '$refresh',
+    ];
+}
+```
+
+In ConfirmedBookingsWidget:
+```php
+protected function getListeners(): array
+{
+    return [
+        'booking-status-updated' => '$refresh',
+    ];
+}
+```
+
+In BookingCalendarWidget (if it extends a Livewire component):
+```php
+protected function getListeners(): array
+{
+    return [
+        'booking-status-updated' => '$refresh',
+    ];
+}
+```
+
+This means: when you click Confirm on a pending booking, that widget refreshes instantly AND dispatches an event that causes the other two widgets to refresh simultaneously. No page reload needed.
+
+STEP 4 — Also handle the reverse: when a new booking arrives from the front-end (ReactJS booking form), the admin panel should update without manual refresh.
+
+If using Reverb/broadcasting, add to the calendar widget:
+
+```php
+// At the top of the widget class
+use Livewire\Attributes\On;
+
+#[On('echo:bookings,booking.created')]
+public function refreshOnNewBooking(): void
+{
+    // This fires when a new booking comes in via websocket
+    // $refresh is handled by the attribute
+}
+```
+
+For the pending widget similarly:
+```php
+#[On('echo:bookings,booking.created')]
+public function refreshOnNewBooking(): void {}
+```
+
+STEP 5 — Bootstrap Echo in the Filament layout if not already done.
+
+Check resources/js/app.js or resources/js/echo.js for Echo initialization.
+If using Reverb, it should look like:
+```js
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+window.Pusher = Pusher;
+window.Echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+    enabledTransports: ['ws', 'wss'],
 });
 ```
 
-For simple device detection without a package:
-```php
-$ua = request()->userAgent();
-$device = str_contains($ua, 'Mobile') ? 'Mobile' : 'Desktop';
-$browser = match(true) {
-    str_contains($ua, 'Chrome')  => 'Chrome',
-    str_contains($ua, 'Firefox') => 'Firefox',
-    str_contains($ua, 'Safari')  => 'Safari',
-    str_contains($ua, 'Edge')    => 'Edge',
-    default => 'Unknown'
-};
+If this already exists from `php artisan install:broadcasting`, leave it untouched.
+Run: `npm run build`
+
+=== TASK 5: Verify Reverb is Running ===
+
+Add this to your server startup (or run manually during development):
+```bash
+php artisan reverb:start
 ```
 
-STEP 4 — Create ActivityLogResource in Filament (read-only, super admin only):
-`php artisan make:filament-resource Activity --generate`
-
-Use \Spatie\Activitylog\Models\Activity as the model.
-
-Table columns:
-```php
-Tables\Columns\TextColumn::make('causer.name')->label('Staff Member')->searchable(),
-Tables\Columns\TextColumn::make('description')->label('Action')->searchable(),
-Tables\Columns\TextColumn::make('subject_type')
-    ->label('Resource')
-    ->formatStateUsing(fn ($state) => class_basename($state)),
-Tables\Columns\TextColumn::make('subject_id')->label('Record ID'),
-Tables\Columns\TextColumn::make('properties.ip')->label('IP Address'),
-Tables\Columns\TextColumn::make('properties.device')->label('Device'),
-Tables\Columns\TextColumn::make('properties.browser')->label('Browser'),
-Tables\Columns\TextColumn::make('created_at')->label('Time')->dateTime('M j, Y H:i:s')->sortable(),
+For production, create a supervisor config:
+```ini
+[program:reverb]
+command=php /path-to-project/artisan reverb:start
+autostart=true
+autorestart=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=/path-to-project/storage/logs/reverb.log
 ```
 
-Add filters: by staff member, by date range, by resource type.
+Check .env has these set (php artisan install:broadcasting sets them automatically):
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=your-app-id
+REVERB_APP_KEY=your-app-key
+REVERB_APP_SECRET=your-app-secret
+REVERB_HOST=localhost
+REVERB_PORT=8080
+REVERB_SCHEME=http
 
-Make it read-only: no create, edit, or delete actions. canCreate() returns false, canEdit() returns false, canDelete() returns false. Super admin only.
-
-=== TASK 7: Filament Mobile Menu Fix + Logo in Brand ===
-
-PROBLEM A: On mobile, the sidebar menu covers the full width — no way to close it, content is inaccessible.
-PROBLEM B: The top brand name shows "Laravel" (from APP_NAME in .env) instead of the resort logo.
-PROBLEM C: .env APP_NAME needs to be "Iceland Beach Resort" so emails read correctly.
-
-STEP 1 — Fix APP_NAME in .env:
-APP_NAME="Iceland Beach Resort"
-Run: `php artisan config:clear`
-
-STEP 2 — Fix Filament brand logo. In app/Providers/Filament/AdminPanelProvider.php:
-```php
-->brandName('Iceland Beach Resort')
-->brandLogo(asset('images/iceland-logo.png'))  // adjust to actual logo path
-->brandLogoHeight('2.5rem')
-->favicon(asset('images/favicon.ico'))
-```
-
-If the logo file is SVG and you want it in Filament (Filament renders SVGs fine in its own UI, unlike email):
-```php
-->brandLogo(asset('images/iceland-logo.svg'))
-```
-
-STEP 3 — Fix mobile sidebar overlay/width. This is a Filament config setting.
-In AdminPanelProvider.php:
-```php
-->sidebarCollapsibleOnDesktop()
-->sidebarFullyCollapsibleOnDesktop()
-```
-
-For mobile specifically, Filament 3 uses a slide-over sidebar by default. If it's covering the full width, it's likely a CSS override issue. Check resources/css/app.css or any filament custom CSS for:
-```css
-.fi-sidebar { width: 100% !important; }
-```
-Remove any such overrides.
-
-If no custom CSS is causing it, add this to resources/css/app.css:
-```css
-/* Filament mobile sidebar — constrain width and add overlay close */
-@media (max-width: 1024px) {
-    .fi-sidebar {
-        max-width: 280px !important;
-        width: 80vw !important;
-    }
-}
-```
-
-STEP 4 — Ensure the mobile sidebar has a visible close/dismiss affordance. Filament 3 renders this automatically via its sidebar toggle button — if it's missing, check that you haven't overridden the sidebar blade view. Run:
-find resources/views/vendor/filament -name "sidebar*" 2>/dev/null
-If a custom sidebar blade exists, check it for a missing `x-on:click="$store.sidebar.close()"` button and restore it.
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="${REVERB_HOST}"
+VITE_REVERB_PORT="${REVERB_PORT}"
+VITE_REVERB_SCHEME="${REVERB_SCHEME}"
 
 === FINAL CHECKS ===
-1. `php artisan optimize:clear && php artisan config:clear && npm run build`
-2. `php artisan storage:link` (for space image uploads)
-3. `php artisan migrate` (for any new migrations)
-4. Test "Your Stay" button — white text on blue background confirmed
-5. Open /admin/bookings — 3 widgets: calendar, pending, confirmed
-6. Open /admin/referrals — super admin can create referral with commission rate
-7. Open /referral — referral user can log in and see only their dashboard
-8. Open rooms.jsx — all category filters work, active filter is blue with white text
-9. Open spaces.jsx — spaces load from DB, not hardcoded
-10. Open /admin/activity-log — all actions tracked with staff name, time, IP, device
-11. Open Filament on mobile — sidebar is max 280px, logo shows instead of "Laravel"
-12. Check email received — brand name shows "Iceland Beach Resort"
-13. DO NOT touch: payment logic, ticket PHP page (except referral label already done), booking availability scope, existing role guards
-
+1. `php artisan optimize:clear && php artisan config:clear`
+2. `npm run build`
+3. `php artisan migrate` (notifications table)
+4. `php artisan queue:work` in one terminal
+5. `php artisan reverb:start` in another terminal
+6. Open /admin in browser — confirm bell icon appears in top bar
+7. Submit a test booking from the front-end rooms page
+8. Confirm: bell shows unread count immediately (within 10s polling at most)
+9. Click the bell — confirm notification shows guest name, room, dates
+10. Click Confirm on a pending booking — confirm pending widget refreshes
+    instantly AND confirmed widget updates without page reload
+11. Click Reject — confirm same instant refresh behaviour
+12. DO NOT touch: payment logic, referral system, ticket PHP page,
+    email campaign system, existing role guards, availability scope
