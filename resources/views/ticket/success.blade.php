@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Ticket — Inter-University Beach Blast 2026</title>
+    <title>Your Ticket Inter-University Beach Blast 2026</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=Raleway:wght@400&family=Bodoni+Moda:wght@500;600&display=swap"
         rel="stylesheet" />
@@ -223,7 +223,7 @@
     @endphp
 
     <div id="receipt">
-        <img src="/static/images/img (1).png" alt="Iceland Beach Logo" class="ticket-logo">
+        <img src="/legacy-images/img (1).png" alt="Iceland Beach Logo" class="ticket-logo">
         <div class="event-name">Inter-University Beach Blast 2026</div>
         <div class="event-meta">Okun-Ajah Road, off Ogombo Road, Ajah, Lagos 106104 <br> Present this ticket at the gate
         </div>
