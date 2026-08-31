@@ -135,11 +135,13 @@ class BookingPaymentController extends Controller
                 // Reuse the existing request-received mailable so paid and
                 // unpaid bookings send the guest the same message.
                 $preview = $room->replicate();
-                $preview->id = $room->id;
-                $preview->customer_name = $booking->guest_name;
-                $preview->email = $booking->guest_email;
-                $preview->start_date = $booking->check_in;
-                $preview->end_date = $booking->check_out;
+		$preview->id = $room->id;
+		$preview->exists = true;
+		$preview->timestamps = false;
+		$preview->customer_name = $booking->guest_name;
+		$preview->email = $booking->guest_email;
+		$preview->start_date = $booking->check_in;
+		$preview->end_date = $booking->check_out;
 
                 Mail::to($booking->guest_email)->send(
                     new BookingCustomerConfirmationMail($preview, $booking->guest_phone, null),

@@ -103,6 +103,7 @@ class ReservationService
             'end_date' => $end,
             'mailsent' => false,
         ]);
+	$room->timestamps = false;
         $room->save();
 
         if ($sendEmails) {
@@ -188,7 +189,7 @@ class ReservationService
         if (! empty($room->email)) {
             Mail::to($room->email)->send(new BookingCustomerConfirmationMail($room, $phone, $guests));
         }
-
+	$room->timestamps = false;
         $room->forceFill(['mailsent' => true])->save();
     }
 }
