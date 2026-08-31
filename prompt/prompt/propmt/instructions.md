@@ -1,420 +1,748 @@
-This is exactly what I needed. Now I have the full picture of how the ticket system works. Here's the precise prompt:
+Here's the prompt:
 
 ---
 
-## Claude Code Prompt — Add Paystack to ticket.php (Alongside TGI, Zero Breakage)
+## Claude Code Prompt — Fix Room Payment 500 + Reject Email + Mass Actions + Payment Toggle
 
 ```
-You are working inside a PHP legacy ticket system for Iceland Beach Resort.
-File: public_html/ticket.php
-The TGI Titan flow is LIVE and working. DO NOT touch it.
-You are ONLY adding Paystack as a second payment option alongside TGI.
-The Laravel app in laravel-app/ already has Paystack + TGI config — reuse those keys.
+You are working inside a Laravel 12 + Filament 3 + ReactJS project 
+for Iceland Beach Resort.
+Production: icelandbeach.com
+Ticket Paystack: WORKING — do not touch ticket.php or PaymentController 
+ticket methods.
 
-=== STEP 0: READ EVERYTHING BEFORE TOUCHING ANYTHING ===
+=== STEP 0: MAP BEFORE TOUCHING ANYTHING ===
 
-1. `cat ticket.php`
-2. `cat laravel-app/app/Http/Controllers/PaymentController.php`
-3. `cat laravel-app/routes/web.php`
-4. `cat laravel-app/config/services.php`
-5. `cat laravel-app/.env | grep -E "PAYSTACK|TITAN"`
-6. `cat laravel-app/resources/views/ticket/success.blade.php`
-7. `cat laravel-app/app/Mail/TicketReceiptMail.php`
-8. `grep -n "PaystackPop\|paystack\|titan\|payment_gateway\|order_ref" ticket.php`
+1. `cat storage/logs/laravel.log | grep "ERROR" | tail -n 30`
+2. `find app/Http/Controllers -name "BookingPayment*" -o -name "Booking*" | sort`
+3. `cat app/Http/Controllers/BookingPaymentController.php`
+4. `cat app/Http/Controllers/BookingController.php 2>/dev/null`
+5. `cat routes/web.php`
+6. `cat app/Filament/Widgets/PendingBookingsWidget.php`
+7. `cat app/Filament/Widgets/ConfirmedBookingsWidget.php 2>/dev/null`
+8. `find app/Mail -name "*.php" | sort`
+9. `cat app/Mail/BookingConfirmation.php`
+10. `find app/Mail -name "*Reject*" -o -name "*Cancel*" -o -name "*Decline*" 2>/dev/null`
+11. `find app/Notifications -name "*Reject*" -o -name "*Book*" 2>/dev/null`
+12. `find app/Filament/Pages -name "*Setting*" -o -name "*Manage*" | sort`
+13. `cat app/Filament/Pages/ManageSettings.php 2>/dev/null`
+14. `find resources/views/filament/pages -name "*setting*" 2>/dev/null`
+15. `cat resources/views/filament/pages/manage-settings.blade.php 2>/dev/null`
+16. `php artisan tinker --execute="
+    echo implode(', ', \Schema::getColumnListing('bookings')) . '\n';
+    echo \App\Models\Setting::get('booking_payment_required', 'NOT FOUND') . '\n';
+"`
+17. `php artisan route:list | grep -i "payment\|booking\|setting"`
 
-Read ALL files fully. Understand:
-- How Paystack inline popup currently works in ticket.php
-- How TGI redirect flow works
-- What PaymentController methods already exist
-- The tickets table schema (uuid, order_ref, payment_gateway, paid, amount in kobo)
+Read ALL outputs fully before touching anything.
 
-DO NOT write any code until all reads are complete.
+=== TASK 1: Fix Room Booking Paystack 500 Error ===
 
-=== WHAT ALREADY EXISTS (from RESULT.md) ===
+STEP 1 — The log from Step 0 will show the exact error.
+Common causes for 500 on booking payment:
 
-Paystack flow on ticket.php:
-- JS intercepts submit → opens PaystackPop inline popup
-- Customer pays in popup
-- Paystack JS callback populates hidden #paystack_ref
-- Form POSTs to POST /verify-payment
-- PaymentController::paystackVerify() verifies, creates Ticket, generates QR, sends email
-- Redirects to /ticket/{uuid}/success
-
-TGI Titan flow on ticket.php:
-- Form POSTs to POST /initiate-titan
-- PaymentController::initiateTitan() creates PENDING ticket, gets payment URL from Titan
-- Redirects customer to Titan hosted page
-- Titan redirects back to GET /titan/callback
-- PaymentController::titanCallback() marks paid, generates QR, sends email
-- Redirects to /ticket/{uuid}/success
-
-BOTH flows already exist. Your job is only to verify they are
-correctly wired and confirm Paystack test keys are active.
-
-=== TASK 1: Verify Paystack Keys Are Set ===
-
-Check laravel-app/.env:
+A) Missing column — payment_reference or payment_status not on bookings table:
 ```bash
-cat laravel-app/.env | grep PAYSTACK
+php artisan tinker --execute="
+echo \Schema::hasColumn('bookings','payment_reference') ? 'ref:OK' : 'ref:MISSING';
+echo '\n';
+echo \Schema::hasColumn('bookings','payment_status') ? 'status:OK' : 'status:MISSING';
+"
+```
+If MISSING — the migration from the last prompt didn't run or failed silently.
+Fix:
+```bash
+php artisan migrate:status | grep payment
+php artisan migrate --force
 ```
 
-If keys are placeholder or empty:
+B) Route not found — booking.payment.callback route missing:
+```bash
+php artisan route:list | grep "booking.payment"
 ```
-PAYSTACK_PUBLIC_KEY=pk_test_xxxxxxxxxx
-PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxx
-```
-Replace with real test keys from Paystack dashboard.
-Super admin must provide the actual pk_test_ and sk_test_ values.
+If missing — the route was never added to routes/web.php.
+Add it:
+```php
+Route::get('/booking/payment/callback/{booking}',
+    [\App\Http\Controllers\BookingPaymentController::class, 'callback']
+)->name('booking.payment.callback');
 
-Run: `php artisan config:clear && php artisan config:cache`
-from inside laravel-app/
-
-=== TASK 2: Verify ticket.php Has Both Payment Options ===
-
-Read ticket.php fully from Step 0.
-
-It should have:
-a) A payment method selector — radio buttons or two buttons:
-   [ Paystack (Card) ] [ TGI Titan ]
-
-b) Paystack JS loaded:
-   ```html
-   <script src="https://js.paystack.co/v1/inline.js"></script>
-   ```
-
-c) PaystackPop.setup() call using the PUBLIC key:
-   ```js
-   var handler = PaystackPop.setup({
-       key: 'pk_test_YOUR_PUBLIC_KEY', // must be pk_ not sk_
-       email: email,
-       amount: amount_in_kobo, // naira × 100
-       ref: order_ref,
-       currency: 'NGN',
-       onSuccess: function(transaction) {
-           document.getElementById('paystack_ref').value = transaction.reference;
-           document.getElementById('payment_gateway').value = 'paystack';
-           document.getElementById('ticket-form').submit();
-       },
-       onCancel: function() {
-           // show message to user
-           alert('Payment cancelled. You can try again.');
-       }
-   });
-   handler.openIframe();
-   ```
-
-d) Hidden fields in the form:
-   ```html
-   <input type="hidden" id="paystack_ref" name="paystack_ref" value="">
-   <input type="hidden" id="payment_gateway" name="payment_gateway" value="paystack">
-   ```
-
-e) Form action logic:
-   - If payment_gateway = 'paystack' → form POSTs to /verify-payment
-   - If payment_gateway = 'titan' → form POSTs to /initiate-titan
-
-IF any of these are missing, add them without removing the TGI flow.
-
-=== TASK 3: Fix Form Submission Logic in ticket.php ===
-
-The form needs to submit to different endpoints based on selected gateway.
-Here is the correct JS logic — add this if it doesn't exist or fix it if broken:
-
-```javascript
-document.getElementById('ticket-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    var gateway = document.querySelector('input[name="selected_gateway"]:checked')?.value
-                  || document.getElementById('selected_gateway')?.value
-                  || 'paystack';
-
-    var name     = document.getElementById('name').value.trim();
-    var email    = document.getElementById('email').value.trim();
-    var phone    = document.getElementById('phone').value.trim();
-    var type     = document.getElementById('ticket_type').value;
-    var qty      = parseInt(document.getElementById('quantity').value) || 1;
-
-    // Validate
-    if (!name || !email || !phone) {
-        alert('Please fill in all required fields.');
-        return;
-    }
-
-    // Price in kobo — must match server-side calculation
-    var prices   = { 'Regular': 500000, 'VIP': 1000000 }; // kobo
-    var amount   = prices[type] * qty;
-
-    // Generate order ref
-    var orderRef = 'BEACH_' + Math.random().toString(36).substr(2, 8).toUpperCase();
-    document.getElementById('order_ref').value = orderRef;
-
-    if (gateway === 'paystack') {
-        // Open Paystack popup
-        var handler = PaystackPop.setup({
-            key: document.getElementById('paystack_public_key').value,
-            email: email,
-            amount: amount,
-            ref: orderRef,
-            currency: 'NGN',
-            metadata: {
-                custom_fields: [
-                    { display_name: 'Name', variable_name: 'name', value: name },
-                    { display_name: 'Phone', variable_name: 'phone', value: phone },
-                    { display_name: 'Ticket Type', variable_name: 'ticket_type', value: type },
-                    { display_name: 'Quantity', variable_name: 'quantity', value: qty },
-                ]
-            },
-            onSuccess: function(transaction) {
-                document.getElementById('paystack_ref').value = transaction.reference;
-                document.getElementById('payment_gateway').value = 'paystack';
-                document.getElementById('ticket-form').action = '/verify-payment';
-                document.getElementById('ticket-form').submit();
-            },
-            onCancel: function() {
-                showError('Payment was cancelled. Please try again.');
-            }
-        });
-        handler.openIframe();
-
-    } else {
-        // TGI Titan — POST to /initiate-titan
-        document.getElementById('payment_gateway').value = 'titan';
-        document.getElementById('ticket-form').action = '/initiate-titan';
-        document.getElementById('ticket-form').submit();
-    }
-});
+Route::post('/webhooks/paystack/booking',
+    [\App\Http\Controllers\BookingPaymentController::class, 'webhook']
+)->name('booking.payment.webhook')
+->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 ```
 
-Add a hidden field for the public key so it's set server-side safely:
-```html
-<input type="hidden" id="paystack_public_key" 
-       value="<?php echo htmlspecialchars(
-           file_exists(__DIR__.'/laravel-app/.env') 
-               ? (preg_match('/PAYSTACK_PUBLIC_KEY=(.+)/', 
-                   file_get_contents(__DIR__.'/laravel-app/.env'), $m) ? trim($m[1]) : '')
-               : ''
-       ); ?>">
+C) BookingPaymentController missing entirely:
+Check if the file exists from Step 0.
+If missing — create it using the full implementation from the previous 
+Paystack prompt. Refer to that prompt for the complete class.
+
+D) PaystackService not bound in AppServiceProvider:
+```bash
+grep -n "PaystackService" app/Providers/AppServiceProvider.php
+```
+If missing:
+```php
+// In AppServiceProvider boot() or register():
+$this->app->singleton(\App\Services\PaystackService::class);
 ```
 
-Or better — read from a config PHP file:
+E) Room price is null or zero — amount in kobo becomes 0:
+```bash
+php artisan tinker --execute="
+\App\Models\Room::all()->each(fn(\$r) => 
+    print(\$r->id . ': ' . \$r->name . ' — price: ' . \$r->price . '\n')
+);
+"
+```
+If price is null — the booking store() method tries to do null * 100 = 0
+which Paystack rejects as invalid amount.
+Fix in BookingController store():
+```php
+// Get room price — fallback to 0 safely
+$room = \App\Models\Room::findOrFail($validated['room_id']);
+$priceNaira = (float) ($room->price ?? 0);
+
+if ($priceNaira <= 0) {
+    return response()->json([
+        'error' => 'Room price is not set. Please contact us to complete your booking.'
+    ], 422);
+}
+
+$amountKobo = (int) ($priceNaira * 100);
+```
+
+F) PAYSTACK_SECRET_KEY not set in .env:
+```bash
+php artisan tinker --execute="echo config('services.paystack.secret') ? 'key:OK' : 'key:MISSING';"`
+```
+If MISSING — add to .env:
+```
+PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxxxx
+PAYSTACK_PUBLIC_KEY=pk_test_xxxxxxxxxxxx
+```
+Then: `php artisan config:cache`
+
+After identifying and fixing the root cause from the log,
+wrap the entire payment initialization block in try/catch
+with a proper JSON error response so 500 never shows to the user:
+
+```php
+try {
+    $data = $paystack->initialize(
+        email: $validated['guest_email'],
+        amountKobo: $amountKobo,
+        reference: $reference,
+        callbackUrl: $callbackUrl,
+        metadata: [...]
+    );
+
+    return response()->json([
+        'requires_payment'  => true,
+        'authorization_url' => $data['authorization_url'],
+        'reference'         => $reference,
+        'booking_id'        => $booking->id,
+    ]);
+
+} catch (\Exception $e) {
+    // Clean up the pending booking
+    $booking->delete();
+
+    \Illuminate\Support\Facades\Log::error('Paystack booking init failed: ' . $e->getMessage(), [
+        'room_id'     => $validated['room_id'],
+        'guest_email' => $validated['guest_email'],
+    ]);
+
+    return response()->json([
+        'error' => 'Payment could not be initialized. Please try again or contact us.'
+    ], 422); // 422 not 500 — frontend can handle this gracefully
+}
+```
+
+Also update rooms.jsx to show a user-friendly error instead of crashing:
+```jsx
+if (!response.ok) {
+    const data = await response.json();
+    setError(data.error || 'Booking failed. Please try again.');
+    setLoading(false);
+    return;
+}
+```
+
+=== TASK 2: Fix Reject Email 500 Error ===
+
+STEP 1 — Find where rejection email is sent:
+```bash
+grep -rn "reject\|Reject\|rejection" app/Filament/Widgets app/Mail \
+    app/Notifications app/Http --include="*.php" | grep -i "mail\|notify\|send"
+```
+
+STEP 2 — Read the rejection action in PendingBookingsWidget fully.
+
+The 500 on rejection is almost certainly one of these:
+
+A) Rejection mailable doesn't exist — the action calls a Mail class 
+   that was never created:
+```bash
+find app/Mail -name "*Reject*" -o -name "*Decline*"
+```
+If missing, create app/Mail/BookingRejected.php:
 ```php
 <?php
-// At top of ticket.php, read the key safely
-$envFile = __DIR__ . '/laravel-app/.env';
-$paystackPublicKey = '';
-if (file_exists($envFile)) {
-    $env = parse_ini_file($envFile);
-    $paystackPublicKey = $env['PAYSTACK_PUBLIC_KEY'] ?? '';
-}
-?>
-```
-Then use `<?= htmlspecialchars($paystackPublicKey) ?>` in the hidden field.
+namespace App\Mail;
 
-=== TASK 4: Verify PaymentController::paystackVerify() ===
+use App\Models\Booking;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 
-Read the existing paystackVerify() method from Step 0.
-
-It should:
-1. Get reference from request: `$ref = $request->input('paystack_ref')`
-2. Verify with Paystack API:
-   ```php
-   $response = Http::withToken(config('services.paystack.secret_key'))
-       ->get(config('services.paystack.base_url') . '/transaction/verify/' . $ref);
-   ```
-3. Check `$response->json('data.status') === 'success'`
-4. Recalculate amount SERVER-SIDE from ticket_type + quantity
-   NEVER trust the amount from the frontend
-5. Create Ticket record with paid=true, payment_gateway='paystack'
-6. Generate QR code
-7. Send receipt email
-8. Redirect to /ticket/{uuid}/success
-
-If any of these steps are missing or wrong — fix them.
-If the method already does all of this correctly — leave it alone.
-
-=== TASK 5: Add Paystack Webhook for Tickets ===
-
-This is the safety net — fires even if browser closes after payment.
-
-Add to laravel-app/routes/web.php:
-```php
-Route::post('/webhooks/paystack/tickets',
-    [\App\Http\Controllers\PaymentController::class, 'paystackWebhook']
-)->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-```
-
-Add method to PaymentController:
-```php
-public function paystackWebhook(Request $request): \Illuminate\Http\Response
+class BookingRejected extends Mailable
 {
-    // Return 200 immediately — Paystack requires this before heavy processing
-    $payload   = $request->getContent();
-    $signature = $request->header('x-paystack-signature', '');
-    $secret    = config('services.paystack.secret_key');
+    public function __construct(public Booking $booking) {}
 
-    // Verify signature
-    $hash = hash_hmac('sha512', $payload, $secret);
-    if (!hash_equals($hash, $signature)) {
-        return response('Unauthorized', 401);
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'Update on Your Booking — Iceland Beach Resort'
+        );
     }
 
-    $event = json_decode($payload, true);
+    public function content(): Content
+    {
+        $logoPath   = public_path('images/iceland-logo.png');
+        $logoBase64 = file_exists($logoPath)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+            : '';
 
-    if (($event['event'] ?? '') === 'charge.success') {
-        $ref = $event['data']['reference'] ?? null;
+        return new Content(
+            view: 'emails.booking-rejected',
+            with: [
+                'booking'     => $this->booking,
+                'logoBase64'  => $logoBase64,
+                'guestName'   => $this->booking->guest_name 
+                                 ?? $this->booking->name 
+                                 ?? 'Valued Guest',
+            ]
+        );
+    }
+}
+```
 
-        if ($ref) {
-            $ticket = \App\Models\Ticket::where('order_ref', $ref)
-                ->where('paid', false)
-                ->first();
+Create resources/views/emails/booking-rejected.blade.php:
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Booking Update — Iceland Beach Resort</title>
+</head>
+<body style="margin:0;padding:0;background:#f0f7ff;
+             font-family:'Helvetica Neue',Arial,sans-serif;">
 
-            if ($ticket) {
-                $ticket->update([
-                    'paid'            => true,
-                    'payment_ref'     => $ref,
-                    'payment_gateway' => 'paystack',
-                ]);
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background:linear-gradient(135deg,#002F61,#0ea5e9);">
+  <tr>
+    <td style="padding:28px 40px;text-align:center;">
+      @if($logoBase64)
+        <img src="{{ $logoBase64 }}" alt="Iceland Beach Resort" 
+             width="160" style="display:block;margin:0 auto;">
+      @endif
+    </td>
+  </tr>
+</table>
 
-                // Generate QR if not already generated
-                if (!$ticket->qr_code_path) {
-                    $this->generateQr($ticket);
-                }
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background:#f0f7ff;">
+<tr><td align="center" style="padding:0 16px 40px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0"
+       style="max-width:600px;background:#fff;border-radius:16px;
+              overflow:hidden;margin-top:0;
+              box-shadow:0 8px 40px rgba(0,47,97,0.1);">
+  <tr>
+    <td style="padding:40px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:16px;">😔</div>
+      <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;
+                 color:#0c4a6e;">
+        Hi {{ $guestName }},
+      </h1>
+      <p style="margin:0 0 24px;font-size:16px;color:#64748b;
+                line-height:1.6;">
+        Thank you for your interest in staying at 
+        <strong style="color:#002F61;">Iceland Beach Resort</strong>.<br>
+        Unfortunately, we are unable to accommodate your booking request
+        at this time.
+      </p>
 
-                // Send receipt email
-                try {
-                    \Illuminate\Support\Facades\Mail::to($ticket->email)
-                        ->send(new \App\Mail\TicketReceiptMail($ticket));
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Webhook email failed: ' . $e->getMessage());
-                }
-            }
+      <div style="background:#f8fafc;border-radius:12px;
+                  padding:20px;text-align:left;
+                  border:1px solid #e2e8f0;margin-bottom:24px;">
+        <p style="margin:0 0 8px;font-size:11px;color:#0369a1;
+                  text-transform:uppercase;letter-spacing:1px;
+                  font-weight:700;">Booking Reference</p>
+        <p style="margin:0;font-size:18px;font-weight:700;color:#0c4a6e;">
+          #{{ str_pad($booking->id, 6, '0', STR_PAD_LEFT) }}
+        </p>
+        @if($booking->check_in && $booking->check_out)
+        <p style="margin:12px 0 0;font-size:14px;color:#64748b;">
+          {{ \Carbon\Carbon::parse($booking->check_in)->format('M j, Y') }}
+          →
+          {{ \Carbon\Carbon::parse($booking->check_out)->format('M j, Y') }}
+        </p>
+        @endif
+      </div>
+
+      <p style="margin:0 0 24px;font-size:15px;color:#475569;
+                line-height:1.6;">
+        We encourage you to check our availability for other dates.
+        We would love to host you at another time!
+      </p>
+
+      <a href="{{ url('/rooms') }}"
+         style="display:inline-block;background:#002F61;color:#fff;
+                text-decoration:none;font-size:15px;font-weight:700;
+                padding:14px 36px;border-radius:50px;">
+        🌊 Check Other Dates
+      </a>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="background:#002F61;padding:20px 40px;text-align:center;">
+      <p style="margin:0;color:rgba(255,255,255,0.7);font-size:12px;">
+        © {{ date('Y') }} Iceland Beach Resort. All rights reserved.
+      </p>
+    </td>
+  </tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>
+```
+
+B) Email sent but guest_email column is null or named differently:
+In the reject action, guard against null email:
+```php
+->action(function (Booking $record) {
+    $oldStatus = $record->status;
+    $record->update(['status' => 'rejected']);
+    $record->load('room');
+
+    // Only send email if guest has an email address
+    $guestEmail = $record->guest_email 
+                  ?? $record->email 
+                  ?? null; // adjust to actual column name
+
+    if (filled($guestEmail)) {
+        try {
+            \Illuminate\Support\Facades\Mail::to($guestEmail)
+                ->send(new \App\Mail\BookingRejected($record));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error(
+                'Rejection email failed: ' . $e->getMessage(),
+                ['booking_id' => $record->id]
+            );
+            // Do NOT re-throw — status already updated, 
+            // don't undo the rejection over an email failure
         }
     }
 
-    return response('OK', 200);
+    \App\Events\BookingStatusChanged::dispatch($record, $oldStatus);
+
+    \Filament\Notifications\Notification::make()
+        ->title('Booking rejected')
+        ->body($guestEmail 
+            ? 'Guest has been notified by email.' 
+            : 'Booking rejected. No email on file.')
+        ->warning()
+        ->send();
+
+    $this->dispatch('booking-status-updated');
+})
+```
+
+KEY FIX: The email is wrapped in try/catch so if it fails,
+the status update is NOT rolled back and no 500 is shown.
+The page refresh worked before because the status was already 
+saved — only the email was failing.
+
+=== TASK 3: Mass Accept / Mass Reject with Single Message ===
+
+Add bulk actions to PendingBookingsWidget table.
+
+STEP 1 — Add bulk actions to the table() method:
+
+```php
+->bulkActions([
+    Tables\Actions\BulkActionGroup::make([
+
+        Tables\Actions\BulkAction::make('mass_confirm')
+            ->label('Confirm Selected')
+            ->icon('heroicon-o-check-circle')
+            ->color('success')
+            ->requiresConfirmation()
+            ->modalHeading('Confirm selected bookings?')
+            ->modalDescription('All selected bookings will be confirmed 
+                               and guests will receive a confirmation email.')
+            ->modalSubmitActionLabel('Yes, confirm all')
+            ->action(function (\Illuminate\Support\Collection $records) {
+                $confirmed = 0;
+                $failed    = 0;
+
+                foreach ($records as $record) {
+                    try {
+                        $oldStatus = $record->status;
+                        $record->update([
+                            'status'   => 'confirmed',
+                            'is_booked'=> 'no',
+                        ]);
+                        $record->load('room');
+
+                        $guestEmail = $record->guest_email 
+                                      ?? $record->email 
+                                      ?? null;
+
+                        if (filled($guestEmail)) {
+                            \Illuminate\Support\Facades\Mail::to($guestEmail)
+                                ->send(new \App\Mail\BookingConfirmation($record));
+                        }
+
+                        \App\Events\BookingStatusChanged::dispatch(
+                            $record, $oldStatus
+                        );
+                        $confirmed++;
+
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error(
+                            'Mass confirm failed for booking ' . $record->id 
+                            . ': ' . $e->getMessage()
+                        );
+                        $failed++;
+                    }
+                }
+
+                \Filament\Notifications\Notification::make()
+                    ->title('Mass confirmation complete')
+                    ->body($confirmed . ' confirmed' . 
+                           ($failed > 0 ? ', ' . $failed . ' failed — check logs' : ''))
+                    ->success()
+                    ->send();
+
+                $this->dispatch('booking-status-updated');
+            }),
+
+        Tables\Actions\BulkAction::make('mass_reject')
+            ->label('Reject Selected')
+            ->icon('heroicon-o-x-circle')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('Reject selected bookings?')
+            ->modalDescription('All selected bookings will be rejected 
+                               and guests will receive a single rejection email each.')
+            ->modalSubmitActionLabel('Yes, reject all')
+            ->form([
+                \Filament\Forms\Components\Textarea::make('rejection_reason')
+                    ->label('Rejection Message (Optional)')
+                    ->placeholder('e.g. Sorry, we are fully booked for those dates.')
+                    ->helperText('This message will be included in each guest\'s email.')
+                    ->rows(3),
+            ])
+            ->action(function (
+                \Illuminate\Support\Collection $records, 
+                array $data
+            ) {
+                $rejected = 0;
+                $failed   = 0;
+
+                foreach ($records as $record) {
+                    try {
+                        $oldStatus = $record->status;
+                        $record->update(['status' => 'rejected']);
+                        $record->load('room');
+
+                        $guestEmail = $record->guest_email 
+                                      ?? $record->email 
+                                      ?? null;
+
+                        if (filled($guestEmail)) {
+                            \Illuminate\Support\Facades\Mail::to($guestEmail)
+                                ->send(new \App\Mail\BookingRejected(
+                                    $record,
+                                    $data['rejection_reason'] ?? null
+                                ));
+                        }
+
+                        \App\Events\BookingStatusChanged::dispatch(
+                            $record, $oldStatus
+                        );
+                        $rejected++;
+
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error(
+                            'Mass reject failed for booking ' . $record->id 
+                            . ': ' . $e->getMessage()
+                        );
+                        $failed++;
+                    }
+                }
+
+                \Filament\Notifications\Notification::make()
+                    ->title('Mass rejection complete')
+                    ->body($rejected . ' rejected' . 
+                           ($failed > 0 ? ', ' . $failed . ' failed — check logs' : ''))
+                    ->warning()
+                    ->send();
+
+                $this->dispatch('booking-status-updated');
+            }),
+
+    ]),
+])
+```
+
+STEP 2 — Update BookingRejected mailable to accept optional reason:
+
+```php
+public function __construct(
+    public Booking $booking,
+    public ?string $reason = null,
+) {}
+```
+
+Pass it to the view:
+```php
+with: [
+    'booking'    => $this->booking,
+    'logoBase64' => $logoBase64,
+    'guestName'  => $this->booking->guest_name ?? $this->booking->name ?? 'Valued Guest',
+    'reason'     => $this->reason,
+]
+```
+
+In the blade view, show the reason if present:
+```blade
+@if($reason)
+<p style="margin:0 0 20px;padding:16px;background:#fef3c7;
+           border-radius:8px;font-size:15px;color:#92400e;
+           border-left:4px solid #f59e0b;">
+    {{ $reason }}
+</p>
+@endif
+```
+
+=== TASK 4: Fix Payment Toggle — Can't Find It in Filament ===
+
+STEP 1 — Check if ManageSettings page exists and is registered:
+```bash
+cat app/Filament/Pages/ManageSettings.php 2>/dev/null || echo "FILE MISSING"
+grep -rn "ManageSettings\|ManageSettings" app/Providers/Filament/AdminPanelProvider.php
+```
+
+STEP 2 — If ManageSettings.php exists but doesn't show in nav:
+The page needs to be discoverable. Check AdminPanelProvider:
+```bash
+grep -n "discoverPages\|Pages\\\\" app/Providers/Filament/AdminPanelProvider.php
+```
+
+If `->discoverPages()` is set, the page should auto-appear.
+If pages are manually registered in `->pages([])`, add it:
+```php
+->pages([
+    Pages\Dashboard::class,
+    \App\Filament\Pages\ManageSettings::class,
+])
+```
+
+STEP 3 — If ManageSettings.php is MISSING entirely —
+recreate it. Create app/Filament/Pages/ManageSettings.php:
+
+```php
+<?php
+namespace App\Filament\Pages;
+
+use App\Models\Setting;
+use Filament\Pages\Page;
+use Filament\Notifications\Notification;
+
+class ManageSettings extends Page
+{
+    protected static ?string $navigationIcon  = 'heroicon-o-cog-6-tooth';
+    protected static ?string $navigationLabel = 'Settings';
+    protected static ?string $navigationGroup = 'System';
+    protected static ?string $title           = 'Resort Settings';
+    protected static string  $view            = 'filament.pages.manage-settings';
+    protected static ?int    $navigationSort  = 99;
+
+    public bool $booking_payment_required = false;
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasRole('super_admin') ?? false;
+    }
+
+    public function mount(): void
+    {
+        $this->booking_payment_required = (bool) Setting::get(
+            'booking_payment_required', false
+        );
+    }
+
+    public function save(): void
+    {
+        Setting::set(
+            'booking_payment_required',
+            $this->booking_payment_required ? '1' : '0'
+        );
+
+        Notification::make()
+            ->title('Settings saved')
+            ->body('Payment requirement: ' . 
+                   ($this->booking_payment_required ? 'ON' : 'OFF'))
+            ->success()
+            ->send();
+    }
 }
 ```
 
-=== TASK 6: UI — Payment Method Selector on ticket.php ===
+STEP 4 — Check if the blade view exists:
+```bash
+cat resources/views/filament/pages/manage-settings.blade.php 2>/dev/null \
+    || echo "BLADE MISSING"
+```
 
-The ticket page needs a clear payment method selector.
-Add this where the submit button currently is — replace the single button
-with a gateway selector + conditional button:
+If MISSING, create resources/views/filament/pages/manage-settings.blade.php:
 
-```html
-<!-- Payment Method Selection -->
-<div class="payment-method-selector" style="margin: 24px 0;">
-    <p style="font-weight:600;margin-bottom:12px;color:#002F61;">
-        Select Payment Method
-    </p>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+```blade
+<x-filament-panels::page>
+    <x-filament::section>
+        <x-slot name="heading">Booking Payment Settings</x-slot>
+        <x-slot name="description">
+            Control whether guests must pay before their booking is confirmed.
+        </x-slot>
 
-        <label style="flex:1;min-width:140px;cursor:pointer;">
-            <input type="radio" name="selected_gateway" value="paystack" 
-                   id="gw_paystack" checked style="display:none;">
-            <div class="gateway-btn" id="label_paystack"
-                 style="border:2px solid #002F61;border-radius:12px;padding:16px;
-                        text-align:center;background:#002F61;color:white;">
-                <div style="font-size:20px;">💳</div>
-                <div style="font-weight:700;margin-top:4px;">Card Payment</div>
-                <div style="font-size:12px;opacity:0.85;">Paystack</div>
+        <div class="space-y-6">
+
+            {{-- Payment Toggle --}}
+            <div class="flex items-center justify-between p-5
+                        bg-gray-50 rounded-xl border border-gray-200">
+                <div>
+                    <p class="text-base font-semibold text-gray-900">
+                        Require Payment for Room Bookings
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        <strong>ON</strong> — Guest must pay via Paystack 
+                        before booking is confirmed and email is sent.<br>
+                        <strong>OFF</strong> — Normal flow, booking confirmed 
+                        and email sent immediately with no payment.
+                    </p>
+                </div>
+                <div class="ml-6 flex-shrink-0">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input
+                            type="checkbox"
+                            wire:model="booking_payment_required"
+                            class="sr-only peer"
+                        >
+                        <div class="w-14 h-7 bg-gray-200 peer-focus:outline-none
+                                    rounded-full peer
+                                    peer-checked:after:translate-x-full
+                                    peer-checked:after:border-white
+                                    after:content-['']
+                                    after:absolute after:top-0.5 after:left-[4px]
+                                    after:bg-white after:border-gray-300
+                                    after:border after:rounded-full
+                                    after:h-6 after:w-6 after:transition-all
+                                    peer-checked:bg-[#002F61]">
+                        </div>
+                        <span class="ml-3 text-sm font-medium text-gray-700">
+                            {{ $booking_payment_required ? 'ON' : 'OFF' }}
+                        </span>
+                    </label>
+                </div>
             </div>
-        </label>
 
-        <label style="flex:1;min-width:140px;cursor:pointer;">
-            <input type="radio" name="selected_gateway" value="titan" 
-                   id="gw_titan" style="display:none;">
-            <div class="gateway-btn" id="label_titan"
-                 style="border:2px solid #ccc;border-radius:12px;padding:16px;
-                        text-align:center;background:white;color:#002F61;">
-                <div style="font-size:20px;">🏦</div>
-                <div style="font-weight:700;margin-top:4px;">Bank Transfer</div>
-                <div style="font-size:12px;color:#666;">TGI Titan</div>
+            {{-- Current Status Banner --}}
+            @if($booking_payment_required)
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl
+                        flex items-center gap-3">
+                <span style="font-size:20px;">💳</span>
+                <p class="text-sm text-blue-800">
+                    <strong>Payment is REQUIRED.</strong>
+                    Guests will be redirected to Paystack before 
+                    their booking is confirmed.
+                </p>
             </div>
-        </label>
+            @else
+            <div class="p-4 bg-green-50 border border-green-200 rounded-xl
+                        flex items-center gap-3">
+                <span style="font-size:20px;">📋</span>
+                <p class="text-sm text-green-800">
+                    <strong>Payment is OFF.</strong>
+                    Bookings are confirmed immediately with no payment required.
+                </p>
+            </div>
+            @endif
 
-    </div>
-</div>
+            {{-- Save Button --}}
+            <div class="flex justify-end pt-2">
+                <x-filament::button
+                    wire:click="save"
+                    color="primary"
+                    size="lg">
+                    Save Settings
+                </x-filament::button>
+            </div>
 
-<!-- Single submit button — label changes based on selection -->
-<button type="submit" id="pay-btn"
-        style="width:100%;padding:16px;background:#002F61;color:white;
-               border:none;border-radius:50px;font-size:16px;font-weight:700;
-               cursor:pointer;margin-top:8px;">
-    Pay with Card
-</button>
+        </div>
+    </x-filament::section>
+</x-filament-panels::page>
 ```
 
-Add JS to update button label and visual selection on radio change:
-```javascript
-document.querySelectorAll('input[name="selected_gateway"]').forEach(function(radio) {
-    radio.addEventListener('change', function() {
-        var isPaystack = this.value === 'paystack';
-
-        // Update button label
-        document.getElementById('pay-btn').textContent = 
-            isPaystack ? 'Pay with Card' : 'Pay with TGI Titan';
-
-        // Update visual selection
-        document.getElementById('label_paystack').style.background = 
-            isPaystack ? '#002F61' : 'white';
-        document.getElementById('label_paystack').style.color = 
-            isPaystack ? 'white' : '#002F61';
-        document.getElementById('label_paystack').style.borderColor = 
-            isPaystack ? '#002F61' : '#ccc';
-
-        document.getElementById('label_titan').style.background = 
-            !isPaystack ? '#002F61' : 'white';
-        document.getElementById('label_titan').style.color = 
-            !isPaystack ? 'white' : '#002F61';
-        document.getElementById('label_titan').style.borderColor = 
-            !isPaystack ? '#002F61' : '#ccc';
-    });
-});
+STEP 5 — Verify the settings table has the key seeded:
+```bash
+php artisan tinker --execute="
+\$val = \App\Models\Setting::get('booking_payment_required', 'MISSING');
+echo 'booking_payment_required: ' . var_export(\$val, true) . '\n';
+"
 ```
 
-=== TASK 7: Register Webhook in Paystack Dashboard ===
-
-After deploying, add this webhook URL in Paystack Dashboard →
-Settings → API Keys & Webhooks:
-
+If MISSING — seed it:
+```bash
+php artisan tinker --execute="
+\App\Models\Setting::updateOrCreate(
+    ['key' => 'booking_payment_required'],
+    ['value' => '0', 'type' => 'boolean']
+);
+echo 'seeded';
+"
 ```
-https://icelandbeach.com/webhooks/paystack/tickets
-```
-
-This is SEPARATE from the booking webhook:
-```
-https://icelandbeach.com/webhooks/paystack/booking
-```
-
-Register BOTH in Paystack Dashboard.
 
 === FINAL CHECKS ===
-1. `cd laravel-app && php artisan route:cache && php artisan config:cache`
-2. Hard refresh icelandbeach.com/ticket
-3. Select "Card Payment" → fill form → click Pay
-4. Confirm Paystack popup opens
-5. Use test card: 4084084084084081
-   Expiry: any future date e.g. 12/26
-   CVV: 123
-   PIN: 3110
-   OTP: 123456
-6. Confirm redirect to /ticket/{uuid}/success with QR code
-7. Confirm receipt email received
-8. Select "TGI Titan" → fill form → click Pay
-9. Confirm redirect to Titan hosted payment page
-10. Confirm TGI flow still works end to end
-11. DO NOT change: titanCallback(), initiateTitan(),
-    verifyEntry(), QR generation logic, TicketReceiptMail,
-    Filament ticket admin, any existing routes
+1. `php artisan optimize:clear && php artisan config:cache && php artisan route:cache`
+2. `npm run build`
+3. Visit /admin — find Settings in sidebar under System group
+4. Toggle payment ON — banner shows Payment is REQUIRED
+5. Toggle payment OFF — banner shows Payment is OFF
+6. Submit a room booking with payment ON —
+   confirm Paystack redirect, no 500
+7. Submit a room booking with payment OFF —
+   confirm immediate email, no payment redirect
+8. Reject a booking — confirm email sends without 500
+9. Select multiple pending bookings —
+   confirm mass confirm and mass reject bulk actions appear
+10. Mass reject with a custom message —
+    confirm each guest gets the rejection email with the message
+11. DO NOT touch: ticket.php, TGI flow, PaymentController ticket methods,
+    referral system, email campaign system
 ```
 
 ---
 
-**Three things before running:**
+**Most likely root causes based on what you described:**
 
-1. **Paystack keys** — the prompt reads the public key from `laravel-app/.env` directly in `ticket.php`. Make sure `PAYSTACK_PUBLIC_KEY` and `PAYSTACK_SECRET_KEY` are set with your real test keys in `laravel-app/.env`.
+- **Room payment 500** — almost certainly the `PAYSTACK_SECRET_KEY` not set in `.env` on production, or the `booking.payment.callback` route was never added to `routes/web.php`. The log from Step 0 will confirm which one in seconds.
 
-2. **Two separate webhooks** — register both URLs in Paystack Dashboard. One for tickets (`/webhooks/paystack/tickets`), one for room bookings (`/webhooks/paystack/booking`). Paystack sends all events to all registered webhooks, so both need to exist.
+- **Reject email 500** — the rejection mailable was never created. The action calls `BookingRejected` but the class doesn't exist. The page refresh worked because the status update already saved to DB — only the missing mail class threw the 500.
 
-3. **Paystack already exists** — based on `RESULT.md`, Paystack was already built into the ticket system in June 2026. The prompt checks what's there first before adding anything. It may be that only the keys need updating and the UI selector needs styling — the logic itself might already be correct.
+- **Settings toggle missing** — either the `ManageSettings` page file was created locally but never pushed, or it exists but isn't registered in `AdminPanelProvider`.

@@ -128,7 +128,18 @@ class BookingController extends Controller
 
         // room_price is the nightly rate; Paystack expects kobo.
         $nights = max(1, $checkIn->diffInDays($checkOut));
-        $amountKobo = (int) round(((float) $room->room_price) * $nights * 100);
+        $nightly = (float) ($room->room_price ?? 0);
+
+        // Paystack rejects a zero amount, which would surface as an opaque 500.
+        if ($nightly <= 0) {
+            $booking->delete();
+
+            return response()->json([
+                'message' => 'This room has no price set. Please contact us to complete your booking.',
+            ], 422);
+        }
+
+        $amountKobo = (int) round($nightly * $nights * 100);
 
         try {
             $init = $paystack->initialize(
@@ -151,9 +162,11 @@ class BookingController extends Controller
             // Leave no orphan holding a reference the guest can never pay.
             $booking->delete();
 
+            // 422, not 5xx: this is a handled outcome the front end shows as a
+            // message rather than a crash.
             return response()->json([
-                'message' => 'We could not start the payment. Please try again.',
-            ], 502);
+                'message' => 'We could not start the payment. Please try again or contact us.',
+            ], 422);
         }
 
         return response()->json([

@@ -8,9 +8,13 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class PendingBookingsWidget extends BaseWidget
 {
@@ -125,8 +129,118 @@ class PendingBookingsWidget extends BaseWidget
                         $this->dispatch('refresh');
                     }),
             ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    BulkAction::make('mass_confirm')
+                        ->label('Confirm selected')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Confirm selected bookings?')
+                        ->modalDescription('Each room is held and every guest is emailed.')
+                        ->modalSubmitActionLabel('Yes, confirm all')
+                        ->action(fn (Collection $records, BookingWorkflowService $workflow) => $this->runBulk(
+                            $records,
+                            fn (Booking $b) => $workflow->confirmBooking($b),
+                            'confirmed',
+                        ))
+                        ->deselectRecordsAfterCompletion(),
+
+                    BulkAction::make('mass_reject')
+                        ->label('Reject selected')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Reject selected bookings?')
+                        ->modalDescription('Each room is released and every guest is emailed.')
+                        ->modalSubmitActionLabel('Yes, reject all')
+                        ->form([
+                            Textarea::make('reason')
+                                ->label('Reason (optional)')
+                                ->helperText('Included in every guest email.')
+                                ->rows(3)
+                                ->maxLength(1000),
+                        ])
+                        ->action(fn (Collection $records, array $data, BookingWorkflowService $workflow) => $this->runBulk(
+                            $records,
+                            fn (Booking $b) => $workflow->rejectBooking($b, $data['reason'] ?? null),
+                            'rejected',
+                        ))
+                        ->deselectRecordsAfterCompletion(),
+                ]),
+            ])
             ->defaultPaginationPageOption(5)
             ->paginated([5, 10, 20]);
+    }
+
+    /**
+     * Apply an action to every selected booking and report once.
+     *
+     * Each record is isolated in its own try/catch: one failure — a bounced
+     * email, say — must not abort the rest of the batch, and the operator gets
+     * a single summary rather than one toast per row.
+     *
+     * @param  Collection<int, Booking>  $records
+     */
+    private function runBulk(Collection $records, callable $apply, string $verb): void
+    {
+        // Authorisation lives here rather than in visible(): a bulk action's
+        // visible() closure is evaluated without reliable auth context and
+        // resolved false even for a Super Admin, which hid the row checkboxes.
+        if (! self::operatorCanManage()) {
+            Notification::make()
+                ->title('Not permitted')
+                ->body('Only a Super Admin or Manager can action bookings in bulk.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $done = 0;
+        $failed = 0;
+
+        foreach ($records as $record) {
+            // Skip anything already actioned — a stale selection must not
+            // re-email a guest.
+            if ($record->status !== 'pending') {
+                continue;
+            }
+
+            try {
+                $apply($record);
+                $done++;
+            } catch (\Throwable $e) {
+                $failed++;
+                Log::error("Bulk {$verb} failed for booking {$record->id}: " . $e->getMessage());
+            }
+        }
+
+        Notification::make()
+            ->title(ucfirst($verb) . ' ' . $done . ' ' . str('booking')->plural($done))
+            ->body($failed > 0
+                ? $failed . ' could not be processed — see the log.'
+                : 'Guests have been emailed.')
+            ->color($failed > 0 ? 'warning' : 'success')
+            ->send();
+
+        $this->dispatch('refresh');
+    }
+
+    /**
+     * Row actions gate per record; bulk actions gate on the operator alone.
+     *
+     * Static because $this is not reliably bound inside Filament action
+     * closures — an unbound call there silently returns false, which hides the
+     * whole bulk group and with it the row checkboxes.
+     */
+    private static function operatorCanManage(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return $user !== null
+            && method_exists($user, 'hasAnyRole')
+            && $user->hasAnyRole(['Super Admin', 'Manager']);
     }
 
     private function canManage(Booking $record): bool
