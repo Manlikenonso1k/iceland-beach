@@ -21,3 +21,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Throwaway Playwright/debug scripts and screenshots at the repo root
+/*.mjs
+/*.png
