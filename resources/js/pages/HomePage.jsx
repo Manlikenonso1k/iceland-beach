@@ -72,30 +72,32 @@ const confidenceCards = [
     },
 ];
 
+// The four room categories. Images are the same files the rooms themselves use,
+// so the homepage and /rooms stay visually consistent.
 const photoStripCards = [
     {
-        title: 'Geothermal stays',
-        text: 'Our signature soaking pools are steps from every room in this wing — the perfect way to end a day on the coast.',
-        cta: 'Explore geothermal rooms',
-        img: '/legacy-images/gallery/imge (5).jpeg',
+        title: 'Beach apartments for family',
+        text: 'Spacious family layouts with direct beach access and room for everyone.',
+        cta: 'Explore family apartments',
+        img: '/legacy-images/rooms/Beach apartment.jpg',
     },
     {
-        title: 'Coastal stays',
-        text: 'Whether you want total quiet or an active base for hikes and boat tours, our coastal rooms flex to your pace.',
-        cta: 'Explore coastal rooms',
-        img: '/legacy-images/gallery/imge (13).jpeg',
+        title: 'Premium stays',
+        text: 'Top-tier amenities and wide ocean views, built for comfort.',
+        cta: 'Explore premium rooms',
+        img: '/legacy-images/prenium room.jpeg',
     },
     {
-        title: 'Aurora stays',
-        text: 'Skylight ceilings, blackout curtains on demand, and a wake-up call the moment the lights appear overhead.',
-        cta: 'Explore aurora rooms',
-        img: '/legacy-images/gallery/nimage (5).jpg',
+        title: 'Gold rooms',
+        text: 'Elegant rooms at the heart of our premier coastal experience.',
+        cta: 'Explore gold rooms',
+        img: '/legacy-images/rooms/Gold Room 1.jpeg',
     },
     {
-        title: 'Family stays',
-        text: "Connecting rooms, a kids' pool deck, and gear rental for the whole group.",
-        cta: 'Explore family stays',
-        img: '/legacy-images/gallery/imge (4).jpeg',
+        title: 'Silver retreats',
+        text: 'Cosy, modern spaces for a quiet getaway by the Atlantic.',
+        cta: 'Explore silver rooms',
+        img: '/legacy-images/rooms/room (4).jpeg',
     },
 ];
 
@@ -271,14 +273,12 @@ export default function HomePage() {
                 variants={revealUp}
             >
                 <div className="hp-stays-intro">
-                    <h2>New ways to stay by the sea</h2>
+                    <h2>New ways to wake up to the Atlantic</h2>
                     <p>
-                        We&apos;re expanding beyond the standard room from geothermal
-                        suites to skylight lofts built for aurora season, there&apos;s a
-                        new way to experience the coast every year.
+                        Step beyond the ordinary with our exclusive beachfront suites and VIP beach lofts. Crafted for those who demand the finest, every stay delivers unmatched ocean views, absolute privacy, and elite island hospitality right by the Atlantic.
                     </p>
                     <Link to="/rooms" className="hp-link">
-                        Explore new stays <ArrowRight size={16} />
+                        Reserve Your Coastal Escape <ArrowRight size={16} />
                     </Link>
                 </div>
 
