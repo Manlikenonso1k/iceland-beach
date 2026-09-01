@@ -113,6 +113,41 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 14px;
         }
+        /* Gateway cards carry their provider logo instead of a text label, so
+           the tile stays white in both states — the Paystack wordmark is dark
+           navy and would disappear against the navy fill this used to use.
+           Selection reads through the border and ring instead. */
+        .gateway-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 76px;
+            padding: 12px 16px;
+            background: #fff;
+            border: 2px solid #d9dee5;
+            border-radius: 12px;
+            transition: border-color .2s, box-shadow .2s;
+            /* onerror wipes the <img> and drops the provider name in as text. */
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            color: #002F61;
+        }
+        .gateway-card.is-selected {
+            border-color: #002F61;
+            box-shadow: 0 0 0 3px rgba(0, 47, 97, 0.14);
+        }
+        /* contain + a shared box height optically aligns two logos with very
+           different aspect ratios. The radius matters for TGI, whose artwork
+           has a solid blue background rather than a transparent one. */
+        .gateway-card img {
+            max-height: 100%;
+            max-width: 100%;
+            width: auto;
+            object-fit: contain;
+            border-radius: 6px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -260,27 +295,17 @@
                     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;">
                         <label style="flex:1;min-width:150px;cursor:pointer;">
                             <input type="radio" name="selected_gateway" value="tgipay" id="gw_tgipay" checked style="display:none;">
-                            <div id="label_tgipay" style="border:2px solid #002F61;border-radius:12px;padding:14px;text-align:center;background:#002F61;color:#fff;transition:all .2s;">
-                                {{-- Logo sits on a white chip so it reads the same whether the
-                                     card is selected (navy) or not (white). --}}
-                                <span style="display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 10px;background:#fff;border-radius:8px;color:#002F61;font-weight:800;font-size:13px;">
-                                    <img src="{{ asset('images/gateways/tgipay.png') }}" alt="TGI Pay"
-                                         style="height:22px;width:auto;display:block;"
-                                         onerror="this.style.display='none';this.parentNode.textContent='TGI';">
-                                </span>
-                                <div style="font-weight:700;margin-top:8px;">Pay with TGI</div>
+                            <div id="label_tgipay" class="gateway-card is-selected">
+                                <img src="{{ asset('images/tgi.jpg') }}" alt="TGI Pay"
+                                     onerror="this.remove(); this.parentNode.textContent = 'TGI Pay';">
                             </div>
                         </label>
 
                         <label style="flex:1;min-width:150px;cursor:pointer;">
                             <input type="radio" name="selected_gateway" value="paystack" id="gw_paystack" style="display:none;">
-                            <div id="label_paystack" style="border:2px solid #ccc;border-radius:12px;padding:14px;text-align:center;background:#fff;color:#002F61;transition:all .2s;">
-                                <span style="display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 10px;background:#fff;border-radius:8px;color:#002F61;font-weight:800;font-size:13px;">
-                                    <img src="{{ asset('images/gateways/paystack.png') }}" alt="Paystack"
-                                         style="height:20px;width:auto;display:block;"
-                                         onerror="this.style.display='none';this.parentNode.textContent='Paystack';">
-                                </span>
-                                <div style="font-weight:700;margin-top:8px;">Pay With Paystack</div>
+                            <div id="label_paystack" class="gateway-card">
+                                <img src="{{ asset('images/paystack.png') }}" alt="Paystack"
+                                     onerror="this.remove(); this.parentNode.textContent = 'Paystack';">
                             </div>
                         </label>
                     </div>
@@ -294,7 +319,7 @@
                     Payment confirmed! Redirecting to your ticket…
                 </div>
                 <button type="submit" class="btn-pay" id="pay-btn">
-                    Proceed to Payment →
+                    Pay Now
                 </button>
             </div>
         </form>
@@ -452,7 +477,7 @@
 
     function resetPayButton() {
         payBtn.disabled = false;
-        payBtn.textContent = 'Pay with Card';
+        payBtn.textContent = 'Pay Now';
     }
 
     function paystackAmountKobo() {
@@ -462,20 +487,15 @@
         return (prices[type] || 5000) * qty * 100;
     }
 
+    // The button reads 'Pay Now' for either gateway, so switching only restyles
+    // the cards.
     document.querySelectorAll('input[name="selected_gateway"]').forEach(function (radio) {
         radio.addEventListener('change', function () {
             var paystack = this.value === 'paystack';
-            styleGateway(document.getElementById('label_paystack'), paystack);
-            styleGateway(document.getElementById('label_tgipay'), !paystack);
-            payBtn.textContent = paystack ? 'Pay with Card' : 'Proceed to Payment →';
+            document.getElementById('label_paystack').classList.toggle('is-selected', paystack);
+            document.getElementById('label_tgipay').classList.toggle('is-selected', !paystack);
         });
     });
-
-    function styleGateway(el, active) {
-        el.style.background  = active ? '#002F61' : '#fff';
-        el.style.color       = active ? '#fff' : '#002F61';
-        el.style.borderColor = active ? '#002F61' : '#ccc';
-    }
 </script>
 
 </body>

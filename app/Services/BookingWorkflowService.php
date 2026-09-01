@@ -7,6 +7,7 @@ use App\Mail\BookingDeclinedMail;
 use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class BookingWorkflowService
@@ -51,6 +52,43 @@ class BookingWorkflowService
 
         if (! empty($booking->guest_email)) {
             Mail::to($booking->guest_email)->send(new BookingConfirmedMail($booking));
+        }
+    }
+
+    /**
+     * Record a successful Paystack payment.
+     *
+     * Paying auto-approves: the booking skips the staff review queue entirely
+     * and is confirmed through the very same path staff use, so a paid stay is
+     * indistinguishable from a hand-confirmed one — same room hold, same
+     * activity log entry, same guest email.
+     *
+     * Idempotent. The Paystack callback and the webhook routinely both fire for
+     * one transaction, and a guest must never be emailed twice. Both the
+     * BookingPaymentController and the shared PaystackWebhookController enter
+     * here so the two cannot drift apart.
+     */
+    public function markBookingPaid(Booking $booking): void
+    {
+        if ($booking->payment_status === 'paid') {
+            return;
+        }
+
+        // Latch the payment first, before anything that can fail. A payment
+        // Paystack has already taken must survive a bad guest address or an
+        // unreachable mail host.
+        $booking->update(['payment_status' => 'paid']);
+
+        try {
+            $this->confirmBooking($booking);
+        } catch (\Throwable $e) {
+            // Deliberately swallowed: re-throwing would show the returning
+            // guest a "we could not verify that payment" page for money that
+            // was in fact taken, and would make Paystack retry the webhook
+            // forever. The payment is recorded either way.
+            Log::error('Confirming booking after payment failed: ' . $e->getMessage(), [
+                'booking_id' => $booking->id,
+            ]);
         }
     }
 

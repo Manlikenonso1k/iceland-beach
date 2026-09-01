@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\BookingConfirmedMail;
 use App\Mail\BookingDeclinedMail;
+use App\Models\Booking;
 use App\Models\Room;
 use App\Services\BookingWorkflowService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,5 +70,79 @@ class BookingWorkflowServiceTest extends TestCase
             return $mail->record->is($room)
                 && $mail->reason === 'No inventory for selected dates';
         });
+    }
+
+    public function test_rejecting_a_booking_releases_the_room_and_emails_the_guest(): void
+    {
+        Mail::fake();
+
+        $booking = $this->makeBooking('Beach Apartment 3', 'pending');
+        $booking->room->forceFill(['is_booked' => 'booked'])->save();
+
+        app(BookingWorkflowService::class)->rejectBooking($booking, 'Fully booked for those dates');
+
+        $booking->refresh();
+
+        $this->assertSame('rejected', $booking->status);
+        $this->assertSame('Fully booked for those dates', $booking->rejection_reason);
+        // A rejection must never leave the room held.
+        $this->assertSame('no', $booking->room->fresh()->is_booked);
+
+        Mail::assertSent(BookingDeclinedMail::class, fn (BookingDeclinedMail $mail): bool => $mail->record->is($booking)
+            && $mail->reason === 'Fully booked for those dates');
+    }
+
+    public function test_paying_auto_confirms_the_booking_and_holds_the_room(): void
+    {
+        Mail::fake();
+
+        $booking = $this->makeBooking('Premium Room 5', 'pending_payment', 'pending');
+
+        app(BookingWorkflowService::class)->markBookingPaid($booking);
+
+        $booking->refresh();
+
+        $this->assertSame('paid', $booking->payment_status);
+        // Payment auto-approves — the booking skips the staff review queue.
+        $this->assertSame('confirmed', $booking->status);
+        $this->assertSame('booked', $booking->room->fresh()->is_booked);
+
+        Mail::assertSent(BookingConfirmedMail::class, 1);
+    }
+
+    public function test_marking_paid_twice_does_not_email_the_guest_twice(): void
+    {
+        Mail::fake();
+
+        $booking = $this->makeBooking('Gold Room 9', 'pending_payment', 'pending');
+        $workflow = app(BookingWorkflowService::class);
+
+        // The Paystack callback and the webhook routinely both fire.
+        $workflow->markBookingPaid($booking);
+        $workflow->markBookingPaid($booking->fresh());
+
+        Mail::assertSent(BookingConfirmedMail::class, 1);
+    }
+
+    private function makeBooking(string $roomName, string $status, ?string $paymentStatus = null): Booking
+    {
+        $room = Room::query()->create([
+            'room_name' => $roomName,
+            'room_category' => 'Premium',
+            'room_price' => 90000,
+            'is_booked' => 'no',
+        ]);
+
+        return Booking::query()->create([
+            'room_id' => $room->id,
+            'guest_name' => 'Chidi Guest',
+            'guest_email' => 'chidi@example.com',
+            'guest_phone' => '08000000000',
+            'room_type' => $room->room_name,
+            'check_in' => now()->addDay(),
+            'check_out' => now()->addDays(3),
+            'status' => $status,
+            'payment_status' => $paymentStatus,
+        ]);
     }
 }

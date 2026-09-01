@@ -85,6 +85,41 @@ class BookingController extends Controller
         $paymentRequired = Setting::get('booking_payment_required', false)
             && app(PaystackService::class)->isConfigured();
 
+        // Re-submitting the identical room and dates is never intentional —
+        // usually a double-tapped button or a refreshed tab. pending_payment
+        // counts here: the guest may still have the Paystack page open.
+        $duplicate = Booking::query()
+            ->where('guest_email', $data['guest_email'])
+            ->where('room_id', $room->id)
+            ->whereDate('check_in', $checkIn)
+            ->whereDate('check_out', $checkOut)
+            ->whereIn('status', ['pending', 'confirmed', 'pending_payment'])
+            ->exists();
+
+        if ($duplicate) {
+            return response()->json([
+                'message' => 'You already have a booking for this room on those dates.',
+            ], 422);
+        }
+
+        // With payment off, nothing costs a guest anything to flood the review
+        // queue, so one address may hold only one live request at a time.
+        // Paying guests are self-limiting and may book as many rooms as they
+        // like — hence this check sitting behind $paymentRequired.
+        if (! $paymentRequired) {
+            $hasActiveBooking = Booking::query()
+                ->where('guest_email', $data['guest_email'])
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->exists();
+
+            if ($hasActiveBooking) {
+                return response()->json([
+                    'message' => 'You already have an active booking with this email address. '
+                        . 'Please contact us if you would like to change it or book another room.',
+                ], 422);
+            }
+        }
+
         try {
             $booking = $reservations->requestBooking(
                 $room,

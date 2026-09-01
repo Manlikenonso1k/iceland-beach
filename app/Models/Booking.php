@@ -28,6 +28,12 @@ class Booking extends Model
         'check_in',
         'check_out',
         'status',
+        // Without these two the Paystack flow silently breaks: update() drops
+        // any non-fillable key, so the reference generated in
+        // Api\BookingController::store() was never persisted and the callback
+        // could never find the booking again.
+        'payment_reference',
+        'payment_status',
         'rejection_reason',
     ];
 

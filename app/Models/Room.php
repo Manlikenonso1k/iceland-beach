@@ -12,6 +12,21 @@ class Room extends Model
 
     protected $table = 'room';
 
+    /**
+     * Production's `room` table is a legacy import that lacks the
+     * created_at/updated_at columns the migration declares — the local schema
+     * has them, which is exactly why this only ever bites on icelandbeach.com,
+     * as "Unknown column 'updated_at'". Call sites had been switching stamping
+     * off one at a time (ReservationService, BookingPaymentController) and each
+     * new writer rediscovered the crash; most recently confirming or rejecting
+     * a booking, which mirrors the hold onto the room.
+     *
+     * Turning it off on the model closes the whole class of bug rather than the
+     * one call site in front of us. Nothing reads a room's timestamps — the
+     * revenue widgets all date off bookings.created_at.
+     */
+    public $timestamps = false;
+
     protected $fillable = [
         'room_name',
         'room_category',

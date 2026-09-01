@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\TicketReceiptMail;
 use App\Models\Booking;
 use App\Models\Ticket;
+use App\Services\BookingWorkflowService;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -24,7 +25,10 @@ use Illuminate\Support\Facades\Mail;
  */
 class PaystackWebhookController extends Controller
 {
-    public function __construct(private readonly PaystackService $paystack) {}
+    public function __construct(
+        private readonly PaystackService $paystack,
+        private readonly BookingWorkflowService $workflow,
+    ) {}
 
     public function handle(Request $request): Response
     {
@@ -66,17 +70,22 @@ class PaystackWebhookController extends Controller
 
     private function creditBooking(string $reference): void
     {
+        // No payment_status filter here: the service already guards against a
+        // second credit, and "!= 'paid'" silently skipped rows where the column
+        // is still NULL, which is every booking taken before payment was
+        // switched on.
         $booking = Booking::query()
             ->where('payment_reference', $reference)
-            ->where('payment_status', '!=', 'paid')
             ->first();
 
         if (! $booking) {
             return;
         }
 
-        // 'pending', not 'confirmed' — payment does not bypass staff review.
-        $booking->update(['status' => 'pending', 'payment_status' => 'paid']);
+        // Same method BookingPaymentController uses, so whichever endpoint
+        // Paystack happens to be pointed at produces the identical outcome:
+        // confirmed booking, room held, guest emailed.
+        $this->workflow->markBookingPaid($booking);
     }
 
     private function creditTicket(string $reference): void

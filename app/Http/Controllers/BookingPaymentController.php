@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\BookingCustomerConfirmationMail;
 use App\Models\Booking;
+use App\Services\BookingWorkflowService;
 use App\Services\PaystackService;
-use App\Services\ReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * Paystack payment handling for ROOM BOOKINGS only.
@@ -21,7 +19,10 @@ use Illuminate\Support\Facades\Mail;
  */
 class BookingPaymentController extends Controller
 {
-    public function __construct(private readonly PaystackService $paystack) {}
+    public function __construct(
+        private readonly PaystackService $paystack,
+        private readonly BookingWorkflowService $workflow,
+    ) {}
 
     /**
      * Guest returns from Paystack checkout.
@@ -55,7 +56,7 @@ class BookingPaymentController extends Controller
 
                 return redirect('/')->with(
                     'success',
-                    'Payment received. Your booking request has been sent to our team.',
+                    'Payment received and your stay is confirmed. A confirmation email is on its way.',
                 );
             }
 
@@ -106,52 +107,16 @@ class BookingPaymentController extends Controller
     }
 
     /**
-     * Move a booking from awaiting-payment into the staff review queue.
+     * Record the payment and confirm the booking.
      *
-     * Idempotent by design: returns early if already paid, so a callback and a
-     * webhook arriving for the same transaction cannot double-send the email.
+     * Thin delegate on purpose. The identical transition is reachable from
+     * PaystackWebhookController (Paystack allows only one webhook URL per mode,
+     * so the shared endpoint dispatches there too), and the two used to carry
+     * separate copies of this logic that had already drifted — one emailed the
+     * guest, the other did not. One method, one behaviour.
      */
     private function markPaid(Booking $booking): void
     {
-        if ($booking->payment_status === 'paid') {
-            return;
-        }
-
-        $booking->update([
-            // 'pending', not 'confirmed' — payment does not skip staff review,
-            // and it must never hold the room on its own.
-            'status' => 'pending',
-            'payment_status' => 'paid',
-        ]);
-
-        if (blank($booking->guest_email)) {
-            return;
-        }
-
-        try {
-            $room = $booking->room;
-
-            if ($room) {
-                // Reuse the existing request-received mailable so paid and
-                // unpaid bookings send the guest the same message.
-                $preview = $room->replicate();
-		$preview->id = $room->id;
-		$preview->exists = true;
-		$preview->timestamps = false;
-		$preview->customer_name = $booking->guest_name;
-		$preview->email = $booking->guest_email;
-		$preview->start_date = $booking->check_in;
-		$preview->end_date = $booking->check_out;
-
-                Mail::to($booking->guest_email)->send(
-                    new BookingCustomerConfirmationMail($preview, $booking->guest_phone, null),
-                );
-            }
-        } catch (\Throwable $e) {
-            // A mail failure must not undo a recorded payment.
-            Log::error('Booking email failed after payment: ' . $e->getMessage(), [
-                'booking_id' => $booking->id,
-            ]);
-        }
+        $this->workflow->markBookingPaid($booking);
     }
 }
