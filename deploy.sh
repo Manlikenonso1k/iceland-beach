@@ -10,21 +10,12 @@
 #
 set -euo pipefail
 
-# 0. Rewrite the root .htaccess to the front-controller bridge.
-#
-#    Not strictly a "restore": .htaccess IS tracked, so `git reset --hard`
-#    brings back the committed 5 KB legacy file, which routes everything at
-#    laravel-app/public/*. This overwrites it with the two-line rule for the
-#    current layout, where the deploy path is the docroot and Laravel's public/
-#    sits directly beneath it. The two disagree and this is what settles it on
-#    each deploy; the committed .htaccess should eventually be replaced with
-#    these two lines so they stop fighting.
-cat > .htaccess << 'HTACCESS'
-RewriteEngine On
-RewriteRule ^(.*)$ public/$1 [L]
-HTACCESS
-echo "==> .htaccess written"
-
+# NOTE: there is deliberately no .htaccess step here any more. The committed
+# .htaccess is now the correct two-line docroot bridge, so `git reset --hard`
+# above already puts the right file in place. This script used to overwrite it
+# on every deploy because the committed copy was the old site's rule set — with
+# both in play, whichever ran last won, and a deploy that stopped short of this
+# script left the site dead.
 echo "==> Deploying $(git rev-parse --short HEAD)"
 
 # 1. PHP dependencies.
