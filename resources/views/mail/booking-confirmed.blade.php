@@ -145,16 +145,32 @@
       </td>
     </tr>
 
-    <!-- CTA. Bulletproof button: the bgcolor on the <td> is what Outlook paints. -->
+    <!-- CTA. Bulletproof button: the bgcolor on the <td> is what Outlook paints.
+         The receipt button only appears for a paid booking — a staff-confirmed
+         request has taken no money, so $receiptUrl is null there. -->
     <tr>
       <td style="padding:0 40px 36px 40px;" align="center">
         <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 auto;">
           <tr>
+            @if ($receiptUrl)
+            <td bgcolor="#002F61" style="background-color:#002F61;border-radius:50px;">
+              <a href="{{ $receiptUrl }}" style="display:inline-block;padding:16px 32px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:50px;letter-spacing:0.5px;">
+                Download receipt
+              </a>
+            </td>
+            <td style="width:12px;font-size:0;line-height:0;">&nbsp;</td>
+            <td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:50px;border:2px solid #002F61;">
+              <a href="{{ $siteUrl }}" style="display:inline-block;padding:14px 30px;font-size:16px;font-weight:bold;color:#002F61;text-decoration:none;border-radius:50px;letter-spacing:0.5px;">
+                🌊 Visit our website
+              </a>
+            </td>
+            @else
             <td bgcolor="#002F61" style="background-color:#002F61;border-radius:50px;">
               <a href="{{ $siteUrl }}" style="display:inline-block;padding:16px 40px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:50px;letter-spacing:0.5px;">
                 🌊 Visit our website
               </a>
             </td>
+            @endif
           </tr>
         </table>
       </td>

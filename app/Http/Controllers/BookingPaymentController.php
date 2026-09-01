@@ -7,6 +7,7 @@ use App\Services\BookingWorkflowService;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Paystack payment handling for ROOM BOOKINGS only.
@@ -54,10 +55,10 @@ class BookingPaymentController extends Controller
             if (($data['status'] ?? '') === 'success') {
                 $this->markPaid($booking);
 
-                return redirect('/')->with(
-                    'success',
-                    'Payment received and your stay is confirmed. A confirmation email is on its way.',
-                );
+                // Straight to the branded receipt page rather than the
+                // homepage, so the guest lands on proof of what they just paid
+                // for. Signed because the page carries their own details.
+                return redirect()->to(URL::signedRoute('booking.success', ['booking' => $booking->id]));
             }
 
             $booking->update(['status' => 'payment_failed', 'payment_status' => 'failed']);

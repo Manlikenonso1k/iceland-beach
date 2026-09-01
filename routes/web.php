@@ -78,6 +78,20 @@ Route::post('/webhooks/tgi', [PaymentController::class, 'tgiPayWebhook'])
 Route::get('/booking/payment/callback', [\App\Http\Controllers\BookingPaymentController::class, 'callback'])
     ->name('booking.payment.callback');
 
+// Post-payment success page and its PDF receipt.
+//
+// Both are `signed`. A booking id is a small sequential integer, so an unsigned
+// /booking/receipt/5 would let anyone walk the range and harvest every guest's
+// name, email and phone. Links are minted where the guest is already known to
+// be legitimate: the Paystack callback redirect, and the confirmation email.
+Route::get('/booking/success/{booking}', [\App\Http\Controllers\BookingReceiptController::class, 'success'])
+    ->name('booking.success')
+    ->middleware('signed');
+
+Route::get('/booking/receipt/{booking}', [\App\Http\Controllers\BookingReceiptController::class, 'download'])
+    ->name('booking.receipt')
+    ->middleware('signed');
+
 // Paystack webhook. Paystack accepts ONE URL per mode, and sends every event
 // to it, so a single endpoint dispatches to tickets or bookings by reference
 // prefix. The two aliases below point at the same handler so whichever URL is

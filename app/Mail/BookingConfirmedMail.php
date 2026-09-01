@@ -10,6 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Sent when a stay is confirmed.
@@ -67,7 +68,25 @@ class BookingConfirmedMail extends Mailable
                 : null,
             'logoUrl' => $this->inlineLogo(),
             'siteUrl' => url('/'),
+            'receiptUrl' => $this->receiptUrl(),
         ];
+    }
+
+    /**
+     * Signed link to the PDF receipt, or null when there is nothing to receipt.
+     *
+     * Only a paid Booking gets one: a staff-confirmed request has taken no
+     * money, and a Room-shaped record has no payment to point at. Signed
+     * because the receipt carries the guest's own details and the route is
+     * keyed by a guessable sequential id.
+     */
+    private function receiptUrl(): ?string
+    {
+        if (! $this->record instanceof Booking || $this->record->payment_status !== 'paid') {
+            return null;
+        }
+
+        return URL::signedRoute('booking.receipt', ['booking' => $this->record->id]);
     }
 
     /**
