@@ -27,64 +27,20 @@ jobs:
           port: ${{ secrets.HOSTINGER_SSH_PORT }}
           script: |
             set -e
-            echo "Deploy path: ${{ secrets.HOSTINGER_SSH_DEPLOY_PATH }}"
             cd "${{ secrets.HOSTINGER_SSH_DEPLOY_PATH }}"
-            echo "Current dir: $(pwd)"
-            ls -la
-            # 1. Setup SSH Agent using key already on server
             eval $(ssh-agent -s)
-            ssh-add ~/.ssh/id_ed25519_iceland 2>/dev/null || ssh-add ~/.ssh/id_ed25519 2>/dev/null || ssh-add ~/.ssh/id_rsa 2>/dev/null || true
-            # 2. Configure GitHub SSH
+            ssh-add ~/.ssh/id_ed25519_iceland 2>/dev/null || \
+            ssh-add ~/.ssh/id_ed25519 2>/dev/null || \
+            ssh-add ~/.ssh/id_rsa 2>/dev/null || true
             mkdir -p ~/.ssh
             ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
-            # 3. Sync files with GitHub using SSH
             if [ ! -d .git ]; then
-              echo "No .git found. Initializing repo."
               git init
               git remote add origin git@github.com:${{ github.repository }}.git
             else
               git remote set-url origin git@github.com:${{ github.repository }}.git
             fi
-            echo "Before sync:"
-            git rev-parse --short HEAD || true
-            git status -sb || true
             git fetch origin main
             git reset --hard origin/main
-            echo "After sync:"
-            git rev-parse --short HEAD
-            git status -sb
-            # 4. Run deploy script
+            echo "Deployed: $(git rev-parse --short HEAD)"
             bash deploy.sh
-            set -e
-            echo "Deploy path: ${{ secrets.HOSTINGER_SSH_DEPLOY_PATH }}"
-            cd "${{ secrets.HOSTINGER_SSH_DEPLOY_PATH }}"
-            echo "Current dir: $(pwd)"
-            ls -la
-
-            # 1. Setup SSH Agent using key already on server
-            eval $(ssh-agent -s)
-            ssh-add ~/.ssh/id_ed25519_iceland 2>/dev/null || ssh-add ~/.ssh/id_ed25519 2>/dev/null || ssh-add ~/.ssh/id_rsa 2>/dev/null || true
-
-            # 2. Configure GitHub SSH
-            mkdir -p ~/.ssh
-            ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
-
-            # 3. Sync files with GitHub using SSH
-            if [ ! -d .git ]; then
-              echo "No .git found. Initializing repo."
-              git init
-              git remote add origin git@github.com:${{ github.repository }}.git
-            else
-              git remote set-url origin git@github.com:${{ github.repository }}.git
-            fi
-
-            echo "Before sync:"
-            git rev-parse --short HEAD || true
-            git status -sb || true
-
-            git fetch origin main
-            git reset --hard origin/main
-
-            echo "After sync:"
-            git rev-parse --short HEAD
-            git status -sb

@@ -10,6 +10,19 @@
 #
 set -euo pipefail
 
+# 0. Restore .htaccess — git reset --hard wipes it every deploy
+# 0. Restore .htaccess
+cat > .htaccess << 'HTACCESS'
+RewriteEngine On
+RewriteRule ^(.*)$ public/$1 [L]
+HTACCESS
+echo "==> .htaccess restored"
+cat > .htaccess << 'HTACCESS'
+RewriteEngine On
+RewriteRule ^(.*)$ public/$1 [L]
+HTACCESS
+echo "==> .htaccess restored"
+
 echo "==> Deploying $(git rev-parse --short HEAD)"
 
 # 1. PHP dependencies.
