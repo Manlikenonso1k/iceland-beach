@@ -1,397 +1,298 @@
-# PROJECT INSTRUCTIONS
-## Iceland Beach Resort — Complete Codebase Map
+# CODEBASE MAPPING PLAYBOOK
 
-> Graph built with Graphify. Last updated: **2026-09-02** (commit `208f3f7`).
-> Read this file at the start of every session before touching any code.
-> Every fact below was verified against the running app, not inferred from the graph alone.
+> **Portable. Contains no facts about any specific project.**
+> Copy this file into any repository. Follow it once to produce that repo's
+> `PROJECT_MAP.md`, then read the map — not this file — at the start of every session.
 
----
+**What this is for:** a new agent session normally burns a large share of its context
+rediscovering a codebase by opening files one at a time. Doing that once, writing the result
+down, and reading *that* instead is the cheaper path. This playbook is the procedure for
+producing that write-up, plus the traps that make a naive attempt useless.
 
-## 🗺️ PROJECT OVERVIEW
+**Two files, two jobs:**
 
-Public website, booking engine and back-office for **Iceland Beach Resort** (Lagos, Nigeria) at
-**icelandbeach.com**. It covers four largely independent product lines that share one Laravel app
-and one database:
-
-1. **Room bookings** — public React site → API → staff review or Paystack payment → confirmation email + PDF receipt.
-2. **Event tickets** — a server-rendered Blade page with two payment gateways (Paystack inline popup, TGI Pay redirect), issuing a QR code scanned at the gate.
-3. **Vendor spots** — vendors apply for a pitch at an event and pay via TGI Pay.
-4. **POS / back office** — Filament admin covering sales, products, inventory, waiters, invoices, referrals and activity logs.
-
-The public site is a **standalone React SPA** (react-router + axios) served from one Blade shell
-(`welcome`). It is **not Inertia** — there is no Inertia anywhere. Server-rendered Blade is used
-where a page must paint on first load from a redirect (ticket purchase, booking success, vendor payment).
-
-**Tech stack**
-| Layer | Choice |
-|---|---|
-| Backend | Laravel 12.55, PHP 8.3 |
-| Admin | Filament 3 (`/admin`) |
-| Frontend | React 18 SPA (`resources/js`), Vite/Rolldown, react-router-dom, axios, lucide-react |
-| Server-rendered | Blade (ticket page, booking success, vendor payment, all emails, PDFs) |
-| Database | MySQL in production · SQLite locally and in tests |
-| Payments | Paystack (rooms + tickets), TGI Pay (tickets + vendor spots) |
-| PDF | `barryvdh/laravel-dompdf` ^3.1 |
-| Auth/roles | `spatie/laravel-permission` |
-| Hosting | Hostinger shared, `~/domains/icelandbeach.com/public_html/` |
-| CI/CD | GitHub Actions → SSH → `git reset --hard` → `bash deploy.sh` |
-
-**Brand:** navy `#002F61` on white.
+| File | Scope | Lifetime |
+|---|---|---|
+| `INSTRUCTIONS.md` (this) | *How* to map any repo | Copied between projects unchanged |
+| `PROJECT_MAP.md` | *What* this repo actually is | Rewritten when the repo changes |
 
 ---
 
-## 📁 DIRECTORY STRUCTURE
+## PART 1 — SESSION START (the common case)
+
+If `PROJECT_MAP.md` already exists, you are not mapping. Do this instead:
 
 ```
-Iceland/
-├── app/
-│   ├── Http/Controllers/
-│   │   ├── Api/                      ← JSON endpoints for the React SPA
-│   │   │   ├── BookingController      rooms list + availability, booking store, rate limits
-│   │   │   ├── CatalogController      services list
-│   │   │   ├── ContactController      contact form
-│   │   │   └── ServiceBookingController
-│   │   ├── BookingPaymentController   Paystack ROOM callback + webhook → markPaid
-│   │   ├── BookingReceiptController   signed success page + PDF receipt
-│   │   ├── PaymentController          ALL ticket logic (Paystack + TGI). Legacy, high risk.
-│   │   ├── PaystackWebhookController  single webhook entry, dispatches by "BOOK-" prefix
-│   │   └── VendorPaymentController    vendor spot payments via TGI
-│   ├── Models/                       23 models — see DATABASE TABLES
-│   ├── Mail/                         7 mailables — see EMAIL SYSTEM
-│   ├── Services/
-│   │   ├── BookingWorkflowService     ★ canonical confirm/reject/markPaid. Everything routes here.
-│   │   ├── ReservationService         public booking creation + legacy room-record writes
-│   │   ├── PaystackService            init / verify / webhook signature
-│   │   ├── PosService                 point-of-sale
-│   │   ├── ActivityLogService         audit trail
-│   │   └── TicketPaymentRefreshService
-│   ├── Filament/
-│   │   ├── Resources/                14 resources (Booking, Room, Ticket, Sale, Invoice, …)
-│   │   ├── Widgets/                  9 widgets — 8 are $isDiscovered=false, see GOTCHAS
-│   │   └── Pages/                    Dashboard, ManageSettings, ScanTicket
-│   ├── Observers/                    AuditObserver, TicketObserver
-│   ├── Policies/                     ActivityLog, Invoice, Role, User
-│   └── Livewire/                     VendorSpotMap
-│
-├── resources/
-│   ├── js/
-│   │   ├── app.jsx                   ★ SPA root: router + the Booking form component
-│   │   └── pages/                    HomePage, AboutPage, RoomsPage, ServicesPage,
-│   │                                 ServiceBookingPage, EventsPage, GalleryPage, ContactPage
-│   └── views/
-│       ├── welcome.blade.php         the SPA shell every React route renders
-│       ├── ticket/purchase.blade.php ★ ticket page (gateway cards + Paystack inline JS)
-│       ├── booking/                  success.blade.php, receipt-pdf.blade.php
-│       ├── mail/                     7 email templates
-│       ├── pdf/invoice.blade.php     DomPDF invoice
-│       └── filament/                 custom admin views (booking calendar wrapper)
-│
-├── database/
-│   ├── migrations/                   ~40 migrations
-│   └── seeders/                      RoleSeeder (idempotent, runs on every deploy), DatabaseSeeder
-│
-├── routes/
-│   ├── web.php                       public pages, tickets, payments, webhooks
-│   └── api.php                       /api/* for the SPA — all throttled
-│
-├── tests/Feature/                    18 tests. BookingWorkflowServiceTest + BookingReceiptTest
-│                                     cover the money paths.
-├── .github/workflows/deploy.yml      CI/CD
-├── deploy.sh                         post-pull deploy steps
-├── .htaccess                         ★ docroot bridge → public/  (see GOTCHAS #3)
-└── graphify-out/                     graph.json, GRAPH_REPORT.md, graph.html
-```
-
-> `.claude/`, `.agents/`, `.cursor/`, `.github/skills/` are committed **agent tooling**, not
-> application code (~2,000 files). Ignore them when reasoning about the app.
-
----
-
-## 🗄️ DATABASE TABLES
-
-| Table | Key columns | Relationships | Notes |
-|---|---|---|---|
-| `bookings` | id, room_id, guest_name, guest_email, guest_phone, room_type, check_in, check_out, status, payment_status, payment_reference, email_opt_in, rejection_reason | belongsTo `room` | **Canonical booking record.** status: `pending`, `confirmed`, `rejected`, `pending_payment`, `payment_failed`. Only `confirmed` blocks availability. |
-| `room` | id, room_name, room_category, room_price, room_image, main_image, gallery_images, is_booked, customer_name, email, start_date, end_date, total_price, mailsent | hasMany bookings (via room_id) | Singular table name. **Production copy has no created_at/updated_at** → `Room::$timestamps = false`. SoftDeletes. `is_booked`: `no`/`booked`/`rejected`/`expired`. |
-| `tickets` | id, uuid, name, email, phone, ticket_type, quantity, amount, order_ref, payment_gateway, payment_ref, paid, checked_in, qr_code_path, scan_count, checked_in_at, pickup_location, referral_code | hasMany ticket_scan_logs | `amount` stored in **kobo**. uuid drives the QR URL. |
-| `ticket_scan_logs` | id, ticket_id, user_id, status | belongsTo ticket, user | Gate scan audit |
-| `services` / `service_bookings` | service_name, service_price, signin, signout, no_of_people | — | Spa/experience bookings |
-| `vendor_spots` | id, event_id, name, price, pos_x, pos_y, status | hasMany vendor_requests | pos_x/pos_y drive the Livewire map |
-| `vendor_requests` | id, vendor_spot_id, name, email, address, expected_to_sell, order_ref, status | belongsTo vendor_spot | |
-| `sales` / `sale_items` / `void_logs` | waiter_id, table_id, total_amount, payment_method, sale_date | belongsTo waiter, table | POS. SoftDeletes throughout. |
-| `products` | name, category, price, stock_quantity, low_stock_threshold | — | Inventory |
-| `tables` / `waiters` | table_name, assigned_waiter_id, status / full_name, pin_hash, role | | POS floor |
-| `invoices` / `invoice_items` | invoice_number, customer_name, total_amount, total_in_words, bank_* | hasMany items | `total_in_words` via NairaAmountFormatter |
-| `referrals` / `referral_ticket_sales` | code, commission_rate, user_id / ticket_id, commission_amount | belongsTo user, ticket | Affiliate ticket sales |
-| `membership` | full_name, email, mplan, member_status, start_date, end_date | — | Legacy schema, snake-case oddities |
-| `settings` | key, value, type | — | `Setting::get()`. Drives `booking_payment_required`. |
-| `activity_logs` | user_id, event, subject_type, subject_id, description, properties, ip_address | morphTo subject | Written by ActivityLogService + AuditObserver |
-| `users`, `roles`, `permissions`, `model_has_roles`, … | | | spatie/laravel-permission |
-
----
-
-## 🔀 CORE FLOWS
-
-### Room booking — payment OFF (`booking_payment_required` = false)
-1. React `Booking` component in `resources/js/app.jsx` POSTs `/api/bookings`.
-2. `Api\BookingController@store` validates, then applies **two rate limits**:
-   - exact duplicate (same email + room + dates, incl. `pending_payment`) → 422
-   - one active booking per email (`pending`/`confirmed`) → 422 *(this check is skipped when payment is on)*
-3. `ReservationService::requestBooking()` — checks `Booking::scopeBlocking` overlap, creates the
-   booking as `pending`, stages guest details onto the `room` row **without** setting `is_booked`.
-4. Sends `BookingNotificationMail` (admins) + `BookingCustomerConfirmationMail` (guest, "request received").
-5. Booking waits in `PendingBookingsWidget` for staff.
-
-### Room booking — payment ON (Paystack)
-1. Same validation and duplicate check; the one-active-booking rule is **not** applied.
-2. Booking created, then flipped to `pending_payment` with `payment_reference`; guest emails suppressed.
-3. Amount = `room_price × nights × 100` (**kobo**). Zero price → 422, booking deleted.
-4. `PaystackService::initialize()` → guest redirected to Paystack.
-5. Return: `GET /booking/payment/callback?reference=…` → verify → `markPaid()`.
-   Safety net: `POST /webhooks/paystack` → `PaystackWebhookController::creditBooking()`.
-6. Both call **`BookingWorkflowService::markBookingPaid()`** — idempotent, latches
-   `payment_status = paid` first, then `confirmBooking()`.
-7. **Payment auto-confirms.** Status → `confirmed`, room held, activity logged,
-   `BookingConfirmedMail` sent carrying a signed **Download receipt** link.
-8. Guest redirected to a **signed** `/booking/success/{booking}`.
-
-### Admin confirm / reject
-- `PendingBookingsWidget` (row + bulk) and `BookingResource` both call `BookingWorkflowService`.
-- **Confirm** → status `confirmed`, mirrors hold onto `room` (`is_booked='booked'` + dates), logs, sends `BookingConfirmedMail`.
-- **Reject** → status `rejected` + reason, releases the room (`is_booked='no'`), logs, sends `BookingDeclinedMail`.
-- `ConfirmedBookingsWidget`'s Cancel button calls the same `rejectBooking()`.
-- Bulk actions isolate each record in try/catch and report one summary; gated to Super Admin / Manager.
-
-### Ticket purchase (Paystack + TGI Pay)
-- `GET /ticket` → `resources/views/ticket/purchase.blade.php`. One form, two gateway cards
-  (logos at `images/tgi.jpg`, `images/paystack.png`), button always reads **"Pay Now"**.
-- **Paystack:** inline popup (`js.paystack.co/v1/inline.js`) → JS gets a reference →
-  POST `/verify-payment` → `PaymentController@paystackVerify` recalculates the amount **server-side**.
-- **TGI Pay:** form POSTs `/initiate-tgipay` → redirect → return on `ANY /tgipay/callback`
-  (CSRF-exempt per route) → webhook `POST /webhooks/tgi`.
-- On success: ticket row, QR to `storage/app/public/qrcodes/{uuid}.svg`, `TicketReceiptMail`.
-- Gate scan: `GET /ticket/verify/{uuid}` → `ScanTicket` Filament page logs to `ticket_scan_logs`.
-
----
-
-## 🛣️ ROUTES REFERENCE
-
-| Method | URI | Handler | Name |
-|---|---|---|---|
-| GET | `/`, `/about`, `/rooms`, `/services`, `/event`, `/gallery`, `/membership`, `/contact`, `/book` | `view('welcome')` — React SPA | — |
-| GET | `/api/rooms` | `Api\BookingController@rooms` | throttle:60,1 |
-| POST | `/api/bookings` | `Api\BookingController@store` | throttle:10,1 |
-| POST | `/api/contact` | `Api\ContactController@store` | throttle:10,1 |
-| GET | `/api/services` | `Api\CatalogController@services` | throttle:60,1 |
-| POST | `/api/service-bookings` | `Api\ServiceBookingController@store` | throttle:10,1 |
-| GET | `/booking/payment/callback` | `BookingPaymentController@callback` | `booking.payment.callback` |
-| GET | `/booking/success/{booking}` | `BookingReceiptController@success` | `booking.success` **signed** |
-| GET | `/booking/receipt/{booking}` | `BookingReceiptController@download` | `booking.receipt` **signed** |
-| POST | `/webhooks/paystack` · `/webhooks/paystack/booking` · `/webhooks/paystack/tickets` | `PaystackWebhookController@handle` | CSRF-exempt |
-| GET | `/ticket` | `PaymentController@showTicketForm` | `ticket.form` |
-| POST | `/ticket/calculate-price` | `PaymentController@calculatePrice` | CSRF-exempt |
-| GET | `/ticket/verify/{uuid}` | `PaymentController@verifyEntry` | `ticket.verify` |
-| GET | `/ticket/{uuid}/success` | `PaymentController@success` | `ticket.success` |
-| POST | `/verify-payment` | `PaymentController@paystackVerify` | — |
-| POST | `/initiate-tgipay` | `PaymentController@initiateTgiPay` | — |
-| ANY | `/tgipay/callback` | `PaymentController@tgiPayCallback` | CSRF-exempt |
-| POST | `/webhooks/tgi` | `PaymentController@tgiPayWebhook` | CSRF-exempt |
-| GET | `/vendor-spots` | `view('vendor-spots')` | |
-| GET/POST | `/vendor-payment/{vendorRequest}` · `/pay` · `ANY /callback` | `VendorPaymentController` | CSRF-exempt on callback |
-| GET | `/invoices/{id}/view` | closure → `pdf.invoice` | `invoices.view` |
-| — | `/admin/*` | Filament panel | |
-
-> Ordering matters in `routes/web.php`: specific ticket sub-routes are declared **before**
-> `GET /ticket`, and the React `Route::view` entries sit last. There is **no catch-all**.
-
----
-
-## 💳 PAYMENT GATEWAYS
-
-### Paystack — rooms
-- Env: `PAYSTACK_PUBLIC_KEY`, `PAYSTACK_SECRET_KEY`, `PAYSTACK_PAYMENT_URL`
-- `PaystackService` · `BookingPaymentController` · `BookingWorkflowService::markBookingPaid()`
-- Redirect checkout. Amount in **kobo**. Callback resolves the booking by `reference` query param
-  (one dashboard URL serves every transaction).
-
-### Paystack — tickets
-- Same keys, entirely separate code path: **inline popup**, not redirect.
-- `PaymentController@paystackVerify` recomputes the amount server-side from `ticket_type`.
-
-### TGI Pay — tickets and vendor spots
-- Env: `TGIPAY_MERCHANT_ID`, `TGIPAY_INTEGRATION_KEY`, `TGIPAY_SECRET`, `TGIPAY_BASE_URL`, `TGIPAY_CALLBACK_URL`
-- `PaymentController` (tickets) · `VendorPaymentController` (spots)
-- Redirect flow, returns on `ANY /tgipay/callback`. **Amount in naira, not kobo.**
-
----
-
-## 👥 ROLES & PERMISSIONS
-
-Seeded by `RoleSeeder` (idempotent, runs every deploy): **Super Admin, Admin, Manager,
-Front Desk, Scanner, Waiter, Referral**.
-
-Booking confirm/reject — row actions, bulk actions and the Cancel button — is gated to
-**Super Admin** and **Manager** via `hasAnyRole`. Note `PendingBookingsWidget::operatorCanManage()`
-is deliberately **static**: `$this` is not reliably bound inside Filament bulk-action closures, and
-an unbound call silently returned false, hiding the row checkboxes.
-
-Policies: `ActivityLogPolicy`, `InvoicePolicy`, `RolePolicy`, `UserPolicy`.
-
----
-
-## 📧 EMAIL SYSTEM
-
-| Mailable | Trigger | Recipient | View |
-|---|---|---|---|
-| `BookingNotificationMail` | Public booking request created | Admin list (`config/resort.php`) | `mail/booking-notification` |
-| `BookingCustomerConfirmationMail` | Public request created, payment **off** | Guest | `mail/booking-customer-confirmation` |
-| `BookingConfirmedMail` | Staff confirm **or** payment received | Guest | `mail/booking-confirmed` |
-| `BookingDeclinedMail` | Staff reject / cancel | Guest | `mail/booking-declined` |
-| `TicketReceiptMail` | Ticket paid (either gateway) | Guest | `mail/ticket-receipt` |
-| `SaleReceiptMail` | POS sale | Customer | `mail/sale-receipt` |
-| `VendorApprovalMail` | Vendor request approved | Vendor | `mail/vendor-approval` |
-
-- `BookingConfirmedMail` and `BookingDeclinedMail` accept **`Room|Booking`** — two code paths reach them.
-- `BookingConfirmedMail` adds a signed **Download receipt** button only when `payment_status === 'paid'`.
-- Logos are **base64 data URIs**, never URLs: `APP_URL` on a private host is unreachable from Gmail.
-  `iceland-logo-email.png` (14 KB) is used over `iceland-logo.png` (67 KB) to stay under Gmail's ~102 KB clipping threshold.
-- Templates are **table-based with inline styles only** — no flexbox, no `<style>` blocks. Outlook's Word renderer supports none of it.
-- SMTP: `MAIL_*` env, from `booking@icelandbeach.com` (Hostinger).
-
----
-
-## ⚠️ KNOWN GOTCHAS — READ BEFORE TOUCHING ANYTHING
-
-1. **`room` table has no timestamps in production.** The migration declares them and local SQLite
-   *has* them, which is why this only ever breaks on icelandbeach.com as
-   `Unknown column 'updated_at'`. Fixed once at the model: `Room::$timestamps = false`
-   (`app/Models/Room.php`). **Never remove that line.** Per-call-site `$room->timestamps = false`
-   in `ReservationService` is now redundant but harmless.
-
-2. **Mass-assignment on `Booking`.** `payment_reference` and `payment_status` must stay in
-   `$fillable`. They were missing, so `update()` silently dropped them, the reference was never
-   persisted, and **no Paystack payment could ever be matched back to its booking.**
-
-3. **`.htaccess` IS tracked and IS the source of truth.** It is the two-line docroot bridge
-   (`RewriteRule ^(.*)$ public/$1`). It used to be the old PHP site's 5 KB rule set which routed at
-   `laravel-app/public/*` and 404'd every Laravel URL through `ErrorDocument /soon.php` —
-   `git reset --hard` restored it on every deploy and killed the site until `deploy.sh` overwrote it.
-   `deploy.sh` **no longer touches it**. Do not reintroduce a `cat > .htaccess` step.
-
-4. **Only `confirmed` bookings block availability** — `Booking::BLOCKING_STATUSES` /
-   `scopeBlocking()`. Overlap is half-open, so same-day turnover stays bookable.
-   *Known wart:* `Api\BookingController@rooms` also treats `room.is_booked === 'booked'` as
-   unavailable **ignoring dates**, so a confirmed stay marks that room sold out for all dates in the UI.
-
-5. **Paystack = kobo. TGI Pay = naira.** Never mix them.
-
-6. **`PaymentController` is legacy and load-bearing.** All ticket + TGI logic lives there and is in
-   production use. Do not refactor it, and do not merge the ticket Paystack flow with the room one.
-
-7. **Payment auto-confirms a booking.** Paid bookings skip the staff review queue entirely
-   (`markBookingPaid` → `confirmBooking`). If staff should review paid bookings, that is the one
-   place to change.
-
-8. **Both payment entry points must stay routed through `BookingWorkflowService`.**
-   `BookingPaymentController` and `PaystackWebhookController` previously held separate copies of
-   the credit logic and had already drifted — one emailed the guest, the other did not.
-
-9. **DomPDF supports no flexbox, no grid, and ignores gradients.** Use tables. Font subsetting is
-   enabled per-document in `BookingReceiptController` — without it the receipt is 1.16 MB instead of 67 KB,
-   because DejaVu Sans (needed for ₦) embeds whole.
-
-10. **Success/receipt routes are `signed`.** Booking ids are small sequential integers; unsigned
-    these would let anyone enumerate and harvest guest names, emails and phones.
-
-11. **8 of 9 Filament widgets set `$isDiscovered = false`** and are registered explicitly on the
-    Dashboard / BookingCalendar page. Removing the flag makes them render twice, or panel-wide.
-    Only `MostBookedRoomsWidget` is auto-discovered.
-
-12. **SQLite enforces enums as CHECK constraints.** The payment-fields migration widened
-    `bookings.status` for MySQL only; a follow-up migration widens it on SQLite, or tests cannot
-    store `pending_payment`.
-
-13. **`storage:link` cannot run on Hostinger** — `exec()` and `symlink()` are disabled.
-    `deploy.sh` uses `ln -sfn` directly.
-
-14. **`APP_NAME` must be quoted** in `.env` — unquoted breaks dotenv parsing and every artisan command.
-
-15. **Do not touch** the ticket/TGI flow, the referral system, or existing role guards unless the
-    task is explicitly about them.
-
----
-
-## 🚀 DEPLOYMENT
-
-**Push to `main` → GitHub Actions → SSH → `git reset --hard origin/main` → `bash deploy.sh`.**
-
-`deploy.sh` steps:
-1. `composer install --no-dev --optimize-autoloader` (tracked `vendor/composer/*` is overwritten by the reset)
-2. `php artisan migrate --force`
-3. `php artisan db:seed --class=RoleSeeder --force`
-4. `npm ci --omit=dev && npm run build` (falls back to the committed `public/build`)
-5. `ln -sfn storage/app/public public/storage`, `mkdir -p storage/app/public/qrcodes`, `chmod -R 775`
-6. `optimize:clear` → `config:cache` → `route:cache` → `view:cache`
-
-There is deliberately **no `.htaccess` step** (gotcha #3) and no `queue:restart` (`QUEUE_CONNECTION=sync`).
-
-**Server:** Hostinger shared · path `~/domains/icelandbeach.com/public_html/` · PHP 8.3 · `exec()` disabled.
-
-`route:cache` works — all closures in `routes/web.php` are cacheable. Verify before shipping route changes.
-
----
-
-## 🔍 HOW TO USE THIS MAP IN NEW SESSIONS
-
-Start every session with:
-
-```
-Read INSTRUCTIONS.md before touching anything.
+Read PROJECT_MAP.md before touching anything.
 Use graphify query/explain/path to look things up instead of reading files.
 ```
 
+Then open only the files the task actually touches. Do not re-read the tree.
+
+Rebuild the map (Part 2) only when the repo has drifted materially — new subsystem, restructure,
+or the map is contradicted by what you find. A stale map is worse than none, so when you notice a
+fact in `PROJECT_MAP.md` that is now wrong, **fix that line as part of your change**.
+
+---
+
+## PART 2 — MAPPING A REPO FROM SCRATCH
+
+### Step 0 — Install the tool
+
 ```bash
-graphify query "how does X work"          # BFS over the graph, returns nodes + file:line
-graphify explain "BookingWorkflowService" # a node, its degree, and every edge
-graphify path "BookingPaymentController" "BookingConfirmedMail"
+graphify --version 2>/dev/null || echo "NOT INSTALLED"
+uv tool install graphifyy        # or: pipx install graphifyy / pip install graphifyy
+graphify install                 # registers the /graphify skill with your agent
 ```
 
-`explain` needs an unambiguous name — pass the repo-relative path or node id when a label
-appears in several files (`Booking` matches the model, a test, and the React component).
+Notes worth knowing before you start:
+- The install directory may not be on `PATH`. If the binary is missing after a clean install,
+  prepend the tool bin dir for the session rather than debugging the shell profile.
+- `graphify install` writes a **global** agent config file in your home directory, affecting every
+  project. Mention this to the user; don't let it be a surprise.
+- A newly installed skill is not available to the *current* session — it registers for the next one.
+  Use the CLI directly: `graphify update <path>` builds a graph with **no LLM and no API key**.
 
-**Rebuilding the graph — important.** Do **not** run `graphify update .` at the repo root. The repo
-carries ~2,000 committed agent-tooling files in `.claude/`, `.agents/`, `.cursor/` and
-`.github/skills/`; a root build yields 34,466 nodes of which only ~613 are application code, and a
-44 MB `graph.json`. Build against application source only:
+### Step 1 — Measure signal before you build ⚠️
+
+**This is the step everyone skips, and it is the one that decides whether the map is worth having.**
+
+Graphify honours `.gitignore`, so dependency directories (`node_modules`, `vendor`, `.venv`,
+`target`) are skipped automatically. It does **not** know that some *tracked* directories are not
+application code. Modern repos commonly commit thousands of files of agent tooling, generated
+bundles, fixtures, or vendored snapshots:
+
+```
+.claude/  .agents/  .cursor/  .github/skills/  .devcontainer/
+dist/  build/  public/build/  static/  coverage/  docs/_build/
+**/__snapshots__/  **/fixtures/  **/testdata/  vendored/  third_party/
+```
+
+Count before committing to a build:
 
 ```bash
-# stage app source, then build there and copy graphify-out back
-mkdir -p /tmp/gstage/resources
-cp -r app routes database config tests bootstrap /tmp/gstage/
-cp -r resources/js resources/views /tmp/gstage/resources/
-cp composer.json package.json deploy.sh /tmp/gstage/
-cd /tmp/gstage && graphify update .
+git ls-files | wc -l                                    # everything tracked
+git ls-files | grep -cE '\.(php|py|rb|go|rs|java|kt|ts|tsx|js|jsx)$'   # plausible source
+for d in .claude .agents .cursor .github dist build public/build; do
+  printf '%-16s %s\n' "$d" "$(git ls-files "$d" | wc -l)"
+done
+```
+
+If the non-source directories hold a comparable number of files to your source, a root-level build
+will drown the signal. **Do not skip to Step 2 on faith — build, then verify the ratio.**
+
+### Step 2 — Build, then check what you actually got
+
+```bash
+graphify update .
+```
+
+Immediately audit where the nodes came from:
+
+```bash
+python - <<'PY'
+import json, collections
+g = json.load(open('graphify-out/graph.json', encoding='utf-8'))
+c = collections.Counter()
+for n in g['nodes']:
+    f = str(n.get('source_file') or '').replace(chr(92), '/')
+    c[f.split('/')[0] if f else '(none)'] += 1
+total = len(g['nodes'])
+print(f"{total} nodes, {len(g.get('links', []))} edges")
+for k, v in c.most_common(12):
+    print(f'  {v:7d}  {100*v/total:5.1f}%  {k}')
+PY
+```
+
+Judge it on one number: **what fraction of nodes sit under your source directories?**
+
+- **> 60% source** — good, keep it. Go to Step 4.
+- **< 40% source** — the graph is mostly noise. Go to Step 3.
+
+Also sanity-check the artefact sizes. A `graph.json` in the tens of megabytes is a red flag on
+both counts: it will not fit comfortably in git, and it usually means noise.
+
+### Step 3 — Scoped rebuild (when the root build is noisy)
+
+You cannot always fix this with `.gitignore`, because the noisy directories are often *legitimately
+tracked* — deleting or ignoring them is not yours to decide. Build against a staged copy instead:
+
+```bash
+STG=$(mktemp -d)
+# Copy ONLY real application source. Adjust to the stack:
+#   Laravel : app routes database config tests bootstrap resources/js resources/views
+#   Django  : <project> apps manage.py settings tests
+#   Rails   : app lib config db spec
+#   Node/TS : src lib server test
+#   Go      : cmd internal pkg
+#   Python  : src <package> tests
+cp -r <source-dirs> "$STG"/
+cp <manifest files: composer.json package.json pyproject.toml go.mod …> "$STG"/ 2>/dev/null
+
+cd "$STG" && graphify update .
 cp graphify-out/{graph.json,GRAPH_REPORT.md,graph.html,manifest.json} <repo>/graphify-out/
 ```
 
-That yields **1,220 nodes / 2,376 edges / 138 communities** — 97% EXTRACTED, 3% INFERRED.
+Mirror the real directory layout in the staging dir so `source_file` paths stay valid
+repo-relative paths. Re-run the Step 2 audit to confirm the ratio improved.
+
+**Record the exact staging command in `PROJECT_MAP.md`.** Otherwise the next person runs
+`graphify update .` at the root and reintroduces the noise.
+
+### Step 4 — Interrogate the graph
+
+```bash
+graphify query "what are the main entry points"
+graphify query "what are the main data models and how do they relate"
+graphify query "what are the payment/auth/background-job flows"   # whatever this repo does
+graphify query "what are the most connected god nodes"
+graphify explain "<CoreClass>"
+graphify path "<EntryPoint>" "<SideEffect>"
+```
+
+Know what these actually return:
+- `query` is a **BFS locator**, not a prose answer. It gives ranked nodes with `file:line`.
+  Treat it as "where do I look", then read those files.
+- `explain` gives a node's degree and every inbound/outbound edge. **This is the most valuable
+  command** — high degree identifies the chokepoints that matter.
+- `explain` fails on ambiguous labels (a name appearing in a model, a test, and a component).
+  Pass the repo-relative path or the node id it offers.
+- `query` truncates to a token budget; raise it with `--budget` or narrow the question.
+
+Start from the `Community Hubs` list in `GRAPH_REPORT.md` — those are the highest-degree nodes and
+they tell you what the codebase is organised around, which is often not what the directory names suggest.
+
+### Step 5 — Verify against the running app ⚠️
+
+**The graph shows structure, not truth.** It cannot tell you that a config value is wrong, that a
+production schema differs from the migrations, or that a documented step no longer exists. Nor can
+any pre-existing notes, which are frequently stale.
+
+Confirm the load-bearing facts by running the app, not by reading about it:
+
+```bash
+# schema as it really is — not as the migrations claim
+<orm/db introspection command>
+# routes as registered — not as the route file reads
+<route listing command>
+# roles/permissions/config as seeded
+<framework console one-liner>
+# what the deploy script really does
+grep -nE '^(#|[a-z])' <deploy script>
+# env var NAMES only, never values
+grep -oE '^[A-Z_]+=' .env | tr -d '='
+```
+
+Every claim you cannot verify should be marked as unverified in the map, or left out. **Never copy
+an assertion from an older document into the new map without checking it** — inherited errors are
+the main way these files rot.
+
+### Step 6 — Write `PROJECT_MAP.md`
+
+Use this structure. Drop sections that do not apply; do not invent ones that do.
+
+```markdown
+# PROJECT MAP — <name>
+> Last verified: <date> (commit <sha>). Facts checked against the running app.
+
+## OVERVIEW           what it does, who uses it, distinct product lines, tech-stack table
+## DIRECTORY STRUCTURE annotated tree — one line per dir saying what lives there and why
+## DATA MODEL          every table/collection: key columns, relationships, notes
+## CORE FLOWS          numbered step-by-step for each critical path, entry point → side effect
+## ROUTES / API        method, path, handler, name, middleware
+## EXTERNAL SERVICES   per integration: env var NAMES, entry points, callbacks, units/formats
+## ROLES & PERMISSIONS who can do what, and where it is enforced
+## BACKGROUND WORK     jobs, schedules, queues, webhooks
+## GOTCHAS ⚠️          the highest-value section — see below
+## DEPLOYMENT          pipeline, script steps, host constraints
+## HOW TO USE THIS MAP query/explain/path examples + the exact scoped-rebuild command
+## GRAPH SUMMARY       node/edge counts, community hubs, the chokepoint classes
+```
+
+**Rules that keep it useful:**
+
+- **Size is the point.** Keep it under ~400 lines. **Never paste the graph report into it** — a
+  400 KB map costs more to read than the files it replaces, which defeats the entire exercise.
+  Link to `graphify-out/GRAPH_REPORT.md` instead.
+- **State facts, not impressions.** "`X` has degree 16 and is imported by A, B, C" beats "X is important".
+- **Point at `file:line`** so the reader can jump straight there.
+- **Write the gotchas as instructions, with the reason.** "Never remove `$timestamps = false` on
+  this model — production's table has no such column and every write 500s" is useful. "Careful with
+  timestamps" is not. Each gotcha should carry: what to do, what breaks otherwise, and where.
+- **Record the non-obvious only.** Anything an agent can read off the code in seconds does not
+  belong. Environment/production divergence, deliberate duplication, legacy no-go zones, and
+  units/encodings *do*.
+
+**Harvest gotchas from history, not just from the code:**
+
+```bash
+git log --oneline -60 | grep -iE 'fix|hotfix|revert|crash|broke|500'
+```
+
+Bug-fix commits are where the sharp edges are recorded. A fix that had to be made twice is a
+gotcha that will be needed a third time.
+
+### Step 7 — Commit
+
+```bash
+cat >> .gitignore <<'EOF'
+
+# Graphify: graph.json + GRAPH_REPORT.md are the committed map. The rest is
+# large, regenerable, or machine-local — see INSTRUCTIONS.md to rebuild.
+graphify-out/graph.html
+graphify-out/cache/
+graphify-out/manifest.json
+graphify-out/.graphify_*
+EOF
+
+git add INSTRUCTIONS.md PROJECT_MAP.md .gitignore \
+        graphify-out/graph.json graphify-out/GRAPH_REPORT.md
+git commit -m "docs: add codebase map"
+```
+
+Commit `graph.json` **only if it is a few MB at most**, so a fresh clone can query without
+rebuilding. If the scoped build is still large, gitignore it too and rely on
+`GRAPH_REPORT.md` plus the documented rebuild command.
+
+### Step 8 — Prove the map works
+
+Ask questions whose answers you can check:
+
+```bash
+graphify query "which files write to <core table>"
+graphify query "what happens step by step when <core action> fails"
+graphify query "if I added a new <integration>, what would I touch"
+```
+
+The map passes if a reader can answer those from `PROJECT_MAP.md` plus the returned `file:line`
+locations, without opening the tree. If a question needs a file the map never mentions, that gap
+belongs in the map.
 
 ---
 
-## 📊 GRAPH SUMMARY
+## THE FIVE FAILURE MODES
 
-Full detail in **`graphify-out/GRAPH_REPORT.md`** (15 KB). Interactive view: open
-`graphify-out/graph.html` in a browser (gitignored — regenerate locally).
+Ranked by how much time they cost when missed.
 
-**Community hubs** (highest-degree nodes, i.e. what the codebase is actually organised around):
-`Ticket` · `Booking` · `BookingResource` · `BookingWorkflowService` · `Room` · `User` · `Sale` ·
-`Invoice` · `Referral` · `Product` · `Setting` · `NairaAmountFormatter` · `app.jsx` ·
-`AdminPanelProvider` · `RolePolicy`
-
-`BookingWorkflowService` has **degree 16** — imported by `BookingResource`, `PendingBookingsWidget`,
-`ConfirmedBookingsWidget`, `BookingPaymentController`, `PaystackWebhookController` and its test,
-exposing `confirmBooking()`, `rejectBooking()`, `markBookingPaid()`, `confirm()`, `reject()`.
-It is the single chokepoint for every booking state change — **change behaviour there, not at call sites.**
+1. **Building at the repo root without checking the signal ratio.** Tracked non-source directories
+   can outnumber application code by an order of magnitude, producing a graph that is mostly
+   tooling and a `graph.json` too large to commit. Always audit (Step 2).
+2. **Pasting the graph report into the map.** Turns a token-saving artefact into a token-burning
+   one. Link, never inline.
+3. **Copying claims from an existing doc or template.** Stale assertions are worse than silence
+   because they are trusted. Verify every fact against the running app (Step 5).
+4. **Expecting prose from `query`.** It is a locator. Use it to find, then read.
+5. **Writing structure the code already makes obvious, and omitting what it doesn't.** The value is
+   concentrated in environment divergence, deliberate duplication, units, and no-go zones.
 
 ---
-*Generated with Graphify 0.9.53. Update with the scoped rebuild above, then revise this file.*
+
+## MAINTENANCE
+
+- After a material change, rerun the **scoped** build recorded in `PROJECT_MAP.md`, then revise the
+  affected sections and the `Last verified` line.
+- Treat a wrong line in the map like a failing test: fix it in the same change that revealed it.
+- If `PROJECT_MAP.md` and the code disagree, **the code wins** — then correct the map.
+
+---
+*Portable playbook. Copy into any repo; it names no project by design.*
