@@ -1,1059 +1,514 @@
-Here's the prompt:
+Let me read the README first to understand how Graphify works in your setup.Now I understand Graphify fully. Here's the prompt:
 
 ---
 
-## Claude Code Prompt — In-House Receipt Email + Success Page After Payment
+## Claude Code Prompt — Map Project with Graphify + Generate INSTRUCTIONS.md
 
 ```
-You are working inside a Laravel 12 + Filament 3 + ReactJS project
-for Iceland Beach Resort. Production: icelandbeach.com
-Brand: #002F61 navy, white.
-Paystack email stays — we are ADDING an Iceland Beach receipt on top.
+You are working inside a project that needs to be fully mapped
+using Graphify so future Claude sessions can understand the entire
+codebase without reading files from scratch, saving tokens.
 
-=== STEP 0: MAP BEFORE TOUCHING ANYTHING ===
+=== STEP 0: INSTALL GRAPHIFY IF NOT ALREADY INSTALLED ===
 
-1. `cat app/Http/Controllers/BookingPaymentController.php`
-2. `cat app/Mail/BookingCustomerConfirmationMail.php`
-3. `cat resources/views/mail/booking-customer-confirmation.blade.php 2>/dev/null || find resources/views/mail -name "*.blade.php" | sort`
-4. `cat app/Models/Booking.php`
-5. `cat app/Models/Room.php`
-6. `cat routes/web.php | grep -i "success\|receipt\|payment\|callback"`
-7. `find resources/js/Pages -name "*.jsx" | sort`
-8. `cat .env | grep -E "MAIL_|APP_URL"`
-9. `find public/images -name "logo*" 2>/dev/null`
-10. `php artisan tinker --execute="echo implode(', ', \Schema::getColumnListing('bookings'));"`
-
-Read ALL outputs fully before writing anything.
-
-=== TASK 1: Create a Branded Success Page ===
-
-REQUIREMENT: After successful Paystack payment, instead of
-redirecting to the homepage, redirect to a branded success
-page that:
-- Shows booking confirmation details
-- Shows a downloadable PDF receipt button
-- Tells the user an email has been sent
-- Looks premium and on-brand
-
-STEP 1 — Add a success route in routes/web.php:
-```php
-Route::get('/booking/success/{booking}', function (\App\Models\Booking $booking) {
-    // Only show to the person who just paid — verify payment status
-    if ($booking->payment_status !== 'paid') {
-        return redirect('/rooms');
-    }
-    return inertia('BookingSuccess', ['booking' => $booking->load('room')]);
-})->name('booking.success');
-```
-
-If the project does NOT use Inertia, use a blade view instead:
-```php
-Route::get('/booking/success/{booking}', function (\App\Models\Booking $booking) {
-    if ($booking->payment_status !== 'paid') {
-        return redirect('/rooms');
-    }
-    return view('booking.success', ['booking' => $booking->load('room')]);
-})->name('booking.success');
-```
-
-Check if the project uses Inertia:
+Check if graphify is installed:
 ```bash
-grep -r "Inertia\|inertia" routes/web.php app/Http/Controllers \
-    --include="*.php" | head -5
-```
-Use whichever approach matches.
-
-STEP 2 — Update BookingPaymentController::callback()
-to redirect to the success page instead of homepage:
-
-Find this line:
-```php
-return redirect('/')->with(
-    'success',
-    'Payment received. Your booking request has been sent to our team.',
-);
+graphify --version 2>/dev/null || echo "NOT INSTALLED"
 ```
 
-Replace with:
-```php
-return redirect()->route('booking.success', $booking->id);
+If NOT INSTALLED:
+```bash
+uv tool install graphifyy
 ```
 
-STEP 3 — If using Inertia, create
-resources/js/Pages/BookingSuccess.jsx:
-
-```jsx
-import React from 'react';
-import { Head } from '@inertiajs/react';
-
-export default function BookingSuccess({ booking }) {
-    const room = booking.room;
-    const checkIn = new Date(booking.check_in).toLocaleDateString('en-GB', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
-    const checkOut = new Date(booking.check_out).toLocaleDateString('en-GB', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
-    const nights = Math.ceil(
-        (new Date(booking.check_out) - new Date(booking.check_in))
-        / (1000 * 60 * 60 * 24)
-    );
-    const ref = String(booking.id).padStart(6, '0');
-
-    return (
-        <>
-            <Head title="Booking Confirmed — Iceland Beach Resort" />
-
-            <div style={{
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '40px 16px',
-                fontFamily: "'Helvetica Neue', Arial, sans-serif",
-            }}>
-                <div style={{
-                    maxWidth: '640px',
-                    width: '100%',
-                }}>
-
-                    {/* Header */}
-                    <div style={{
-                        background: 'linear-gradient(135deg, #002F61, #0ea5e9)',
-                        borderRadius: '20px 20px 0 0',
-                        padding: '32px 40px',
-                        textAlign: 'center',
-                    }}>
-                        <img
-                            src="/images/iceland-logo.png"
-                            alt="Iceland Beach Resort"
-                            style={{ height: '48px', marginBottom: '16px' }}
-                            onError={e => e.target.style.display = 'none'}
-                        />
-                        <p style={{
-                            margin: 0,
-                            color: 'rgba(255,255,255,0.85)',
-                            fontSize: '13px',
-                            letterSpacing: '3px',
-                            textTransform: 'uppercase',
-                        }}>
-                            Booking Confirmed
-                        </p>
-                    </div>
-
-                    {/* Card */}
-                    <div style={{
-                        background: '#ffffff',
-                        borderRadius: '0 0 20px 20px',
-                        boxShadow: '0 20px 60px rgba(0,47,97,0.15)',
-                        padding: '40px',
-                    }}>
-
-                        {/* Success icon */}
-                        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                            <div style={{
-                                width: '72px',
-                                height: '72px',
-                                background: 'linear-gradient(135deg, #002F61, #0ea5e9)',
-                                borderRadius: '50%',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '32px',
-                                marginBottom: '16px',
-                            }}>
-                                ✓
-                            </div>
-                            <h1 style={{
-                                margin: '0 0 8px',
-                                fontSize: '26px',
-                                fontWeight: '800',
-                                color: '#0c4a6e',
-                            }}>
-                                Payment Successful!
-                            </h1>
-                            <p style={{
-                                margin: 0,
-                                fontSize: '15px',
-                                color: '#64748b',
-                                lineHeight: '1.6',
-                            }}>
-                                Your booking is confirmed. A receipt has been
-                                sent to <strong>{booking.guest_email}</strong>
-                            </p>
-                        </div>
-
-                        {/* Email sent notice */}
-                        <div style={{
-                            background: '#f0fdf4',
-                            border: '1px solid #bbf7d0',
-                            borderRadius: '12px',
-                            padding: '14px 18px',
-                            marginBottom: '24px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                        }}>
-                            <span style={{ fontSize: '20px' }}>📧</span>
-                            <p style={{
-                                margin: 0,
-                                fontSize: '14px',
-                                color: '#166534',
-                                lineHeight: '1.5',
-                            }}>
-                                A booking receipt from Iceland Beach Resort
-                                has been sent to your email. Please check
-                                your inbox (and spam folder just in case).
-                            </p>
-                        </div>
-
-                        {/* Booking details */}
-                        <div style={{
-                            background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
-                            borderRadius: '14px',
-                            padding: '24px',
-                            border: '1px solid #bae6fd',
-                            marginBottom: '28px',
-                        }}>
-                            <p style={{
-                                margin: '0 0 16px',
-                                fontSize: '11px',
-                                color: '#0369a1',
-                                textTransform: 'uppercase',
-                                letterSpacing: '2px',
-                                fontWeight: '700',
-                            }}>
-                                Booking Details
-                            </p>
-
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: '16px',
-                            }}>
-                                {[
-                                    { label: 'Reference', value: `#${ref}` },
-                                    { label: 'Room', value: room?.room_name ?? '—' },
-                                    { label: 'Check-in', value: checkIn },
-                                    { label: 'Check-out', value: checkOut },
-                                    { label: 'Nights', value: nights },
-                                    { label: 'Status', value: '✓ Confirmed' },
-                                ].map(({ label, value }) => (
-                                    <div key={label}>
-                                        <p style={{
-                                            margin: '0 0 2px',
-                                            fontSize: '11px',
-                                            color: '#94a3b8',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '1px',
-                                        }}>
-                                            {label}
-                                        </p>
-                                        <p style={{
-                                            margin: 0,
-                                            fontSize: '15px',
-                                            fontWeight: '700',
-                                            color: '#0c4a6e',
-                                        }}>
-                                            {value}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Action buttons */}
-                        <div style={{
-                            display: 'flex',
-                            gap: '12px',
-                            flexWrap: 'wrap',
-                        }}>
-                            
-                                href={`/booking/receipt/${booking.id}/download`}
-                                style={{
-                                    flex: 1,
-                                    minWidth: '160px',
-                                    display: 'block',
-                                    background: 'linear-gradient(135deg, #002F61, #0369a1)',
-                                    color: '#fff',
-                                    textDecoration: 'none',
-                                    fontWeight: '700',
-                                    fontSize: '15px',
-                                    padding: '14px 20px',
-                                    borderRadius: '50px',
-                                    textAlign: 'center',
-                                }}
-                            >
-                                ⬇️ Download Receipt
-                            </a>
-                            
-                                href="/rooms"
-                                style={{
-                                    flex: 1,
-                                    minWidth: '160px',
-                                    display: 'block',
-                                    background: 'white',
-                                    color: '#002F61',
-                                    border: '2px solid #002F61',
-                                    textDecoration: 'none',
-                                    fontWeight: '700',
-                                    fontSize: '15px',
-                                    padding: '14px 20px',
-                                    borderRadius: '50px',
-                                    textAlign: 'center',
-                                }}
-                            >
-                                🌊 Back to Rooms
-                            </a>
-                        </div>
-
-                    </div>
-
-                    {/* Footer */}
-                    <p style={{
-                        textAlign: 'center',
-                        marginTop: '24px',
-                        fontSize: '13px',
-                        color: '#94a3b8',
-                    }}>
-                        Questions? Email us at{' '}
-                        <a href="mailto:booking@icelandbeach.com"
-                           style={{ color: '#002F61' }}>
-                            booking@icelandbeach.com
-                        </a>
-                    </p>
-                </div>
-            </div>
-        </>
-    );
-}
+If uv is not available:
+```bash
+pipx install graphifyy
 ```
 
-IF the project uses Blade instead of Inertia,
-create resources/views/booking/success.blade.php
-with the same content converted to Blade syntax.
-
-=== TASK 2: Downloadable PDF Receipt ===
-
-STEP 1 — Add PDF receipt route in routes/web.php:
-```php
-Route::get('/booking/receipt/{booking}/download',
-    [\App\Http\Controllers\BookingReceiptController::class, 'download']
-)->name('booking.receipt.download');
+If pipx is not available:
+```bash
+pip install graphifyy
 ```
 
-STEP 2 — Create app/Http/Controllers/BookingReceiptController.php:
-
-```php
-<?php
-
-namespace App\Http\Controllers;
-
-use App\Models\Booking;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Response;
-
-class BookingReceiptController extends Controller
-{
-    public function download(Booking $booking): Response
-    {
-        // Only allow download for paid bookings
-        if ($booking->payment_status !== 'paid') {
-            abort(403, 'Receipt not available.');
-        }
-
-        $logoPath   = public_path('images/iceland-logo.png');
-        $logoBase64 = file_exists($logoPath)
-            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
-            : '';
-
-        $pdf = Pdf::loadView('booking.receipt-pdf', [
-            'booking'    => $booking->load('room'),
-            'logoBase64' => $logoBase64,
-            'ref'        => str_pad($booking->id, 6, '0', STR_PAD_LEFT),
-            'nights'     => max(1, \Carbon\Carbon::parse($booking->check_in)
-                                ->diffInDays(\Carbon\Carbon::parse($booking->check_out))),
-        ])->setPaper('a4', 'portrait');
-
-        return $pdf->download('iceland-beach-receipt-' . $booking->id . '.pdf');
-    }
-}
+Verify installation:
+```bash
+graphify --version
 ```
 
-STEP 3 — Create resources/views/booking/receipt-pdf.blade.php:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        background: #ffffff;
-        color: #1e293b;
-        font-size: 14px;
-    }
-
-    .header {
-        background: #002F61;
-        padding: 32px 40px;
-        text-align: center;
-    }
-    .header img {
-        height: 50px;
-        margin-bottom: 8px;
-    }
-    .header p {
-        color: rgba(255,255,255,0.8);
-        font-size: 11px;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        margin: 0;
-    }
-
-    .body { padding: 40px; }
-
-    .title {
-        text-align: center;
-        margin-bottom: 32px;
-    }
-    .title h1 {
-        font-size: 28px;
-        font-weight: 800;
-        color: #002F61;
-        margin-bottom: 4px;
-    }
-    .title p {
-        font-size: 13px;
-        color: #64748b;
-    }
-
-    .ref-box {
-        background: #002F61;
-        color: white;
-        border-radius: 10px;
-        padding: 16px 24px;
-        margin-bottom: 28px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .ref-box .label {
-        font-size: 11px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        opacity: 0.75;
-    }
-    .ref-box .value {
-        font-size: 22px;
-        font-weight: 800;
-    }
-    .ref-box .date {
-        font-size: 12px;
-        opacity: 0.75;
-        text-align: right;
-    }
-
-    .section {
-        margin-bottom: 24px;
-    }
-    .section-title {
-        font-size: 11px;
-        font-weight: 700;
-        color: #0369a1;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        margin-bottom: 12px;
-        padding-bottom: 6px;
-        border-bottom: 2px solid #e0f2fe;
-    }
-
-    table.details {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    table.details td {
-        padding: 10px 0;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: top;
-    }
-    table.details td:first-child {
-        color: #64748b;
-        font-size: 12px;
-        width: 40%;
-    }
-    table.details td:last-child {
-        font-weight: 600;
-        color: #0c4a6e;
-        text-align: right;
-    }
-
-    .total-row td {
-        border-bottom: none !important;
-        padding-top: 16px !important;
-        font-size: 16px;
-    }
-    .total-row td:last-child {
-        color: #002F61 !important;
-        font-size: 20px;
-        font-weight: 800 !important;
-    }
-
-    .status-badge {
-        display: inline-block;
-        background: #dcfce7;
-        color: #166534;
-        font-size: 12px;
-        font-weight: 700;
-        padding: 4px 14px;
-        border-radius: 20px;
-    }
-
-    .notice {
-        background: #f0f9ff;
-        border: 1px solid #bae6fd;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-top: 24px;
-        font-size: 13px;
-        color: #0369a1;
-        line-height: 1.6;
-    }
-
-    .footer {
-        background: #f8fafc;
-        border-top: 2px solid #e2e8f0;
-        padding: 20px 40px;
-        text-align: center;
-        font-size: 11px;
-        color: #94a3b8;
-        margin-top: 40px;
-    }
-    .footer strong { color: #002F61; }
-</style>
-</head>
-<body>
-
-<!-- Header -->
-<div class="header">
-    @if($logoBase64)
-        <img src="{{ $logoBase64 }}" alt="Iceland Beach Resort">
-    @endif
-    <p>Official Booking Receipt</p>
-</div>
-
-<div class="body">
-
-    <!-- Title -->
-    <div class="title">
-        <h1>Booking Receipt</h1>
-        <p>Thank you for choosing Iceland Beach Resort</p>
-    </div>
-
-    <!-- Reference box -->
-    <div class="ref-box">
-        <div>
-            <div class="label">Booking Reference</div>
-            <div class="value">#{{ $ref }}</div>
-        </div>
-        <div class="date">
-            Issued: {{ now()->format('M j, Y') }}<br>
-            <span class="status-badge" style="margin-top:4px;display:inline-block;">
-                ✓ Paid
-            </span>
-        </div>
-    </div>
-
-    <!-- Guest details -->
-    <div class="section">
-        <div class="section-title">Guest Information</div>
-        <table class="details">
-            <tr>
-                <td>Full Name</td>
-                <td>{{ $booking->guest_name }}</td>
-            </tr>
-            <tr>
-                <td>Email</td>
-                <td>{{ $booking->guest_email }}</td>
-            </tr>
-            @if($booking->guest_phone)
-            <tr>
-                <td>Phone</td>
-                <td>{{ $booking->guest_phone }}</td>
-            </tr>
-            @endif
-        </table>
-    </div>
-
-    <!-- Booking details -->
-    <div class="section">
-        <div class="section-title">Booking Details</div>
-        <table class="details">
-            <tr>
-                <td>Room</td>
-                <td>{{ $booking->room->room_name ?? $booking->room_type ?? '—' }}</td>
-            </tr>
-            <tr>
-                <td>Check-in</td>
-                <td>
-                    {{ \Carbon\Carbon::parse($booking->check_in)->format('l, M j, Y') }}
-                    <br>
-                    <small style="color:#94a3b8;">From 2:00 PM</small>
-                </td>
-            </tr>
-            <tr>
-                <td>Check-out</td>
-                <td>
-                    {{ \Carbon\Carbon::parse($booking->check_out)->format('l, M j, Y') }}
-                    <br>
-                    <small style="color:#94a3b8;">By 12:00 PM</small>
-                </td>
-            </tr>
-            <tr>
-                <td>Duration</td>
-                <td>{{ $nights }} {{ $nights === 1 ? 'night' : 'nights' }}</td>
-            </tr>
-            <tr>
-                <td>Payment Method</td>
-                <td>Paystack (Card)</td>
-            </tr>
-            <tr>
-                <td>Payment Status</td>
-                <td><span class="status-badge">✓ Confirmed</span></td>
-            </tr>
-            @if($booking->payment_reference)
-            <tr>
-                <td>Payment Reference</td>
-                <td style="font-size:12px;font-family:monospace;">
-                    {{ $booking->payment_reference }}
-                </td>
-            </tr>
-            @endif
-            <tr class="total-row">
-                <td>Total Paid</td>
-                <td>
-                    ₦{{ number_format(($booking->room->room_price ?? 0) * $nights, 2) }}
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Notice -->
-    <div class="notice">
-        📋 <strong>Important:</strong> Please present this receipt at
-        check-in. Check-in time is 2:00 PM and check-out is 12:00 PM.
-        For questions or changes, contact us at
-        <strong>booking@icelandbeach.com</strong>
-    </div>
-
-</div>
-
-<!-- Footer -->
-<div class="footer">
-    <strong>Iceland Beach Resort</strong> ·
-    icelandbeach.com ·
-    booking@icelandbeach.com<br>
-    This is an official receipt. Keep it for your records.
-</div>
-
-</body>
-</html>
+Register graphify with Claude Code:
+```bash
+graphify install
 ```
 
-=== TASK 3: Premium Receipt Email from Iceland Beach ===
+=== STEP 1: MAP THE ENTIRE PROJECT ===
 
-Update the BookingCustomerConfirmationMail blade view
-to be premium and branded. Read the current view from Step 0.
-
-Replace resources/views/mail/booking-customer-confirmation.blade.php
-with this fully branded version:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Booking Confirmed — Iceland Beach Resort</title>
-</head>
-<body style="margin:0;padding:0;background:#f0f7ff;
-             font-family:'Helvetica Neue',Arial,sans-serif;">
-
-<!-- Top confetti strip -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-       style="background:linear-gradient(135deg,#002F61,#0ea5e9);">
-  <tr>
-    <td style="padding:10px 0;text-align:center;font-size:22px;
-               letter-spacing:5px;">
-      🎉 🌊 🎊 🌴 🎉 🌊 🎊 🌴 🎉
-    </td>
-  </tr>
-</table>
-
-<!-- Header with logo -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-       style="background:linear-gradient(135deg,#002F61,#0369a1);">
-  <tr>
-    <td style="padding:28px 40px 24px;text-align:center;">
-      @if(!empty($logoBase64))
-        <img src="{{ $logoBase64 }}"
-             alt="Iceland Beach Resort"
-             width="160"
-             style="display:block;margin:0 auto 14px;">
-      @endif
-      <p style="margin:0;color:rgba(255,255,255,0.8);font-size:12px;
-                letter-spacing:3px;text-transform:uppercase;">
-        Booking Confirmation
-      </p>
-    </td>
-  </tr>
-</table>
-
-<!-- Main card -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-       style="background:#f0f7ff;">
-<tr><td align="center" style="padding:0 16px 40px;">
-<table width="600" cellpadding="0" cellspacing="0" border="0"
-       style="max-width:600px;width:100%;background:#ffffff;
-              border-radius:0 0 20px 20px;
-              box-shadow:0 20px 60px rgba(0,47,97,0.12);">
-
-  <!-- Hero -->
-  <tr>
-    <td style="padding:40px 40px 0;text-align:center;">
-      <div style="width:70px;height:70px;
-                  background:linear-gradient(135deg,#002F61,#0ea5e9);
-                  border-radius:50%;display:inline-flex;
-                  align-items:center;justify-content:center;
-                  font-size:32px;margin-bottom:16px;">
-        🥂
-      </div>
-      <h1 style="margin:0 0 8px;font-size:26px;font-weight:800;
-                 color:#0c4a6e;">
-        You're booked, {{ $room->customer_name ?? 'Valued Guest' }}!
-      </h1>
-      <p style="margin:0;font-size:15px;color:#64748b;line-height:1.6;">
-        Your reservation at
-        <strong style="color:#002F61;">Iceland Beach Resort</strong>
-        is confirmed and paid.
-      </p>
-    </td>
-  </tr>
-
-  <!-- Booking details card -->
-  <tr>
-    <td style="padding:28px 40px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0"
-             style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);
-                    border-radius:14px;border:1px solid #bae6fd;">
-        <tr>
-          <td style="padding:20px 24px 8px;">
-            <p style="margin:0;font-size:11px;font-weight:700;
-                      color:#0369a1;text-transform:uppercase;
-                      letter-spacing:2px;">
-              Booking Details
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:8px 24px 20px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-
-              <tr>
-                <td width="50%" style="padding:8px 0;vertical-align:top;">
-                  <p style="margin:0 0 3px;font-size:11px;color:#94a3b8;
-                            text-transform:uppercase;letter-spacing:1px;">
-                    Room
-                  </p>
-                  <p style="margin:0;font-size:15px;font-weight:700;
-                            color:#0c4a6e;">
-                    {{ $room->room_name ?? '—' }}
-                  </p>
-                </td>
-                <td width="50%" style="padding:8px 0;vertical-align:top;">
-                  <p style="margin:0 0 3px;font-size:11px;color:#94a3b8;
-                            text-transform:uppercase;letter-spacing:1px;">
-                    Status
-                  </p>
-                  <p style="margin:0;">
-                    <span style="background:#dcfce7;color:#166534;
-                                 font-size:12px;font-weight:700;
-                                 padding:3px 12px;border-radius:20px;">
-                      ✓ Confirmed & Paid
-                    </span>
-                  </p>
-                </td>
-              </tr>
-
-              <tr>
-                <td width="50%" style="padding:8px 0;vertical-align:top;">
-                  <p style="margin:0 0 3px;font-size:11px;color:#94a3b8;
-                            text-transform:uppercase;letter-spacing:1px;">
-                    Check-in
-                  </p>
-                  <p style="margin:0;font-size:15px;font-weight:700;
-                            color:#0c4a6e;">
-                    {{ \Carbon\Carbon::parse($room->start_date)->format('D, M j Y') }}
-                  </p>
-                  <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">
-                    From 2:00 PM
-                  </p>
-                </td>
-                <td width="50%" style="padding:8px 0;vertical-align:top;">
-                  <p style="margin:0 0 3px;font-size:11px;color:#94a3b8;
-                            text-transform:uppercase;letter-spacing:1px;">
-                    Check-out
-                  </p>
-                  <p style="margin:0;font-size:15px;font-weight:700;
-                            color:#0c4a6e;">
-                    {{ \Carbon\Carbon::parse($room->end_date)->format('D, M j Y') }}
-                  </p>
-                  <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">
-                    By 12:00 PM
-                  </p>
-                </td>
-              </tr>
-
-              @if(!empty($phone))
-              <tr>
-                <td width="50%" style="padding:8px 0;vertical-align:top;">
-                  <p style="margin:0 0 3px;font-size:11px;color:#94a3b8;
-                            text-transform:uppercase;letter-spacing:1px;">
-                    Phone
-                  </p>
-                  <p style="margin:0;font-size:15px;font-weight:700;
-                            color:#0c4a6e;">
-                    {{ $phone }}
-                  </p>
-                </td>
-                @if(!empty($guests))
-                <td width="50%" style="padding:8px 0;vertical-align:top;">
-                  <p style="margin:0 0 3px;font-size:11px;color:#94a3b8;
-                            text-transform:uppercase;letter-spacing:1px;">
-                    Guests
-                  </p>
-                  <p style="margin:0;font-size:15px;font-weight:700;
-                            color:#0c4a6e;">
-                    {{ $guests }}
-                  </p>
-                </td>
-                @endif
-              </tr>
-              @endif
-
-            </table>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-
-  <!-- What to expect -->
-  <tr>
-    <td style="padding:0 40px 28px;">
-      <h2 style="margin:0 0 16px;font-size:17px;font-weight:700;
-                 color:#0c4a6e;">
-        What to expect 🌴
-      </h2>
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td width="36" style="vertical-align:top;padding-top:2px;
-                                font-size:20px;">🏖️</td>
-          <td style="padding:0 0 12px 10px;font-size:14px;color:#475569;
-                     line-height:1.6;">
-            <strong style="color:#0c4a6e;">Private beach access</strong>
-            — wake up steps from the water every morning of your stay.
-          </td>
-        </tr>
-        <tr>
-          <td width="36" style="vertical-align:top;padding-top:2px;
-                                font-size:20px;">🎵</td>
-          <td style="padding:0 0 12px 10px;font-size:14px;color:#475569;
-                     line-height:1.6;">
-            <strong style="color:#0c4a6e;">Live events</strong>
-            — check our events page closer to your arrival for the
-            latest lineup.
-          </td>
-        </tr>
-        <tr>
-          <td width="36" style="vertical-align:top;padding-top:2px;
-                                font-size:20px;">📋</td>
-          <td style="padding:0 0 0 10px;font-size:14px;color:#475569;
-                     line-height:1.6;">
-            <strong style="color:#0c4a6e;">Check-in</strong>
-            — show this email at the front desk.
-            Check-in starts at 2:00 PM.
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-
-  <!-- CTA buttons -->
-  <tr>
-    <td style="padding:0 40px 36px;text-align:center;">
-      <table cellpadding="0" cellspacing="0" border="0"
-             style="margin:0 auto;">
-        <tr>
-          <td style="padding-right:8px;">
-            <a href="{{ url('/booking/receipt/' . ($booking_id ?? '') . '/download') }}"
-               style="display:inline-block;background:linear-gradient(135deg,#002F61,#0369a1);
-                      color:#fff;text-decoration:none;font-size:14px;
-                      font-weight:700;padding:13px 24px;border-radius:50px;">
-              ⬇️ Download Receipt
-            </a>
-          </td>
-          <td style="padding-left:8px;">
-            <a href="{{ url('/') }}"
-               style="display:inline-block;background:white;
-                      color:#002F61;border:2px solid #002F61;
-                      text-decoration:none;font-size:14px;
-                      font-weight:700;padding:11px 24px;border-radius:50px;">
-              🌊 Visit Website
-            </a>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-
-  <!-- Divider -->
-  <tr>
-    <td style="padding:0 40px;">
-      <hr style="border:none;border-top:1px solid #e2e8f0;margin:0;">
-    </td>
-  </tr>
-
-  <!-- Footer -->
-  <tr>
-    <td style="padding:24px 40px;text-align:center;">
-      <p style="margin:0 0 4px;font-size:13px;color:#94a3b8;">
-        Questions? Reply to this email or contact us.
-      </p>
-      <p style="margin:0;font-size:12px;color:#cbd5e1;">
-        © {{ date('Y') }} Iceland Beach Resort · All rights reserved<br>
-        <a href="{{ url('/') }}"
-           style="color:#0ea5e9;text-decoration:none;">
-          icelandbeach.com
-        </a>
-      </p>
-    </td>
-  </tr>
-
-  <!-- Bottom strip -->
-  <tr>
-    <td style="background:linear-gradient(135deg,#002F61,#0ea5e9);
-               padding:10px 0;text-align:center;font-size:20px;
-               letter-spacing:4px;border-radius:0 0 20px 20px;">
-      🌊 🌴 🌊 🌴 🌊 🌴 🌊
-    </td>
-  </tr>
-
-</table>
-</td></tr>
-</table>
-
-</body>
-</html>
+Run graphify on the project root:
+```bash
+/graphify .
 ```
 
-STEP 2 — Update BookingCustomerConfirmationMail to pass
-`$booking_id` to the view so the download link works:
+This generates three files in graphify-out/:
+- graph.html   — interactive visual graph (open in browser)
+- GRAPH_REPORT.md — key concepts, communities, surprising connections
+- graph.json   — full queryable graph
 
-In app/Mail/BookingCustomerConfirmationMail.php,
-find the content() method and add booking_id to with():
+Wait for it to complete fully before proceeding.
 
-The mailable receives a Room $room object.
-The room object was built with $preview->id = $room->id
-in BookingPaymentController.
+=== STEP 2: QUERY THE GRAPH TO UNDERSTAND THE PROJECT ===
 
-Add a new constructor parameter for booking_id:
-```php
-public function __construct(
-    public Room $room,
-    public ?string $phone = null,
-    public ?int $guests = null,
-    public ?int $bookingId = null,  // ADD THIS
-) {}
-```
-
-Pass it in the with() array:
-```php
-with: [
-    'room'       => $this->room,
-    'phone'      => $this->phone,
-    'guests'     => $this->guests,
-    'booking_id' => $this->bookingId, // ADD THIS
-    'logoBase64' => $this->getLogoBase64(),
-],
-```
-
-Add a helper method to the mailable:
-```php
-private function getLogoBase64(): string
-{
-    $logoPath = public_path('images/iceland-logo.png');
-    if (!file_exists($logoPath)) return '';
-    return 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
-}
-```
-
-STEP 3 — Update all places that call
-BookingCustomerConfirmationMail to pass the booking ID.
-
-In app/Http/Controllers/BookingPaymentController.php,
-find where the mail is sent and pass the booking ID:
-```php
-new \App\Mail\BookingCustomerConfirmationMail(
-    $preview,
-    $booking->guest_phone,
-    null,
-    $booking->id,  // ADD booking ID
-)
-```
-
-In app/Services/ReservationService.php sendBookingEmails(),
-the room object doesn't have a booking ID easily available.
-Leave bookingId as null there — the download link only
-matters for paid bookings, not the free flow.
-
-=== TASK 4: Commit Everything ===
+After the graph is built, run these queries to extract
+deep understanding of the project structure:
 
 ```bash
-git add app/Http/Controllers/BookingPaymentController.php
-git add app/Http/Controllers/BookingReceiptController.php
-git add app/Mail/BookingCustomerConfirmationMail.php
-git add resources/views/mail/booking-customer-confirmation.blade.php
-git add resources/views/booking/success.blade.php
-git add resources/views/booking/receipt-pdf.blade.php
-git add resources/js/Pages/BookingSuccess.jsx
-git add routes/web.php
-git commit -m "feat: branded success page, downloadable PDF receipt, premium confirmation email"
+graphify query "what are the main entry points of this application"
+```
+
+```bash
+graphify query "what are the most important files and what do they do"
+```
+
+```bash
+graphify query "what are the main data models and how do they relate"
+```
+
+```bash
+graphify query "what are the payment flows in this project"
+```
+
+```bash
+graphify query "what are all the API routes and controllers"
+```
+
+```bash
+graphify query "what frontend pages exist and what do they render"
+```
+
+```bash
+graphify query "what are the main services and what do they handle"
+```
+
+```bash
+graphify query "what does the authentication and roles system look like"
+```
+
+```bash
+graphify query "what are the database tables and their relationships"
+```
+
+```bash
+graphify query "what third party integrations exist in this project"
+```
+
+```bash
+graphify query "what are the most connected god nodes in this codebase"
+```
+
+Store all query outputs — you need them for INSTRUCTIONS.md.
+
+=== STEP 3: TRACE KEY PATHS ===
+
+Run path queries to understand how core flows connect:
+
+```bash
+graphify path "routes" "controllers"
+```
+
+```bash
+graphify path "models" "database"
+```
+
+```bash
+graphify path "payment" "email"
+```
+
+```bash
+graphify path "booking" "notification"
+```
+
+```bash
+graphify path "frontend" "api"
+```
+
+=== STEP 4: EXPLAIN KEY NODES ===
+
+Run explain on the most important concepts found in Step 2:
+
+```bash
+graphify explain "Booking"
+```
+
+```bash
+graphify explain "Room"
+```
+
+```bash
+graphify explain "PaymentController"
+```
+
+```bash
+graphify explain "ReservationService"
+```
+
+```bash
+graphify explain "BookingWorkflowService"
+```
+
+For each major class/file found in the graph report,
+run graphify explain on it.
+
+=== STEP 5: CREATE INSTRUCTIONS.md ===
+
+Using ALL information gathered from:
+- graphify-out/GRAPH_REPORT.md
+- All query outputs from Step 2
+- All path outputs from Step 3
+- All explain outputs from Step 4
+
+Create a comprehensive INSTRUCTIONS.md file at the project root.
+
+This file is the single source of truth for any new Claude session.
+It must be so complete that a new session can understand the entire
+project without reading a single source file.
+
+Write INSTRUCTIONS.md with this exact structure:
+
+---
+
+```markdown
+# PROJECT INSTRUCTIONS
+## [Project Name] — Complete Codebase Map
+> Generated by Graphify. Last updated: [date]
+> Read this file at the start of every new session before touching any code.
+
+---
+
+## 🗺️ PROJECT OVERVIEW
+
+[2-3 paragraph description of what this project does,
+its tech stack, and its purpose. Be specific.]
+
+**Tech Stack:**
+- Backend: [e.g. Laravel 12, PHP 8.3]
+- Frontend: [e.g. ReactJS, Inertia, or Blade]
+- Admin: [e.g. Filament 3]
+- Database: [e.g. MySQL]
+- Payment: [e.g. Paystack, TGI Titan]
+- Hosting: [e.g. Hostinger shared, cPanel]
+- CI/CD: [e.g. GitHub Actions → SSH deploy]
+
+---
+
+## 📁 DIRECTORY STRUCTURE
+
+[Full annotated directory tree — every folder explained]
+
+```
+project-root/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/        ← [what controllers live here]
+│   │   │   └── Api/            ← [what API controllers do]
+│   │   └── Middleware/         ← [what middleware does]
+│   ├── Models/                 ← [list every model and what it represents]
+│   ├── Mail/                   ← [list every mailable and when it fires]
+│   ├── Services/               ← [list every service and what it handles]
+│   ├── Events/                 ← [list every event]
+│   ├── Listeners/              ← [list every listener]
+│   ├── Filament/
+│   │   ├── Resources/          ← [list every Filament resource]
+│   │   ├── Widgets/            ← [list every widget — note which are $isDiscovered=false]
+│   │   └── Pages/              ← [list every custom Filament page]
+│   └── Providers/              ← [list providers and what they register]
+│
+├── resources/
+│   ├── js/
+│   │   └── Pages/              ← [list every JSX page and its route]
+│   ├── views/
+│   │   ├── mail/               ← [list every email blade view]
+│   │   └── filament/           ← [list custom Filament blade views]
+│   └── css/                    ← [note brand colors: #002F61 navy, white]
+│
+├── database/
+│   ├── migrations/             ← [list key migrations and what they add]
+│   └── seeders/                ← [list seeders]
+│
+├── routes/
+│   ├── web.php                 ← [list ALL routes with method, URI, controller]
+│   └── api.php                 ← [list all API routes]
+│
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          ← [explain CI/CD flow]
+│
+├── deploy.sh                   ← [explain what deploy script does]
+├── .env                        ← [list all key env vars — no values]
+└── graphify-out/               ← [graphify outputs live here]
+```
+
+---
+
+## 🗄️ DATABASE TABLES
+
+[List every table with columns and relationships]
+
+| Table | Key Columns | Relationships | Notes |
+|-------|------------|---------------|-------|
+| bookings | id, room_id, guest_name, guest_email, guest_phone, check_in, check_out, status, payment_status, payment_reference, email_opt_in | belongs to room | status: pending/confirmed/rejected/cancelled/pending_payment/payment_failed |
+| room | id, room_name, room_category, room_price, room_image, main_image, gallery_images, is_booked, customer_name, email, start_date, end_date | has many bookings | NO timestamps column |
+| [every other table] | | | |
+
+---
+
+## 🔀 CORE FLOWS
+
+### Booking Flow (Payment OFF)
+[Step by step what happens when a user books a room]
+
+### Booking Flow (Payment ON — Paystack)
+[Step by step from form submit to confirmation email]
+
+### Ticket Purchase Flow (Paystack)
+[Step by step from ticket.php to QR code email]
+
+### Ticket Purchase Flow (TGI Titan)
+[Step by step from ticket.php to QR code]
+
+### Admin Approve/Reject Flow
+[What happens when staff approves or rejects]
+
+---
+
+## 🛣️ ROUTES REFERENCE
+
+| Method | URI | Controller | Action |
+|--------|-----|------------|--------|
+[List every route from web.php and api routes]
+
+---
+
+## 💳 PAYMENT GATEWAYS
+
+### Paystack (Rooms)
+- Keys: PAYSTACK_SECRET_KEY, PAYSTACK_PUBLIC_KEY in .env
+- Service: app/Services/PaystackService.php
+- Controller: app/Http/Controllers/BookingPaymentController.php
+- Callback: GET /booking/payment/callback
+- Webhook: POST /webhooks/paystack/booking
+- Flow: [describe]
+
+### Paystack (Tickets)
+- Same keys
+- Controller: laravel-app/app/Http/Controllers/PaymentController.php
+- Callback: POST /verify-payment
+- Webhook: POST /webhooks/paystack/tickets
+- Flow: [describe]
+
+### TGI Titan (Tickets only)
+- Keys: TITAN_MERCHANT_ID, TITAN_API_KEY, TITAN_SECRET in .env
+- Controller: laravel-app/app/Http/Controllers/PaymentController.php
+- Callback: GET /titan/callback (CSRF exempt)
+- Amount: sent in NAIRA not kobo
+- Flow: [describe]
+
+---
+
+## 👥 ROLES & PERMISSIONS
+
+[List every role and what they can access]
+
+| Role | Can Access | Cannot Access |
+|------|-----------|---------------|
+| super_admin | Everything | — |
+| campaign_manager | Email campaigns, subscribers | Bookings, rooms, referrals |
+| referral | Own sales dashboard only | Everything else |
+| [other roles] | | |
+
+---
+
+## 📧 EMAIL SYSTEM
+
+| Mailable | Trigger | Recipient | View |
+|----------|---------|-----------|------|
+| BookingCustomerConfirmationMail | Booking created / payment confirmed | Guest | mail/booking-customer-confirmation |
+| BookingDeclinedMail | Staff rejects booking | Guest | mail/booking-declined |
+| BookingNotificationMail | Any booking | Admin team | [view] |
+| CampaignMail | Manual send / scheduled | Subscribers | emails/campaign |
+| TicketReceiptMail | Ticket paid | Guest | mail/ticket-receipt |
+
+SMTP config: booking@icelandbeach.com via Hostinger SMTP
+All mailables use base64 inline logo (localhost URLs break in Gmail)
+
+---
+
+## ⚠️ KNOWN GOTCHAS — READ BEFORE TOUCHING ANYTHING
+
+[This section is critical — list every sharp edge]
+
+1. **room table has NO timestamps** — always set $model->timestamps = false
+   before any ->save() on a Room model or it crashes with
+   "Column not found: room.updated_at"
+
+2. **Rogue widgets** — SalesOverview and PaymentMethodBreakdown are
+   Project Z widgets accidentally in this codebase. Both have
+   $isDiscovered = false. Never remove this flag.
+
+3. **.htaccess is not in git** — deploy.sh restores it on every deploy.
+   The file rewrites public_html/ → public_html/public/
+   Never commit .htaccess. Never remove the restore step from deploy.sh.
+
+4. **APP_NAME must be quoted** — APP_NAME="Iceland Beach Resort"
+   Unquoted causes dotenv parse failure and kills all artisan commands.
+
+5. **ticket.php is legacy PHP** — DO NOT convert to Laravel.
+   DO NOT touch PaymentController ticket methods.
+   TGI callback is GET not POST — CSRF excluded per route not in $except array.
+
+6. **Paystack amount in kobo, TGI amount in naira** — never mix these up.
+
+7. **storage:link is disabled** — exec() disabled on Hostinger.
+   Use: ln -sf storage/app/public public/storage
+
+8. **Availability uses scopeBlocking()** — only CONFIRMED bookings
+   block a room. pending/rejected/expired never block.
+
+9. **ReservationService writes to room table** — legacy pattern kept
+   for compatibility. Always timestamps = false before save.
+
+10. [Add any other gotchas found during graphify analysis]
+
+---
+
+## 🚀 DEPLOYMENT
+
+**CI/CD:** Push to main → GitHub Actions → SSH → git reset --hard → bash deploy.sh
+
+**deploy.sh does:**
+1. Restores .htaccess
+2. composer install --no-dev
+3. php artisan migrate --force
+4. php artisan optimize:clear + config:cache + route:cache + event:cache
+5. Storage symlink via ln -sf
+6. mkdir qrcodes, chmod
+7. php artisan queue:restart
+
+**Server:** Hostinger shared, us-phx-web940
+**Path:** ~/domains/icelandbeach.com/public_html/
+**PHP:** 8.3.x
+**exec() disabled** — use ln -sf not php artisan storage:link
+
+---
+
+## 🔍 HOW TO USE THIS MAP IN NEW SESSIONS
+
+At the start of every new Claude Code session, paste this:
+
+```
+Read INSTRUCTIONS.md and graphify-out/GRAPH_REPORT.md before
+doing anything. Do not read source files until you have read
+both of these. Use graphify query "<question>" to look up
+anything specific before opening files.
+```
+
+To look something up without reading files:
+```bash
+graphify query "how does X work"
+graphify explain "ClassName"
+graphify path "ConceptA" "ConceptB"
+```
+
+To update the map after major changes:
+```bash
+graphify update .
+```
+
+---
+
+## 📊 GRAPHIFY GRAPH SUMMARY
+
+[Paste the full contents of graphify-out/GRAPH_REPORT.md here]
+
+---
+*This file was generated using Graphify knowledge graph mapping.*
+*Update with: graphify update . then regenerate this file.*
+```
+
+---
+
+=== STEP 6: VERIFY THE MAP IS USEFUL ===
+
+After writing INSTRUCTIONS.md, test it by asking:
+
+```bash
+graphify query "if I needed to add a new payment gateway, what files would I touch"
+```
+
+```bash
+graphify query "what happens step by step when a booking is rejected"
+```
+
+```bash
+graphify query "which files write to the room table"
+```
+
+If graphify answers these correctly from graph.json alone
+without you reading any source file — the map is complete.
+
+=== STEP 7: COMMIT THE MAP ===
+
+```bash
+git add graphify-out/GRAPH_REPORT.md
+git add graphify-out/graph.json
+git add INSTRUCTIONS.md
+git add .gitignore
+```
+
+Add to .gitignore (graph.html is large and browser-only):
+```bash
+echo "graphify-out/graph.html" >> .gitignore
+echo "graphify-out/cache/" >> .gitignore
+```
+
+```bash
+git commit -m "docs: add graphify project map and INSTRUCTIONS.md"
 git push origin main
 ```
 
+=== HOW TO USE FOR A NEW PROJECT ===
+
+For any new project, run this single command at the project root:
+
+```
+/graphify .
+```
+
+Then ask Claude Code:
+```
+Read graphify-out/GRAPH_REPORT.md and create INSTRUCTIONS.md
+following the same structure as the Iceland Beach INSTRUCTIONS.md
+```
+
+Every new session starts with:
+```
+Read INSTRUCTIONS.md before touching anything.
+Use graphify query to look things up instead of reading files.
+```
+
 === FINAL CHECKS ===
-1. `php artisan optimize:clear && php artisan route:cache`
-2. `npm run build`
-3. Submit a room booking with payment ON
-4. Complete Paystack test payment
-5. Confirm redirect to /booking/success/{id} — NOT homepage
-6. Confirm success page shows booking details
-7. Confirm "A receipt has been sent to your email" message shows
-8. Check email inbox — Iceland Beach branded email arrives
-9. Click "Download Receipt" — PDF downloads with resort branding
-10. Confirm PDF shows: guest name, room, dates, amount, reference
-11. DO NOT touch: ticket.php, TGI flow, referral system,
-    email campaign system, rogue widget fixes
+1. `ls graphify-out/` — confirm graph.html, GRAPH_REPORT.md, graph.json exist
+2. `graphify query "what is this project"` — confirm it answers correctly
+3. `cat INSTRUCTIONS.md | wc -l` — should be 200+ lines
+4. Open graphify-out/graph.html in browser — confirm interactive graph loads
+5. Commit everything to git
 ```
 
 ---
 
-**Two things before running:**
+**How this saves you tokens in every new session:**
 
-1. **DomPDF is already installed** — `barryvdh/laravel-dompdf` was in your `composer.json` from the RESULT.md documentation. The PDF download works out of the box.
+Instead of Claude reading 30+ files to understand context, you start every session with:
+```
+Read INSTRUCTIONS.md and use graphify query for anything specific.
+```
 
-2. **Inertia vs Blade** — the prompt checks which one your project uses for the success page. If rooms.jsx uses Inertia, the success page will be a JSX component. If it's a standalone React setup without Inertia, it'll be a Blade view. Claude Code detects this automatically in Step 0.
+That's one file read + graph queries instead of reading controllers, models, routes, widgets, services one by one. For a project like Iceland Beach that's probably 80% fewer tokens per session on context-gathering alone.
