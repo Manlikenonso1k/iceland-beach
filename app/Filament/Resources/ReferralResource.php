@@ -4,10 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReferralResource\Pages;
 use App\Models\Referral;
-use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -21,6 +19,15 @@ use Illuminate\Support\Facades\Hash;
 
 class ReferralResource extends Resource
 {
+
+    /**
+     * Staff-only. Referral partners use their own guard and panel; this makes
+     * that explicit per resource rather than relying on panel access alone.
+     */
+    public static function canAccess(): bool
+    {
+        return auth()->guard('web')->check();
+    }
     protected static ?string $model = Referral::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
@@ -29,77 +36,33 @@ class ReferralResource extends Resource
 
     protected static ?string $navigationLabel = 'Referrals';
 
-    /**
-     * Referral partners see only their own row; staff see everything.
-     *
-     * Scoping here (rather than in the page) means it applies to every query the
-     * resource makes — list, view, edit and any direct record lookup — so a
-     * partner cannot reach another partner's record by guessing a URL.
-     */
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-        $user = Filament::auth()->user();
-
-        if ($user instanceof User && $user->isReferralPartner()) {
-            $query->where('user_id', $user->id);
-        }
-
-        return $query;
-    }
-
-    /** Only staff may create, edit or delete referral accounts. */
-    public static function canCreate(): bool
-    {
-        return ! static::currentUserIsPartner();
-    }
-
-    public static function canEdit($record): bool
-    {
-        return ! static::currentUserIsPartner();
-    }
-
-    public static function canDelete($record): bool
-    {
-        return ! static::currentUserIsPartner();
-    }
-
-    private static function currentUserIsPartner(): bool
-    {
-        $user = Filament::auth()->user();
-
-        return $user instanceof User && $user->isReferralPartner();
-    }
-
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Select::make('user_id')
-                ->label('Referral account')
-                ->relationship('user', 'name')
-                ->searchable()
-                ->preload()
+            TextInput::make('name')
+                ->label('Partner name')
                 ->required()
-                ->helperText('Pick an existing user, or create one below.')
-                ->createOptionForm([
-                    TextInput::make('name')->required()->maxLength(255),
-                    TextInput::make('email')->email()->required()->unique('users', 'email'),
-                    TextInput::make('password')
-                        ->password()
-                        ->required()
-                        ->minLength(8)
-                        ->helperText('The partner signs in to /admin with this.'),
-                ])
-                ->createOptionUsing(function (array $data): int {
-                    $user = User::create([
-                        'name' => $data['name'],
-                        'email' => $data['email'],
-                        'password' => $data['password'], // 'hashed' cast handles it
-                    ]);
-                    $user->assignRole('Referral');
+                ->maxLength(255),
 
-                    return $user->id;
-                }),
+            TextInput::make('email')
+                ->label('Sign-in email')
+                ->email()
+                ->required()
+                ->unique(ignoreRecord: true)
+                ->helperText('The partner signs in at /referral with this.'),
+
+            TextInput::make('phone')
+                ->tel()
+                ->maxLength(50),
+
+            TextInput::make('password')
+                ->password()
+                ->revealable()
+                ->minLength(8)
+                // Required on create; blank on edit keeps the existing password.
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->dehydrated(fn (?string $state): bool => filled($state))
+                ->helperText('Leave blank when editing to keep the current password.'),
 
             TextInput::make('code')
                 ->label('Referral code')
@@ -146,8 +109,8 @@ class ReferralResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('code')->label('Code')->searchable()->copyable()->weight('bold'),
-                TextColumn::make('user.name')->label('Partner')->searchable(),
-                TextColumn::make('user.email')->label('Email')->searchable()->toggleable(),
+                TextColumn::make('name')->label('Partner')->searchable(),
+                TextColumn::make('email')->label('Email')->searchable()->toggleable(),
                 IconColumn::make('is_active')->label('Active')->boolean(),
                 TextColumn::make('sales_count')
                     ->label('Successful sales')

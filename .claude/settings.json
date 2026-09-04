@@ -9,7 +9,13 @@
       "Bash(curl -s http://127.0.0.1:8001/)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://127.0.0.1:8001/)",
       "Bash(curl -s -o /dev/null -w \"og-image: HTTP %{http_code}  %{content_type}  %{size_download} bytes\\\\n\" http://127.0.0.1:8001/images/og-image.jpg)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(cd ~ && echo \"=== ~/.claude dirs ===\" && ls -d .claude/skills .claude/plugins 2>/dev/null; echo && echo \"=== skills installed at user level ===\" && ls .claude/skills 2>/dev/null | head -50; echo && echo \"=== count ===\" && ls .claude/skills 2>/dev/null | wc -l)",
+      "Read(//c/Users/Tenstrings Music Ins/**)",
+      "Bash(cd ~ && echo \"=== plugin config ===\" && cat .claude/plugins/config.json 2>/dev/null | head -60; echo; echo \"=== marketplaces ===\" && ls .claude/plugins/marketplaces 2>/dev/null; echo; echo \"=== repos ===\" && ls .claude/plugins/repos 2>/dev/null | head -20)",
+      "Bash(cd ~ && echo \"=== project-level skills ===\" && ls \"Documents/Iceland/.claude/skills\" 2>/dev/null | head -80; echo \"count: $\\(ls 'Documents/Iceland/.claude/skills' 2>/dev/null | wc -l\\)\"; echo; echo \"=== marketplace contents ===\" && ls .claude/plugins/marketplaces/claude-plugins-official 2>/dev/null | head -20)",
+      "Bash(TGT=\"/c/Users/Tenstrings Music Ins/Downloads/utopia-world-travis-scott.full-page.Woblo/utopia-world-travis-scott\"; echo \"=== libs referenced ===\" && grep -ohiE \"gsap|three\\\\.?js|scrolltrigger|lenis|locomotive|swiper|lottie|spline|barba|framer|anime\\\\.js|tailwind\" \"$TGT/index.html\" \"$TGT/styles.css\" 2>/dev/null | sort -u | tr '\\\\n' ' '; echo; echo; echo \"=== size / structure ===\" && du -sh \"$TGT\" && ls \"$TGT/utopia-rebuild\" 2>/dev/null | head)",
+      "Read(//c/Users/Tenstrings Music Ins/Downloads/utopia-world-travis-scott.full-page.Woblo/utopia-world-travis-scott/**)"
     ]
   }
 }

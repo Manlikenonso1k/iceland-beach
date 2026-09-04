@@ -12,6 +12,15 @@ use Filament\Tables\Table;
 
 class UserResource extends Resource
 {
+
+    /**
+     * Staff-only. Referral partners use their own guard and panel; this makes
+     * that explicit per resource rather than relying on panel access alone.
+     */
+    public static function canAccess(): bool
+    {
+        return auth()->guard('web')->check();
+    }
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';

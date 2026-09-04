@@ -2,14 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-class Referral extends Model
+class Referral extends Authenticatable
 {
+    use Notifiable;
+
+    protected $table = 'referrals';
+
     protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'password',
+        // Legacy: partners no longer authenticate through a linked User.
         'user_id',
         'code',
         'commission_rate',
@@ -19,7 +29,10 @@ class Referral extends Model
         'last_login_at',
     ];
 
+    protected $hidden = ['password', 'remember_token'];
+
     protected $casts = [
+        'password' => 'hashed',
         'is_active' => 'boolean',
         'commission_rate' => 'decimal:2',
         'last_login_at' => 'datetime',
@@ -84,6 +97,17 @@ class Referral extends Model
     public function totalAmount(): int
     {
         return (int) $this->sales()->where('status', 'successful')->sum('amount');
+    }
+
+    /** Commission earned in naira, for display. Storage is kobo. */
+    public function totalEarnedNaira(): float
+    {
+        return $this->totalCommission() / 100;
+    }
+
+    public function totalTicketsSold(): int
+    {
+        return $this->successfulSalesCount();
     }
 
     /** Commission actually earned, in kobo. Summed from the per-sale snapshots. */

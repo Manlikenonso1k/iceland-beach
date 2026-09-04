@@ -42,6 +42,13 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Referral partners authenticate against their own table and only ever
+        // reach the /referral panel — never /admin.
+        'referral' => [
+            'driver' => 'session',
+            'provider' => 'referrals',
+        ],
     ],
 
     /*
@@ -65,6 +72,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'referrals' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Referral::class,
         ],
 
         // 'users' => [

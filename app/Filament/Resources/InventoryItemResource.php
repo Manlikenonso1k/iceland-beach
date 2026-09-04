@@ -15,6 +15,15 @@ use Filament\Tables\Table;
 
 class InventoryItemResource extends Resource
 {
+
+    /**
+     * Staff-only. Referral partners use their own guard and panel; this makes
+     * that explicit per resource rather than relying on panel access alone.
+     */
+    public static function canAccess(): bool
+    {
+        return auth()->guard('web')->check();
+    }
     protected static ?string $model = InventoryItem::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cube';

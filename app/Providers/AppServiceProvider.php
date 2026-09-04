@@ -37,10 +37,14 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Event::listen(Login::class, function (Login $event): void {
-            // Referral partners get a last-seen stamp for the admin list.
-            \App\Models\Referral::query()
-                ->where('user_id', $event->user->getAuthIdentifier())
-                ->update(['last_login_at' => now()]);
+            // Staff logins only. Referral partners authenticate on their own
+            // guard against the Referral model, and ActivityLogService::log()
+            // types its $user as ?User — passing a Referral threw a TypeError
+            // that aborted the login with no visible error on the form.
+            // Their last-seen stamp lives in ReferralPanelProvider::boot().
+            if (! $event->user instanceof \App\Models\User) {
+                return;
+            }
 
             ActivityLogService::log(
                 event: 'login',

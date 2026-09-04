@@ -1,514 +1,785 @@
-Let me read the README first to understand how Graphify works in your setup.Now I understand Graphify fully. Here's the prompt:
+You are working inside a Laravel 12 + Filament 3 project for
+Iceland Beach Resort. Production: icelandbeach.com
+Brand: #002F61 navy, white.
 
----
+PROBLEM: Referral users log into /admin and can see bookings,
+rooms, tickets, and all staff resources. This is a privacy breach.
+FIX: Create a completely separate Filament panel at /referral
+that referral users log into. They never touch /admin again.
 
-## Claude Code Prompt — Map Project with Graphify + Generate INSTRUCTIONS.md
+=== STEP 0: READ BEFORE TOUCHING ANYTHING ===
 
+1. `cat app/Providers/Filament/AdminPanelProvider.php`
+2. `cat app/Filament/Resources/ReferralResource.php`
+3. `cat app/Models/Referral.php 2>/dev/null || find app/Models -name "Referral*"`
+4. `cat app/Models/User.php | head -50`
+5. `find app/Filament -name "*.php" | sort`
+6. `php artisan tinker --execute="
+    echo implode(', ', \Schema::getColumnListing('referrals')) . '\n';
+    echo implode(', ', \Schema::getColumnListing('referral_ticket_sales')) . '\n';
+"`
+7. `cat composer.json | grep filament`
+8. `php artisan tinker --execute="
+    \App\Models\Referral::first()?->toArray() ?? print('no referrals yet');
+"`
+9. `grep -rn "referral\|Referral" app/Models --include="*.php" -l`
+10. `cat routes/web.php | grep -i "referral"`
+
+Read ALL outputs before writing anything.
+
+=== TASK 1: Ensure Referral Model is a Proper Authenticatable ===
+
+Read app/Models/Referral.php from Step 0.
+
+It must extend Authenticatable not Model:
+```php
+<?php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class Referral extends Authenticatable
+{
+    use Notifiable;
+
+    protected $table = 'referrals';
+
+    protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'password',
+        'code',
+        'commission_rate',
+        'is_active',
+        'created_by',
+        'last_login_at',
+    ];
+
+    protected $hidden = ['password', 'remember_token'];
+
+    protected $casts = [
+        'password'         => 'hashed',
+        'is_active'        => 'boolean',
+        'commission_rate'  => 'decimal:2',
+        'last_login_at'    => 'datetime',
+    ];
+
+    public function sales()
+    {
+        return $this->hasMany(ReferralTicketSale::class);
+    }
+
+    public function totalEarned(): float
+    {
+        return (float) $this->sales()->sum('commission_amount');
+    }
+
+    public function totalTicketsSold(): int
+    {
+        return $this->sales()->count();
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+}
 ```
-You are working inside a project that needs to be fully mapped
-using Graphify so future Claude sessions can understand the entire
-codebase without reading files from scratch, saving tokens.
 
-=== STEP 0: INSTALL GRAPHIFY IF NOT ALREADY INSTALLED ===
+If the model already extends Authenticatable — leave it,
+only add missing parts.
 
-Check if graphify is installed:
+=== TASK 2: Add Referral Guard to config/auth.php ===
+
+Open config/auth.php.
+Add a new guard and provider for referrals:
+
+```php
+'guards' => [
+    'web' => [
+        'driver'   => 'session',
+        'provider' => 'users',
+    ],
+    'referral' => [              // ADD THIS
+        'driver'   => 'session',
+        'provider' => 'referrals',
+    ],
+],
+
+'providers' => [
+    'users' => [
+        'driver' => 'eloquent',
+        'model'  => App\Models\User::class,
+    ],
+    'referrals' => [             // ADD THIS
+        'driver' => 'eloquent',
+        'model'  => App\Models\Referral::class,
+    ],
+],
+
+'passwords' => [
+    'users' => [
+        'provider' => 'users',
+        'table'    => 'password_reset_tokens',
+        'expire'   => 60,
+        'throttle' => 60,
+    ],
+    'referrals' => [             // ADD THIS
+        'provider' => 'referrals',
+        'table'    => 'password_reset_tokens',
+        'expire'   => 60,
+        'throttle' => 60,
+    ],
+],
+```
+
+=== TASK 3: Create the Referral Filament Panel ===
+
+Run:
 ```bash
-graphify --version 2>/dev/null || echo "NOT INSTALLED"
+php artisan make:filament-panel referral
 ```
 
-If NOT INSTALLED:
-```bash
-uv tool install graphifyy
+This creates app/Providers/Filament/ReferralPanelProvider.php.
+
+Replace the generated file with:
+
+```php
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Pages;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+class ReferralPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->id('referral')
+            ->path('referral')               // logs in at /referral
+            ->authModel(\App\Models\Referral::class)
+            ->authGuard('referral')
+            ->login()
+            ->brandName('Iceland Beach — Partner Portal')
+            ->brandLogo(asset('images/iceland-logo.png'))
+            ->brandLogoHeight('2.25rem')
+            ->favicon(asset('favicon.ico'))
+            ->colors([
+                'primary' => [
+                    50  => '#e6edf7',
+                    100 => '#ccdaee',
+                    200 => '#99b5de',
+                    300 => '#6690cd',
+                    400 => '#336bbc',
+                    500 => '#002F61',
+                    600 => '#002655',
+                    700 => '#001e44',
+                    800 => '#001533',
+                    900 => '#000d22',
+                    950 => '#000611',
+                ],
+            ])
+            ->discoverResources(
+                in: app_path('Filament/Referral/Resources'),
+                for: 'App\\Filament\\Referral\\Resources'
+            )
+            ->discoverPages(
+                in: app_path('Filament/Referral/Pages'),
+                for: 'App\\Filament\\Referral\\Pages'
+            )
+            ->discoverWidgets(
+                in: app_path('Filament/Referral/Widgets'),
+                for: 'App\\Filament\\Referral\\Widgets'
+            )
+            ->pages([
+                Pages\Dashboard::class,
+            ])
+            ->widgets([
+                \App\Filament\Referral\Widgets\ReferralStatsWidget::class,
+                \App\Filament\Referral\Widgets\ReferralSalesChartWidget::class,
+            ])
+            ->middleware([
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                VerifyCsrfToken::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
+            ])
+            ->authMiddleware([
+                Authenticate::class,
+            ]);
+    }
+}
 ```
 
-If uv is not available:
-```bash
-pipx install graphifyy
+Register the new provider in config/app.php providers array
+OR in bootstrap/providers.php (Laravel 11+):
+
+For Laravel 11+ (bootstrap/providers.php):
+```php
+return [
+    App\Providers\AppServiceProvider::class,
+    App\Providers\Filament\AdminPanelProvider::class,
+    App\Providers\Filament\ReferralPanelProvider::class, // ADD THIS
+];
 ```
 
-If pipx is not available:
-```bash
-pip install graphifyy
-```
-
-Verify installation:
-```bash
-graphify --version
-```
-
-Register graphify with Claude Code:
-```bash
-graphify install
-```
-
-=== STEP 1: MAP THE ENTIRE PROJECT ===
-
-Run graphify on the project root:
-```bash
-/graphify .
-```
-
-This generates three files in graphify-out/:
-- graph.html   — interactive visual graph (open in browser)
-- GRAPH_REPORT.md — key concepts, communities, surprising connections
-- graph.json   — full queryable graph
-
-Wait for it to complete fully before proceeding.
-
-=== STEP 2: QUERY THE GRAPH TO UNDERSTAND THE PROJECT ===
-
-After the graph is built, run these queries to extract
-deep understanding of the project structure:
-
-```bash
-graphify query "what are the main entry points of this application"
-```
-
-```bash
-graphify query "what are the most important files and what do they do"
-```
-
-```bash
-graphify query "what are the main data models and how do they relate"
-```
-
-```bash
-graphify query "what are the payment flows in this project"
-```
-
-```bash
-graphify query "what are all the API routes and controllers"
-```
-
-```bash
-graphify query "what frontend pages exist and what do they render"
-```
-
-```bash
-graphify query "what are the main services and what do they handle"
-```
-
-```bash
-graphify query "what does the authentication and roles system look like"
-```
-
-```bash
-graphify query "what are the database tables and their relationships"
-```
-
-```bash
-graphify query "what third party integrations exist in this project"
-```
-
-```bash
-graphify query "what are the most connected god nodes in this codebase"
-```
-
-Store all query outputs — you need them for INSTRUCTIONS.md.
-
-=== STEP 3: TRACE KEY PATHS ===
-
-Run path queries to understand how core flows connect:
-
-```bash
-graphify path "routes" "controllers"
-```
-
-```bash
-graphify path "models" "database"
-```
-
-```bash
-graphify path "payment" "email"
-```
-
-```bash
-graphify path "booking" "notification"
-```
-
-```bash
-graphify path "frontend" "api"
-```
-
-=== STEP 4: EXPLAIN KEY NODES ===
-
-Run explain on the most important concepts found in Step 2:
-
-```bash
-graphify explain "Booking"
-```
-
-```bash
-graphify explain "Room"
-```
-
-```bash
-graphify explain "PaymentController"
-```
-
-```bash
-graphify explain "ReservationService"
-```
-
-```bash
-graphify explain "BookingWorkflowService"
-```
-
-For each major class/file found in the graph report,
-run graphify explain on it.
-
-=== STEP 5: CREATE INSTRUCTIONS.md ===
-
-Using ALL information gathered from:
-- graphify-out/GRAPH_REPORT.md
-- All query outputs from Step 2
-- All path outputs from Step 3
-- All explain outputs from Step 4
-
-Create a comprehensive INSTRUCTIONS.md file at the project root.
-
-This file is the single source of truth for any new Claude session.
-It must be so complete that a new session can understand the entire
-project without reading a single source file.
-
-Write INSTRUCTIONS.md with this exact structure:
-
----
-
-```markdown
-# PROJECT INSTRUCTIONS
-## [Project Name] — Complete Codebase Map
-> Generated by Graphify. Last updated: [date]
-> Read this file at the start of every new session before touching any code.
-
----
-
-## 🗺️ PROJECT OVERVIEW
-
-[2-3 paragraph description of what this project does,
-its tech stack, and its purpose. Be specific.]
-
-**Tech Stack:**
-- Backend: [e.g. Laravel 12, PHP 8.3]
-- Frontend: [e.g. ReactJS, Inertia, or Blade]
-- Admin: [e.g. Filament 3]
-- Database: [e.g. MySQL]
-- Payment: [e.g. Paystack, TGI Titan]
-- Hosting: [e.g. Hostinger shared, cPanel]
-- CI/CD: [e.g. GitHub Actions → SSH deploy]
-
----
-
-## 📁 DIRECTORY STRUCTURE
-
-[Full annotated directory tree — every folder explained]
-
-```
-project-root/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/        ← [what controllers live here]
-│   │   │   └── Api/            ← [what API controllers do]
-│   │   └── Middleware/         ← [what middleware does]
-│   ├── Models/                 ← [list every model and what it represents]
-│   ├── Mail/                   ← [list every mailable and when it fires]
-│   ├── Services/               ← [list every service and what it handles]
-│   ├── Events/                 ← [list every event]
-│   ├── Listeners/              ← [list every listener]
-│   ├── Filament/
-│   │   ├── Resources/          ← [list every Filament resource]
-│   │   ├── Widgets/            ← [list every widget — note which are $isDiscovered=false]
-│   │   └── Pages/              ← [list every custom Filament page]
-│   └── Providers/              ← [list providers and what they register]
-│
-├── resources/
-│   ├── js/
-│   │   └── Pages/              ← [list every JSX page and its route]
-│   ├── views/
-│   │   ├── mail/               ← [list every email blade view]
-│   │   └── filament/           ← [list custom Filament blade views]
-│   └── css/                    ← [note brand colors: #002F61 navy, white]
-│
-├── database/
-│   ├── migrations/             ← [list key migrations and what they add]
-│   └── seeders/                ← [list seeders]
-│
-├── routes/
-│   ├── web.php                 ← [list ALL routes with method, URI, controller]
-│   └── api.php                 ← [list all API routes]
-│
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          ← [explain CI/CD flow]
-│
-├── deploy.sh                   ← [explain what deploy script does]
-├── .env                        ← [list all key env vars — no values]
-└── graphify-out/               ← [graphify outputs live here]
-```
-
----
-
-## 🗄️ DATABASE TABLES
-
-[List every table with columns and relationships]
-
-| Table | Key Columns | Relationships | Notes |
-|-------|------------|---------------|-------|
-| bookings | id, room_id, guest_name, guest_email, guest_phone, check_in, check_out, status, payment_status, payment_reference, email_opt_in | belongs to room | status: pending/confirmed/rejected/cancelled/pending_payment/payment_failed |
-| room | id, room_name, room_category, room_price, room_image, main_image, gallery_images, is_booked, customer_name, email, start_date, end_date | has many bookings | NO timestamps column |
-| [every other table] | | | |
-
----
-
-## 🔀 CORE FLOWS
-
-### Booking Flow (Payment OFF)
-[Step by step what happens when a user books a room]
-
-### Booking Flow (Payment ON — Paystack)
-[Step by step from form submit to confirmation email]
-
-### Ticket Purchase Flow (Paystack)
-[Step by step from ticket.php to QR code email]
-
-### Ticket Purchase Flow (TGI Titan)
-[Step by step from ticket.php to QR code]
-
-### Admin Approve/Reject Flow
-[What happens when staff approves or rejects]
-
----
-
-## 🛣️ ROUTES REFERENCE
-
-| Method | URI | Controller | Action |
-|--------|-----|------------|--------|
-[List every route from web.php and api routes]
-
----
-
-## 💳 PAYMENT GATEWAYS
-
-### Paystack (Rooms)
-- Keys: PAYSTACK_SECRET_KEY, PAYSTACK_PUBLIC_KEY in .env
-- Service: app/Services/PaystackService.php
-- Controller: app/Http/Controllers/BookingPaymentController.php
-- Callback: GET /booking/payment/callback
-- Webhook: POST /webhooks/paystack/booking
-- Flow: [describe]
-
-### Paystack (Tickets)
-- Same keys
-- Controller: laravel-app/app/Http/Controllers/PaymentController.php
-- Callback: POST /verify-payment
-- Webhook: POST /webhooks/paystack/tickets
-- Flow: [describe]
-
-### TGI Titan (Tickets only)
-- Keys: TITAN_MERCHANT_ID, TITAN_API_KEY, TITAN_SECRET in .env
-- Controller: laravel-app/app/Http/Controllers/PaymentController.php
-- Callback: GET /titan/callback (CSRF exempt)
-- Amount: sent in NAIRA not kobo
-- Flow: [describe]
-
----
-
-## 👥 ROLES & PERMISSIONS
-
-[List every role and what they can access]
-
-| Role | Can Access | Cannot Access |
-|------|-----------|---------------|
-| super_admin | Everything | — |
-| campaign_manager | Email campaigns, subscribers | Bookings, rooms, referrals |
-| referral | Own sales dashboard only | Everything else |
-| [other roles] | | |
-
----
-
-## 📧 EMAIL SYSTEM
-
-| Mailable | Trigger | Recipient | View |
-|----------|---------|-----------|------|
-| BookingCustomerConfirmationMail | Booking created / payment confirmed | Guest | mail/booking-customer-confirmation |
-| BookingDeclinedMail | Staff rejects booking | Guest | mail/booking-declined |
-| BookingNotificationMail | Any booking | Admin team | [view] |
-| CampaignMail | Manual send / scheduled | Subscribers | emails/campaign |
-| TicketReceiptMail | Ticket paid | Guest | mail/ticket-receipt |
-
-SMTP config: booking@icelandbeach.com via Hostinger SMTP
-All mailables use base64 inline logo (localhost URLs break in Gmail)
-
----
-
-## ⚠️ KNOWN GOTCHAS — READ BEFORE TOUCHING ANYTHING
-
-[This section is critical — list every sharp edge]
-
-1. **room table has NO timestamps** — always set $model->timestamps = false
-   before any ->save() on a Room model or it crashes with
-   "Column not found: room.updated_at"
-
-2. **Rogue widgets** — SalesOverview and PaymentMethodBreakdown are
-   Project Z widgets accidentally in this codebase. Both have
-   $isDiscovered = false. Never remove this flag.
-
-3. **.htaccess is not in git** — deploy.sh restores it on every deploy.
-   The file rewrites public_html/ → public_html/public/
-   Never commit .htaccess. Never remove the restore step from deploy.sh.
-
-4. **APP_NAME must be quoted** — APP_NAME="Iceland Beach Resort"
-   Unquoted causes dotenv parse failure and kills all artisan commands.
-
-5. **ticket.php is legacy PHP** — DO NOT convert to Laravel.
-   DO NOT touch PaymentController ticket methods.
-   TGI callback is GET not POST — CSRF excluded per route not in $except array.
-
-6. **Paystack amount in kobo, TGI amount in naira** — never mix these up.
-
-7. **storage:link is disabled** — exec() disabled on Hostinger.
-   Use: ln -sf storage/app/public public/storage
-
-8. **Availability uses scopeBlocking()** — only CONFIRMED bookings
-   block a room. pending/rejected/expired never block.
-
-9. **ReservationService writes to room table** — legacy pattern kept
-   for compatibility. Always timestamps = false before save.
-
-10. [Add any other gotchas found during graphify analysis]
-
----
-
-## 🚀 DEPLOYMENT
-
-**CI/CD:** Push to main → GitHub Actions → SSH → git reset --hard → bash deploy.sh
-
-**deploy.sh does:**
-1. Restores .htaccess
-2. composer install --no-dev
-3. php artisan migrate --force
-4. php artisan optimize:clear + config:cache + route:cache + event:cache
-5. Storage symlink via ln -sf
-6. mkdir qrcodes, chmod
-7. php artisan queue:restart
-
-**Server:** Hostinger shared, us-phx-web940
-**Path:** ~/domains/icelandbeach.com/public_html/
-**PHP:** 8.3.x
-**exec() disabled** — use ln -sf not php artisan storage:link
-
----
-
-## 🔍 HOW TO USE THIS MAP IN NEW SESSIONS
-
-At the start of every new Claude Code session, paste this:
-
-```
-Read INSTRUCTIONS.md and graphify-out/GRAPH_REPORT.md before
-doing anything. Do not read source files until you have read
-both of these. Use graphify query "<question>" to look up
-anything specific before opening files.
-```
-
-To look something up without reading files:
-```bash
-graphify query "how does X work"
-graphify explain "ClassName"
-graphify path "ConceptA" "ConceptB"
-```
-
-To update the map after major changes:
-```bash
-graphify update .
-```
-
----
-
-## 📊 GRAPHIFY GRAPH SUMMARY
-
-[Paste the full contents of graphify-out/GRAPH_REPORT.md here]
-
----
-*This file was generated using Graphify knowledge graph mapping.*
-*Update with: graphify update . then regenerate this file.*
-```
-
----
-
-=== STEP 6: VERIFY THE MAP IS USEFUL ===
-
-After writing INSTRUCTIONS.md, test it by asking:
+=== TASK 4: Create Referral Panel Directory Structure ===
 
 ```bash
-graphify query "if I needed to add a new payment gateway, what files would I touch"
+mkdir -p app/Filament/Referral/Resources
+mkdir -p app/Filament/Referral/Pages
+mkdir -p app/Filament/Referral/Widgets
+```
+
+=== TASK 5: Create Referral Stats Widget ===
+
+Create app/Filament/Referral/Widgets/ReferralStatsWidget.php:
+
+```php
+<?php
+
+namespace App\Filament\Referral\Widgets;
+
+use App\Models\ReferralTicketSale;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+use Carbon\Carbon;
+
+class ReferralStatsWidget extends BaseWidget
+{
+    protected static ?int $sort = 1;
+
+    protected function getStats(): array
+    {
+        // Always scope to the logged-in referral user only
+        $referral = auth('referral')->user();
+
+        if (!$referral) {
+            return [];
+        }
+
+        $totalSales = ReferralTicketSale::where('referral_id', $referral->id)
+            ->count();
+
+        $totalEarned = ReferralTicketSale::where('referral_id', $referral->id)
+            ->sum('commission_amount');
+
+        $thisMonth = ReferralTicketSale::where('referral_id', $referral->id)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->sum('commission_amount');
+
+        $thisMonthCount = ReferralTicketSale::where('referral_id', $referral->id)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->count();
+
+        return [
+            Stat::make('Your Referral Code', $referral->code)
+                ->description('Share this code with customers')
+                ->color('primary')
+                ->icon('heroicon-o-tag'),
+
+            Stat::make('Total Tickets Sold', number_format($totalSales))
+                ->description('All time successful sales')
+                ->color('success')
+                ->icon('heroicon-o-ticket'),
+
+            Stat::make('This Month', $thisMonthCount . ' tickets')
+                ->description('₦' . number_format($thisMonth, 2) . ' earned')
+                ->color('info')
+                ->icon('heroicon-o-calendar'),
+
+            Stat::make('Total Earned', '₦' . number_format($totalEarned, 2))
+                ->description($referral->commission_rate . '% commission rate')
+                ->color('warning')
+                ->icon('heroicon-o-banknotes'),
+        ];
+    }
+}
+```
+
+=== TASK 6: Create Referral Sales Chart Widget ===
+
+Create app/Filament/Referral/Widgets/ReferralSalesChartWidget.php:
+
+```php
+<?php
+
+namespace App\Filament\Referral\Widgets;
+
+use App\Models\ReferralTicketSale;
+use Filament\Widgets\ChartWidget;
+use Carbon\Carbon;
+
+class ReferralSalesChartWidget extends ChartWidget
+{
+    protected static ?string $heading = 'Monthly Sales';
+    protected static ?int $sort = 2;
+    protected static string $chartType = 'bar';
+
+    protected function getData(): array
+    {
+        $referral = auth('referral')->user();
+
+        if (!$referral) {
+            return ['datasets' => [], 'labels' => []];
+        }
+
+        $months = collect(range(5, 0))->map(function ($monthsAgo) use ($referral) {
+            $date = Carbon::now()->subMonths($monthsAgo);
+            $count = ReferralTicketSale::where('referral_id', $referral->id)
+                ->whereMonth('created_at', $date->month)
+                ->whereYear('created_at', $date->year)
+                ->count();
+            $earned = ReferralTicketSale::where('referral_id', $referral->id)
+                ->whereMonth('created_at', $date->month)
+                ->whereYear('created_at', $date->year)
+                ->sum('commission_amount');
+            return [
+                'label'  => $date->format('M Y'),
+                'count'  => $count,
+                'earned' => $earned,
+            ];
+        });
+
+        return [
+            'datasets' => [
+                [
+                    'label'           => 'Tickets Sold',
+                    'data'            => $months->pluck('count')->toArray(),
+                    'backgroundColor' => '#002F61',
+                    'borderColor'     => '#002F61',
+                    'borderRadius'    => 6,
+                ],
+            ],
+            'labels' => $months->pluck('label')->toArray(),
+        ];
+    }
+
+    protected function getType(): string
+    {
+        return 'bar';
+    }
+}
+```
+
+=== TASK 7: Create Referral Sales Resource (Read-Only) ===
+
+Create app/Filament/Referral/Resources/SalesResource.php:
+
+```php
+<?php
+
+namespace App\Filament\Referral\Resources;
+
+use App\Models\ReferralTicketSale;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Forms\Form;
+
+class SalesResource extends Resource
+{
+    protected static ?string $model = ReferralTicketSale::class;
+    protected static ?string $navigationIcon  = 'heroicon-o-ticket';
+    protected static ?string $navigationLabel = 'My Sales';
+    protected static ?string $modelLabel      = 'Sale';
+    protected static ?int    $navigationSort  = 1;
+
+    // Scope ALL queries to current referral only
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $referralId = auth('referral')->id();
+
+        return parent::getEloquentQuery()
+            ->where('referral_id', $referralId)
+            ->latest();
+    }
+
+    // Read only — no create, edit, delete
+    public static function canCreate(): bool { return false; }
+    public static function canEdit($record): bool { return false; }
+    public static function canDelete($record): bool { return false; }
+    public static function canDeleteAny(): bool { return false; }
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema([]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('buyer_name')
+                    ->label('Buyer Name')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('buyer_email')
+                    ->label('Email')
+                    ->searchable()
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('ticket_amount')
+                    ->label('Ticket Price')
+                    ->formatStateUsing(fn ($state) =>
+                        '₦' . number_format($state, 2))
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('commission_amount')
+                    ->label('Your Commission')
+                    ->formatStateUsing(fn ($state) =>
+                        '₦' . number_format($state, 2))
+                    ->sortable()
+                    ->color('success'),
+
+                Tables\Columns\BadgeColumn::make('status')
+                    ->colors(['success' => 'successful'])
+                    ->default('successful'),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Date')
+                    ->dateTime('M j, Y H:i')
+                    ->sortable(),
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->emptyStateHeading('No sales yet')
+            ->emptyStateDescription(
+                'Share your referral code with customers to start earning.'
+            )
+            ->paginated([10, 25, 50]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => \App\Filament\Referral\Resources\SalesResource\Pages\ListSales::route('/'),
+        ];
+    }
+}
+```
+
+Create the page:
+```bash
+mkdir -p app/Filament/Referral/Resources/SalesResource/Pages
+```
+
+Create app/Filament/Referral/Resources/SalesResource/Pages/ListSales.php:
+
+```php
+<?php
+
+namespace App\Filament\Referral\Resources\SalesResource\Pages;
+
+use App\Filament\Referral\Resources\SalesResource;
+use Filament\Resources\Pages\ListRecords;
+
+class ListSales extends ListRecords
+{
+    protected static string $resource = SalesResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return []; // No create button
+    }
+}
+```
+
+=== TASK 8: Create Profile Page for Referral User ===
+
+A referral user can view and edit ONLY their own profile
+(name, email, phone, password). Nothing else.
+
+Create app/Filament/Referral/Pages/ReferralProfile.php:
+
+```php
+<?php
+
+namespace App\Filament\Referral\Pages;
+
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Pages\Page;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Hash;
+
+class ReferralProfile extends Page
+{
+    protected static ?string $navigationIcon  = 'heroicon-o-user-circle';
+    protected static ?string $navigationLabel = 'My Profile';
+    protected static string  $view            = 'filament.referral.pages.profile';
+    protected static ?int    $navigationSort  = 2;
+
+    public string $name     = '';
+    public string $email    = '';
+    public string $phone    = '';
+    public string $password = '';
+    public string $code     = '';
+    public string $commission_rate = '';
+
+    public function mount(): void
+    {
+        $referral = auth('referral')->user();
+        $this->name            = $referral->name;
+        $this->email           = $referral->email;
+        $this->phone           = $referral->phone ?? '';
+        $this->code            = $referral->code;
+        $this->commission_rate = $referral->commission_rate;
+    }
+
+    public function save(): void
+    {
+        $referral = auth('referral')->user();
+
+        $data = [
+            'name'  => $this->name,
+            'phone' => $this->phone,
+        ];
+
+        // Only update password if a new one was entered
+        if (filled($this->password)) {
+            $data['password'] = Hash::make($this->password);
+        }
+
+        $referral->update($data);
+        $this->password = '';
+
+        Notification::make()
+            ->title('Profile updated')
+            ->success()
+            ->send();
+    }
+}
+```
+
+Create resources/views/filament/referral/pages/profile.blade.php:
+
+```blade
+<x-filament-panels::page>
+    <x-filament::section>
+        <x-slot name="heading">My Profile</x-slot>
+        <x-slot name="description">
+            Update your name, phone, and password.
+        </x-slot>
+
+        <div class="space-y-6 max-w-lg">
+
+            {{-- Referral code (read-only) --}}
+            <div class="p-4 bg-blue-50 border border-blue-200
+                        rounded-xl flex items-center gap-4">
+                <span style="font-size:24px;">🏷️</span>
+                <div>
+                    <p class="text-xs font-bold text-blue-600 uppercase
+                               tracking-widest">
+                        Your Referral Code
+                    </p>
+                    <p class="text-2xl font-black text-[#002F61] mt-1">
+                        {{ $code }}
+                    </p>
+                    <p class="text-xs text-blue-500 mt-1">
+                        Share this with customers to earn
+                        {{ $commission_rate }}% commission
+                    </p>
+                </div>
+            </div>
+
+            {{-- Name --}}
+            <div>
+                <label class="block text-sm font-semibold
+                               text-gray-700 mb-1">Full Name</label>
+                <input wire:model="name" type="text"
+                       class="w-full border border-gray-300 rounded-lg
+                              px-4 py-2 text-sm focus:outline-none
+                              focus:ring-2 focus:ring-[#002F61]">
+            </div>
+
+            {{-- Email (read-only) --}}
+            <div>
+                <label class="block text-sm font-semibold
+                               text-gray-700 mb-1">Email</label>
+                <input value="{{ $email }}" type="email" disabled
+                       class="w-full border border-gray-200 rounded-lg
+                              px-4 py-2 text-sm bg-gray-50
+                              text-gray-400 cursor-not-allowed">
+                <p class="text-xs text-gray-400 mt-1">
+                    Contact admin to change your email.
+                </p>
+            </div>
+
+            {{-- Phone --}}
+            <div>
+                <label class="block text-sm font-semibold
+                               text-gray-700 mb-1">Phone</label>
+                <input wire:model="phone" type="tel"
+                       class="w-full border border-gray-300 rounded-lg
+                              px-4 py-2 text-sm focus:outline-none
+                              focus:ring-2 focus:ring-[#002F61]">
+            </div>
+
+            {{-- New password --}}
+            <div>
+                <label class="block text-sm font-semibold
+                               text-gray-700 mb-1">New Password</label>
+                <input wire:model="password" type="password"
+                       placeholder="Leave blank to keep current password"
+                       class="w-full border border-gray-300 rounded-lg
+                              px-4 py-2 text-sm focus:outline-none
+                              focus:ring-2 focus:ring-[#002F61]">
+            </div>
+
+            {{-- Save --}}
+            <div class="flex justify-end pt-2">
+                <x-filament::button wire:click="save" color="primary">
+                    Save Changes
+                </x-filament::button>
+            </div>
+
+        </div>
+    </x-filament::section>
+</x-filament-panels::page>
+```
+
+=== TASK 9: Lock Down Admin Panel — Remove Referral Access ===
+
+Referral users must never be able to log into /admin.
+Add a check to AdminPanelProvider to block the referral guard.
+
+In app/Providers/Filament/AdminPanelProvider.php,
+find the authMiddleware section and add:
+
+```php
+->authGuard('web') // explicitly use web guard only
+```
+
+Also add canAccess() to every resource that doesn't have it,
+to ensure only authenticated web users (staff) can access:
+
+Find all resources missing canAccess():
+```bash
+grep -rL "canAccess" app/Filament/Resources --include="*.php"
+```
+
+For each resource listed — add:
+```php
+public static function canAccess(): bool
+{
+    return auth()->guard('web')->check();
+}
+```
+
+This ensures even if a referral user somehow reaches /admin,
+they get a 403 on every resource.
+
+=== TASK 10: Update remember_token on referrals table ===
+
+Authenticatable models need a remember_token column.
+Check if it exists:
+
+```bash
+php artisan tinker --execute="
+echo \Schema::hasColumn('referrals','remember_token')
+    ? 'OK' : 'MISSING';
+"
+```
+
+If MISSING:
+```bash
+php artisan make:migration add_remember_token_to_referrals_table
+```
+
+```php
+// In migration up():
+$table->rememberToken()->nullable();
 ```
 
 ```bash
-graphify query "what happens step by step when a booking is rejected"
+php artisan migrate --force
 ```
 
-```bash
-graphify query "which files write to the room table"
-```
+=== TASK 11: Record Last Login ===
 
-If graphify answers these correctly from graph.json alone
-without you reading any source file — the map is complete.
+When a referral logs in, record the timestamp.
+Add to ReferralPanelProvider boot() or create a listener.
 
-=== STEP 7: COMMIT THE MAP ===
+In app/Providers/Filament/ReferralPanelProvider.php,
+add a boot() method:
 
-```bash
-git add graphify-out/GRAPH_REPORT.md
-git add graphify-out/graph.json
-git add INSTRUCTIONS.md
-git add .gitignore
-```
-
-Add to .gitignore (graph.html is large and browser-only):
-```bash
-echo "graphify-out/graph.html" >> .gitignore
-echo "graphify-out/cache/" >> .gitignore
-```
-
-```bash
-git commit -m "docs: add graphify project map and INSTRUCTIONS.md"
-git push origin main
-```
-
-=== HOW TO USE FOR A NEW PROJECT ===
-
-For any new project, run this single command at the project root:
-
-```
-/graphify .
-```
-
-Then ask Claude Code:
-```
-Read graphify-out/GRAPH_REPORT.md and create INSTRUCTIONS.md
-following the same structure as the Iceland Beach INSTRUCTIONS.md
-```
-
-Every new session starts with:
-```
-Read INSTRUCTIONS.md before touching anything.
-Use graphify query to look things up instead of reading files.
+```php
+public function boot(): void
+{
+    \Illuminate\Support\Facades\Event::listen(
+        \Illuminate\Auth\Events\Login::class,
+        function ($event) {
+            if ($event->guard === 'referral'
+                && $event->user instanceof \App\Models\Referral) {
+                $event->user->update(['last_login_at' => now()]);
+            }
+        }
+    );
+}
 ```
 
 === FINAL CHECKS ===
-1. `ls graphify-out/` — confirm graph.html, GRAPH_REPORT.md, graph.json exist
-2. `graphify query "what is this project"` — confirm it answers correctly
-3. `cat INSTRUCTIONS.md | wc -l` — should be 200+ lines
-4. Open graphify-out/graph.html in browser — confirm interactive graph loads
-5. Commit everything to git
+
+1. `php artisan migrate --force`
+2. `php artisan optimize:clear && php artisan config:cache && php artisan route:cache`
+3. `npm run build`
+
+4. Test referral login:
+   - Go to icelandbeach.com/referral
+   - Log in with a referral account
+   - Confirm: sees ONLY — stats widget, sales table,
+     profile page, monthly chart
+   - Confirm: NO bookings, NO rooms, NO tickets admin,
+     NO other users, NO settings
+
+5. Test admin login:
+   - Go to icelandbeach.com/admin
+   - Log in as super admin
+   - Confirm everything still works normally
+
+6. Try to access /admin while logged in as referral:
+   - Should redirect to /referral login
+   - Should NOT show admin resources
+
+7. Try to access /referral while logged in as admin:
+   - Should redirect to /referral login (different guard)
+
+8. Commit everything:
+```bash
+git add app/Providers/Filament/ReferralPanelProvider.php
+git add app/Filament/Referral/
+git add resources/views/filament/referral/
+git add config/auth.php
+git add app/Models/Referral.php
+git add bootstrap/providers.php
+git commit -m "feat: separate referral panel at /referral, full privacy isolation"
+git push origin main
 ```
 
----
-
-**How this saves you tokens in every new session:**
-
-Instead of Claude reading 30+ files to understand context, you start every session with:
-```
-Read INSTRUCTIONS.md and use graphify query for anything specific.
-```
-
-That's one file read + graph queries instead of reading controllers, models, routes, widgets, services one by one. For a project like Iceland Beach that's probably 80% fewer tokens per session on context-gathering alone.
+9. DO NOT touch: ticket.php, TGI flow, admin panel resources,
+   booking flow, email campaign system, payment gateways
