@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-class Referral extends Authenticatable
+class Referral extends Authenticatable implements \Filament\Models\Contracts\FilamentUser
 {
     use Notifiable;
 
@@ -114,6 +114,11 @@ class Referral extends Authenticatable
     public function totalCommission(): int
     {
         return (int) $this->sales()->where('status', 'successful')->sum('commission_amount');
+    }
+
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        return $panel->getId() === 'referral' && $this->is_active;
     }
 
     public function successfulSalesCount(): int
