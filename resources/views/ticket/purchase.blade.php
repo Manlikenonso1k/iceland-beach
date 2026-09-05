@@ -294,16 +294,16 @@
                     <label class="form-label">Payment method</label>
                     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;">
                         <label style="flex:1;min-width:150px;cursor:pointer;">
-                            <input type="radio" name="selected_gateway" value="tgipay" id="gw_tgipay" checked style="display:none;">
-                            <div id="label_tgipay" class="gateway-card is-selected">
+                            <input type="radio" name="selected_gateway" value="tgipay" id="gw_tgipay" style="display:none;">
+                            <div id="label_tgipay" class="gateway-card">
                                 <img src="{{ asset('images/tgi.jpg') }}" alt="TGI Pay"
                                      onerror="this.remove(); this.parentNode.textContent = 'TGI Pay';">
                             </div>
                         </label>
 
                         <label style="flex:1;min-width:150px;cursor:pointer;">
-                            <input type="radio" name="selected_gateway" value="paystack" id="gw_paystack" style="display:none;">
-                            <div id="label_paystack" class="gateway-card">
+                            <input type="radio" name="selected_gateway" value="paystack" id="gw_paystack" checked style="display:none;">
+                            <div id="label_paystack" class="gateway-card is-selected">
                                 <img src="{{ asset('images/paystack.png') }}" alt="Paystack"
                                      onerror="this.remove(); this.parentNode.textContent = 'Paystack';">
                             </div>
@@ -311,7 +311,7 @@
                     </div>
                 </div>
 
-                <input type="hidden" name="payment_method" id="payment_method" value="tgipay">
+                <input type="hidden" name="payment_method" id="payment_method" value="paystack">
                 <input type="hidden" name="paystack_ref" id="paystack_ref" value="">
 
                 {{-- Submit --}}
