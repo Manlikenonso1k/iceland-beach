@@ -417,6 +417,25 @@
         e.preventDefault();
 
         // Re-validate price server-side before submitting
+        // Auto-apply referral code if customer typed one but forgot to click Apply
+        const promoInput = document.getElementById('promo_code');
+        const promoVal = promoInput ? promoInput.value.trim() : '';
+        if (promoVal !== '' ) {
+            try {
+                const promoRes = await fetch(CALCULATE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]') ? document.querySelector('meta[name=csrf-token]').content : '' },
+                    body: JSON.stringify({ ticket_type: typeEl.value, quantity: parseInt(qtyEl.value)||1, promo_code: promoVal })
+                });
+                const promoData = await promoRes.json();
+                if (!promoData.success) {
+                    alert(promoData.error || 'Invalid referral code. Please check the code and try again.');
+                    return;
+                }
+            } catch(err) {
+                // Network error — allow payment to continue, server validates again
+            }
+        }
         await updateDisplay();
 
         const email = document.getElementById('email').value.trim();
