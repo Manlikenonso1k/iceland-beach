@@ -62,4 +62,11 @@ class TicketObserver
             Log::debug('Referral sale already recorded for ticket ' . $ticket->id);
         }
     }
+
+    public function deleted(Ticket $ticket): void
+    {
+        if ($ticket->qr_code_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($ticket->qr_code_path);
+        }
+    }
 }
