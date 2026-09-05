@@ -134,7 +134,16 @@ class ReferralResource extends Resource
                     ->formatStateUsing(fn ($state) => 'NGN ' . number_format(((int) $state) / 100, 2)),
                 TextColumn::make('created_at')->dateTime()->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->actions([
+                \Filament\Tables\Actions\EditAction::make(),
+                \Filament\Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                \Filament\Tables\Actions\BulkActionGroup::make([
+                    \Filament\Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getRelations(): array
