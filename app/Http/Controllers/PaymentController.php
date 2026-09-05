@@ -110,7 +110,10 @@ class PaymentController extends Controller
             if ($promoCode === 'ICECOCONUT') {
                 return response()->json(['success' => false, 'error' => 'Promo code expired']);
             }
-            return response()->json(['success' => false, 'error' => 'Invalid promo code']);
+            $referral = \App\Models\Referral::findByCode($promoCode);
+            if (! $referral) {
+                return response()->json(['success' => false, 'error' => 'Invalid referral code']);
+            }
         }
 
         return response()->json([
