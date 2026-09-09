@@ -29,6 +29,11 @@ class ActivityLogResource extends Resource
         return $user instanceof \App\Models\User && $user->hasRole('Super Admin');
     }
 
+    public static function canViewAny(): bool
+    {
+        return static::canAccess();
+    }
+
     public static function canCreate(): bool
     {
         return false;

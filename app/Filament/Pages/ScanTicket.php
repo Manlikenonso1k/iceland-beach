@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Pages\Page;
 
 class ScanTicket extends Page
@@ -19,4 +21,12 @@ class ScanTicket extends Page
     protected static ?string $slug = 'scan-ticket';
 
     protected static string $view = 'filament.pages.scan-ticket';
+
+    public static function canAccess(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return $user instanceof User
+            && ! $user->hasAnyRole(['Front Desk', 'frontdesk', 'Scanner']);
+    }
 }

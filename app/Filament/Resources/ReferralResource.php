@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Hash;
 
 class ReferralResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictsFrontDeskAndScanner;
+
 
     /**
      * Staff-only. Referral partners use their own guard and panel; this makes
@@ -26,7 +28,7 @@ class ReferralResource extends Resource
      */
     public static function canAccess(): bool
     {
-        return auth()->guard('web')->check();
+        return static::canViewAny();
     }
     protected static ?string $model = Referral::class;
 

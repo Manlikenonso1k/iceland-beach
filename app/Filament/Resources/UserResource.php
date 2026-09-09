@@ -12,6 +12,8 @@ use Filament\Tables\Table;
 
 class UserResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictsFrontDeskAndScanner;
+
 
     /**
      * Staff-only. Referral partners use their own guard and panel; this makes
@@ -19,7 +21,7 @@ class UserResource extends Resource
      */
     public static function canAccess(): bool
     {
-        return auth()->guard('web')->check();
+        return static::canViewAny();
     }
     protected static ?string $model = User::class;
 
