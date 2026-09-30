@@ -43,6 +43,29 @@ class BookingResource extends Resource
 
     protected static ?string $navigationLabel = 'Bookings';
 
+    /** Shown as the heading of each global-search hit. */
+    protected static ?string $recordTitleAttribute = 'guest_name';
+
+    /**
+     * Phone is listed second so staff can find a booking from a number alone —
+     * it is the identifier for anything taken over the telephone, and for those
+     * guest_email is empty.
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['guest_name', 'guest_phone', 'guest_email', 'room_type'];
+    }
+
+    /** @param  Booking  $record */
+    public static function getGlobalSearchResultDetails(\Illuminate\Database\Eloquent\Model $record): array
+    {
+        return [
+            'Phone' => $record->guest_phone ?: 'No phone',
+            'Email' => $record->guest_email ?: 'No email',
+            'Room' => $record->room_type,
+        ];
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -60,8 +83,22 @@ class BookingResource extends Resource
                     ->live(),
                 TextInput::make('room_type')->label('Room name')->maxLength(255),
                 TextInput::make('guest_name')->required()->maxLength(255),
-                TextInput::make('guest_email')->email()->required()->maxLength(255),
-                TextInput::make('guest_phone')->tel()->maxLength(50),
+                // Phone before email, and phone is the required one: staff take
+                // most of these over the counter or the telephone, where an
+                // email address frequently does not exist. The PUBLIC form
+                // (Api\BookingController) still requires an email — Paystack
+                // needs somewhere to send a receipt.
+                TextInput::make('guest_phone')
+                    ->label('Phone number')
+                    ->tel()
+                    ->required()
+                    ->maxLength(50)
+                    ->helperText('Primary contact. Used to identify the guest.'),
+                TextInput::make('guest_email')
+                    ->label('Email (optional)')
+                    ->email()
+                    ->maxLength(255)
+                    ->helperText('If provided, confirmation and decline emails are sent here.'),
                 Toggle::make('email_opt_in')
                     ->label('Subscribed to marketing email')
                     ->helperText('Guest ticked the opt-in box on the booking form.'),
@@ -88,8 +125,19 @@ class BookingResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('guest_name')->label('Guest Name')->searchable(),
-                TextColumn::make('guest_email')->label('Email')->searchable(),
-                TextColumn::make('guest_phone')->label('Phone'),
+                TextColumn::make('guest_phone')
+                    ->label('Phone')
+                    ->icon('heroicon-o-phone')
+                    ->searchable()
+                    ->copyable()
+                    ->placeholder('No phone'),
+                TextColumn::make('guest_email')
+                    ->label('Email')
+                    ->searchable()
+                    ->copyable()
+                    // Phone-only bookings are normal now, so an empty cell needs
+                    // to read as deliberate rather than as missing data.
+                    ->placeholder('No email'),
                 IconColumn::make('email_opt_in')->label('Opted in')->boolean()->sortable(),
                 TextColumn::make('room_type')->label('Room'),
                 TextColumn::make('check_in')->label('Check In')->dateTime(),

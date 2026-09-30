@@ -41,12 +41,21 @@ class ConfirmedBookingsWidget extends BaseWidget
                     ->sortable(),
                 TextColumn::make('guest_name')
                     ->label('Guest')
-                    ->searchable()
+                    ->searchable(['guest_name', 'guest_phone', 'guest_email'])
                     ->weight('medium')
-                    ->description(fn (Booking $record): ?string => $record->guest_email),
+                    // Phone is the identifier for a booking taken by telephone.
+                    ->description(fn (Booking $record): string => $record->guest_phone ?: 'No phone'),
                 TextColumn::make('guest_phone')
                     ->label('Phone')
+                    ->icon('heroicon-o-phone')
+                    ->copyable()
+                    ->placeholder('No phone')
                     ->toggleable(),
+                TextColumn::make('guest_email')
+                    ->label('Email')
+                    ->placeholder('No email')
+                    ->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 // room_type is the stored label; the relation covers rooms renamed since.
                 TextColumn::make('room_type')
                     ->label('Room')

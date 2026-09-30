@@ -52,10 +52,19 @@ class PendingBookingsWidget extends BaseWidget
             ->columns([
                 TextColumn::make('guest_name')
                     ->label('Guest')
-                    ->searchable()
+                    // Searches the two identifiers as well as the name, so a
+                    // guest who phoned in can be found by their number.
+                    ->searchable(['guest_name', 'guest_phone', 'guest_email'])
                     ->weight('medium')
-                    ->description(fn (Booking $record): ?string => $record->guest_email)
+                    // Phone, not email: a booking taken over the telephone has
+                    // no email at all, and the phone is what staff call back on.
+                    ->description(fn (Booking $record): string => $record->guest_phone ?: 'No phone')
                     ->limit(24),
+                TextColumn::make('guest_email')
+                    ->label('Email')
+                    ->placeholder('No email')
+                    ->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('room_type')
                     ->label('Room')
                     ->searchable()
