@@ -208,6 +208,15 @@
         </div>
     </div>
 
+    {{-- Pushed to the layout's scripts stack rather than left inline.
+         Livewire requires a component to render exactly ONE root element,
+         and libxml (which Livewire uses to count them) mis-parses this
+         block and closes the .fi-page div early — Filament's three action
+         modals then became sibling roots and the page threw
+         MultipleRootElementsDetectedException on every load with
+         APP_DEBUG=true. Order is preserved, so the qr library still loads
+         before the code that uses it. --}}
+@push('scripts')
     {{-- html5-qrcode library --}}
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -454,4 +463,5 @@
             }
         }
     </script>
+@endpush
 </x-filament-panels::page>
