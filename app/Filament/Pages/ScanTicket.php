@@ -22,11 +22,26 @@ class ScanTicket extends Page
 
     protected static string $view = 'filament.pages.scan-ticket';
 
+    /**
+     * Scanner is deliberately NOT excluded here.
+     *
+     * This page lives in the Events navigation group, so when Events was
+     * restricted for Front Desk and Scanner it swept up the one page the
+     * Scanner role exists for — a scanner who cannot scan. Gate entry is that
+     * role's entire job.
+     *
+     * Front Desk stays out: rooms and bookings are their remit, and they have no
+     * reason to admit guests at the gate.
+     *
+     * Note this is a denylist, not an allowlist, so the owner account (which
+     * User::canAccessPanel() admits by email address, possibly with no role
+     * assigned at all) is not locked out.
+     */
     public static function canAccess(): bool
     {
         $user = Filament::auth()->user();
 
         return $user instanceof User
-            && ! $user->hasAnyRole(['Front Desk', 'frontdesk', 'Scanner']);
+            && ! $user->hasAnyRole(['Front Desk', 'frontdesk']);
     }
 }
