@@ -299,3 +299,72 @@ building any other department:
   - changing a meal's prep_time_minutes does not alter any existing order's
     due_at or target_minutes
 Do not start Phase 3 until every one of those passes.
+
+
+Build the "Hospi Sales" mobile app now, inside the already-scaffolded Expo project
+(sibling folder to the Laravel repo — NOT inside it). The scaffold, app.config.ts,
+eas.json, src/config.ts and the /api/health screen already exist and the health
+screen renders on a real device against the API. Do not re-scaffold.
+
+READ FIRST, IN THIS ORDER, BEFORE WRITING A LINE:
+1. HOSPI_SALES_BRIEF.md (the codebase map + order/delay data model + reuse list)
+2. The Agent 2 build spec (agent-2-build.md) — its FIXED STACK, REUSE-THIS list,
+   API surface, guardrails and phased build order are binding.
+3. The Google Stitch screen designs — the visual source of truth. For each screen,
+   match layout, spacing, status colours (GREEN #16A34A / AMBER #F59E0B /
+   RED #DC2626 / GREY #64748B), navy #002F61, large tap targets, bottom-tab nav.
+   Rebuild them as React Native (View/Text/FlatList/Pressable/Modal/TextInput) —
+   never a WebView, never CSS grid.
+
+ABSOLUTE RULES (from the build spec — do not relax):
+- PRIORITY 1 is the meal-delay engine. Build it first and prove it before any
+  other department. Server owns time (due_at, server_time, seconds_remaining,
+  status_colour on every order payload); the phone clock is never trusted.
+- Multi-tenant: tenant comes from the Sanctum token, NEVER from the request or the
+  app. BelongsToTenant scope on every new model. No business identity, price,
+  department or prep time hardcoded — all from /api/me and tenant_settings.
+- ADDITIVE backend only: do not modify existing routes, webhooks, PaystackService,
+  BookingWorkflowService, ReservationService, PosService or the Filament panels.
+  Reuse markBookingPaid() for payment state. Keep the existing test suite green.
+- Money is integer kobo end to end. Decline requires a stored reason. Role
+  isolation enforced server-side, not by hiding tabs. Use seeded role names
+  ('Super Admin', 'Manager', 'Waiter', 'Front Desk', etc.).
+- Live updates = short polling with React Query (Manager board 10s, chef 10s,
+  waitress 30s, CEO 60s) + refetch on app foreground. No websockets/Reverb in v1.
+- Payments: server returns authorization_url; app opens expo-web-browser
+  openAuthSessionAsync; existing callback + webhook verify server-side. Keep the
+  BOOK- reference prefix.
+
+BUILD ORDER — STOP-GATE AFTER PHASE 2:
+  Phase 0  tenants + tenant_id + /api/auth/login + /api/me + Sanctum + role gates
+  Phase 1  Welcome/setup, login (email OR phone), role-based home (5 variants)
+  Phase 2  THE ORDER/DELAY ENGINE — waitress entry (starts timer), chef queue
+           (accept / decline-with-required-reason / mark ready), manager Order
+           Board (RED-first traffic light, sticky overdue banner), Expo push on
+           new order + overdue, server-side overdue scheduled job.
+  --- STOP. Prove with automated tests before Phase 3: ---
+     * tenant A token cannot read/write/enumerate any tenant B row
+     * waitress token refused on every chef/manager endpoint
+     * chef token cannot see another department's queue
+     * a 5-min-target order reports AMBER before due_at, RED after, from due_at
+     * overdue job pushes to manager exactly once, no app open
+     * empty decline reason rejected, nothing written
+     * raising a meal's prep_time_minutes does NOT change any existing order
+  Phase 3  Main Kitchen + Barbecue catalogues, CSV import, prep-time editor
+  Phase 4  Ice Cream counter
+  Phase 5  Gate Sales (per-day / per-shift receipts via Invoice)
+  Phase 6  Hosts (tables/beds/cabins via the services table)
+  Phase 7  Front Desk (rooms + swimming via Booking::scopeBlocking())
+  Phase 8  CEO dashboard
+
+FOR EVERY SCREEN:
+- Wire it to the real API endpoint from the brief; no mock data left in committed
+  code (a seeded demo tenant is fine).
+- Loading, empty and error states for anything that loads a list (the Stitch
+  designs include these — match them).
+- Respect safe areas / the S24-class notch; bottom tabs clear of the gesture bar.
+
+DELIVER AT EACH PHASE:
+- Running screens on a real Android device, the matching API controllers/routes
+  (additive), and the tests for that phase. After Phase 2, output the passing
+  test results for the stop-gate list above before continuing.
