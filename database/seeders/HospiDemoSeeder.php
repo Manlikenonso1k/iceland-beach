@@ -98,5 +98,8 @@ class HospiDemoSeeder extends Seeder
 
             $user->syncRoles([$role]);
         }
+
+        // Fill the board / kitchen / revenue with a realistic spread of orders.
+        $this->call(HospiDemoOrdersSeeder::class);
     }
 }
