@@ -26,6 +26,9 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'tenant_id',
+        'phone',
+        'department',
     ];
 
     /**
@@ -55,6 +58,12 @@ class User extends Authenticatable implements FilamentUser
     public function referral(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Referral::class);
+    }
+
+    /** The Hospi Sales tenant this account belongs to (null for legacy admins). */
+    public function tenant(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     public function isReferralPartner(): bool
