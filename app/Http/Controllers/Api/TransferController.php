@@ -16,9 +16,11 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Order hand-offs. A waitress sends an order she placed to another waitress; a
- * chef sends one in their station to another chef. The recipient accepts (taking
- * ownership) or declines (it stays put). Tenant scoping is inherited from the
- * models, so staff can only ever transfer within their own business.
+ * chef sends one in their station to another chef. A manager/CEO (or admin) may
+ * hand off ANY order in the business — to a waitress (server kind) or to a chef
+ * on that order's station (chef kind). The recipient accepts (taking ownership)
+ * or declines (it stays put). Tenant scoping is inherited from the models, so
+ * staff can only ever transfer within their own business.
  */
 class TransferController extends Controller
 {
@@ -32,25 +34,34 @@ class TransferController extends Controller
             throw ValidationException::withMessages(['order' => 'This order can no longer be transferred.']);
         }
 
-        // Decide the kind from who's asking and what they own.
-        if ($caller->hasRole('Waiter') && (int) $order->placed_by_user_id === (int) $caller->id) {
-            $kind = 'server';
-        } elseif ($caller->hasRole('Chef') && $caller->department === $order->department) {
-            $kind = 'chef';
-        } else {
-            abort(403, 'You can only transfer your own orders.');
-        }
-
         $to = User::query()->where('tenant_id', $caller->tenant_id)->find($data['to_user_id']);
         if (! $to || (int) $to->id === (int) $caller->id) {
             throw ValidationException::withMessages(['to_user_id' => 'Pick a different, valid teammate.']);
         }
 
-        if ($kind === 'server' && ! $to->hasRole('Waiter')) {
-            throw ValidationException::withMessages(['to_user_id' => 'Orders can only be sent to another waitress.']);
-        }
-        if ($kind === 'chef' && (! $to->hasRole('Chef') || $to->department !== $order->department)) {
-            throw ValidationException::withMessages(['to_user_id' => 'Orders can only be sent to a chef on the same station.']);
+        $privileged = $caller->hasAnyRole(['Manager', 'CEO', 'Super Admin', 'Admin']);
+
+        // Decide the kind from who's asking (and, for managers, who they picked).
+        if ($privileged) {
+            if ($to->hasRole('Waiter')) {
+                $kind = 'server';
+            } elseif ($to->hasRole('Chef') && $to->department === $order->department) {
+                $kind = 'chef';
+            } else {
+                throw ValidationException::withMessages(['to_user_id' => 'Send to a waitress, or to a chef on this order\'s station.']);
+            }
+        } elseif ($caller->hasRole('Waiter') && (int) $order->placed_by_user_id === (int) $caller->id) {
+            $kind = 'server';
+            if (! $to->hasRole('Waiter')) {
+                throw ValidationException::withMessages(['to_user_id' => 'Orders can only be sent to another waitress.']);
+            }
+        } elseif ($caller->hasRole('Chef') && $caller->department === $order->department) {
+            $kind = 'chef';
+            if (! $to->hasRole('Chef') || $to->department !== $order->department) {
+                throw ValidationException::withMessages(['to_user_id' => 'Orders can only be sent to a chef on the same station.']);
+            }
+        } else {
+            abort(403, 'You can only transfer your own orders.');
         }
 
         if (OrderTransfer::query()->where('order_id', $order->id)->where('status', 'pending')->exists()) {
@@ -74,26 +85,31 @@ class TransferController extends Controller
     public function targets(Request $request, Order $order): JsonResponse
     {
         $caller = $request->user();
+        $privileged = $caller->hasAnyRole(['Manager', 'CEO', 'Super Admin', 'Admin']);
 
-        if ($caller->hasRole('Waiter') && (int) $order->placed_by_user_id === (int) $caller->id) {
-            $role = 'Waiter';
-            $dept = null;
+        $query = User::query()
+            ->where('tenant_id', $caller->tenant_id)
+            ->where('id', '!=', $caller->id);
+
+        if ($privileged) {
+            // A manager/CEO may hand off to any waitress, or to a chef on this
+            // order's station.
+            $query->where(function ($w) use ($order): void {
+                $w->whereHas('roles', fn ($r) => $r->where('name', 'Waiter'))
+                    ->orWhere(fn ($c) => $c
+                        ->whereHas('roles', fn ($r) => $r->where('name', 'Chef'))
+                        ->where('department', $order->department));
+            });
+        } elseif ($caller->hasRole('Waiter') && (int) $order->placed_by_user_id === (int) $caller->id) {
+            $query->whereHas('roles', fn ($r) => $r->where('name', 'Waiter'));
         } elseif ($caller->hasRole('Chef') && $caller->department === $order->department) {
-            $role = 'Chef';
-            $dept = $order->department;
+            $query->whereHas('roles', fn ($r) => $r->where('name', 'Chef'))
+                ->where('department', $order->department);
         } else {
             abort(403, 'You can only transfer your own orders.');
         }
 
-        $targets = User::query()
-            ->where('tenant_id', $caller->tenant_id)
-            ->where('id', '!=', $caller->id)
-            ->when($dept, fn ($q) => $q->where('department', $dept))
-            ->whereHas('roles', fn ($q) => $q->where('name', $role))
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        return response()->json(['data' => $targets]);
+        return response()->json(['data' => $query->orderBy('name')->get(['id', 'name'])]);
     }
 
     /** Transfers offered to me and still awaiting my response. */

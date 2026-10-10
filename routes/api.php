@@ -94,9 +94,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     // Order transfers between staff (waitress↔waitress, chef↔chef).
     Route::get('/orders/{order}/transfer-targets', [TransferController::class, 'targets'])
-        ->middleware('hospi.role:Waiter,Chef');
+        ->middleware('hospi.role:Waiter,Chef,Manager,CEO,Super Admin,Admin');
     Route::post('/orders/{order}/transfer', [TransferController::class, 'store'])
-        ->middleware(['throttle:30,1', 'hospi.role:Waiter,Chef']);
+        ->middleware(['throttle:30,1', 'hospi.role:Waiter,Chef,Manager,CEO,Super Admin,Admin']);
     Route::get('/transfers', [TransferController::class, 'incoming'])
         ->middleware('hospi.role:Waiter,Chef');
     Route::post('/transfers/{transfer}/accept', [TransferController::class, 'accept'])
