@@ -35,11 +35,16 @@ class OrderOverdueNotification extends Notification
     public function toExpo(object $notifiable): array
     {
         $where = $this->order->table_id ? "Table {$this->order->table_id}" : ($this->order->guest_ref ?: 'a guest');
+        $late = $this->order->due_at ? (int) round(abs(now()->diffInMinutes($this->order->due_at))) : 0;
 
         return [
-            'title' => 'Order overdue',
-            'body' => "Order #{$this->order->id} for {$where} is past its {$this->order->target_minutes}-min target.",
+            'title' => "OVERDUE: {$where} — {$late} min late",
+            'body' => "Order #{$this->order->id} ({$this->order->department}) is past its {$this->order->target_minutes}-min target. Resolve it now.",
             'data' => ['order_id' => $this->order->id, 'type' => 'order.overdue'],
+            // Route to the loud, high-importance Android channel + custom alarm sound.
+            'channelId' => 'overdue-orders',
+            'sound' => 'overdue_alarm.wav',
+            'priority' => 'high',
         ];
     }
 }

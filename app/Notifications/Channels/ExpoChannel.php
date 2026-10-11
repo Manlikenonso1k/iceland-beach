@@ -31,14 +31,17 @@ class ExpoChannel
 
         $payload = $notification->toExpo($notifiable);
 
-        $messages = array_map(fn (string $token): array => [
+        // A notification may ask for a specific Android channel + custom sound
+        // (e.g. the loud "overdue-orders" channel). Default to the general sound.
+        $messages = array_map(fn (string $token): array => array_filter([
             'to' => $token,
             'title' => $payload['title'] ?? 'Hospi Sales',
             'body' => $payload['body'] ?? '',
             'data' => $payload['data'] ?? [],
-            'sound' => 'default',
-            'priority' => 'high',
-        ], $tokens);
+            'sound' => $payload['sound'] ?? 'default',
+            'priority' => $payload['priority'] ?? 'high',
+            'channelId' => $payload['channelId'] ?? null, // Android routes to this channel
+        ], fn ($v) => $v !== null), $tokens);
 
         try {
             Http::acceptJson()

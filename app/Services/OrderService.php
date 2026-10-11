@@ -378,26 +378,32 @@ class OrderService
      */
     public function escalateOverdue(Order $order): void
     {
-        $sent = DB::transaction(function () use ($order): bool {
-            $claimed = Order::query()
-                ->whereKey($order->id)
-                ->whereNull('notified_overdue_at')
-                ->update(['notified_overdue_at' => now()]);
-
-            return $claimed === 1;
-        });
-
-        if (! $sent) {
-            return; // another sweep already paged for this order
-        }
+        // Stamp the time of this page. The scheduled command only hands us orders
+        // that are either un-paged or last paged > 5 min ago, so this re-stamp is
+        // what drives the "repeat every 5 minutes until resolved" cadence.
+        Order::query()->whereKey($order->id)->update(['notified_overdue_at' => now()]);
 
         ActivityLogService::log(
             event: 'order.overdue',
-            description: "Order #{$order->id} overdue, manager notified",
+            description: "Order #{$order->id} overdue — manager, chef and waiter paged",
             subject: $order,
         );
 
-        Notification::send($this->managers($order->tenant_id), new OrderOverdueNotification($order));
+        Notification::send($this->overdueRecipients($order), new OrderOverdueNotification($order));
+    }
+
+    /** Everyone accountable for an overdue order: managers + the assigned chef + the waiter who placed it. */
+    private function overdueRecipients(Order $order): Collection
+    {
+        $recipients = $this->managers($order->tenant_id);
+
+        foreach ([$order->placed_by_user_id, $order->chef_user_id] as $id) {
+            if ($id && ($user = User::query()->find($id))) {
+                $recipients->push($user);
+            }
+        }
+
+        return $recipients->unique('id')->values();
     }
 
     private function assertChefOwnsDepartment(Order $order, User $chef): void
