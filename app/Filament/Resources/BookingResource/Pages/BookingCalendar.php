@@ -22,6 +22,7 @@ class BookingCalendar extends Page
                 ->label('New Booking')
                 ->icon('heroicon-o-plus')
                 ->url(BookingResource::getUrl('create')),
+            BookingResource::downloadReportAction(),
             Action::make('tableView')
                 ->label('Table View')
                 ->icon('heroicon-o-table-cells')

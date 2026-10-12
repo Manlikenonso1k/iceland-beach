@@ -5,15 +5,19 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Booking;
 use App\Models\Room;
+use App\Services\BookingReportService;
 use App\Services\BookingWorkflowService;
 use App\Services\ReservationService;
 use Filament\Facades\Filament;
+use Filament\Actions\Action as PageAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
@@ -224,6 +228,41 @@ class BookingResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function downloadReportAction(): PageAction
+    {
+        return PageAction::make('downloadReport')
+            ->label('Download Report')
+            ->icon('heroicon-o-arrow-down-tray')
+            ->color('gray')
+            ->modalHeading('Download Booking Report')
+            ->modalSubmitActionLabel('Download PDF')
+            ->form([
+                Select::make('period')
+                    ->label('Period type')
+                    ->options(BookingReportService::PERIODS)
+                    ->default('daily')
+                    ->required()
+                    ->live(),
+                DatePicker::make('date')
+                    ->label(fn (Get $get): string => $get('period') === 'weekly' ? 'Any day in the week (Mon–Sun)' : 'Date')
+                    ->default(now())
+                    ->native(false)
+                    ->visible(fn (Get $get): bool => in_array($get('period'), ['daily', 'weekly'], true))
+                    ->required(),
+                Select::make('month')
+                    ->options(collect(range(1, 12))->mapWithKeys(fn (int $m): array => [$m => now()->month($m)->startOfMonth()->format('F')])->all())
+                    ->default(now()->month)
+                    ->visible(fn (Get $get): bool => $get('period') === 'monthly')
+                    ->required(),
+                Select::make('year')
+                    ->options(collect(range(now()->year + 1, now()->year - 5))->mapWithKeys(fn (int $y): array => [$y => (string) $y])->all())
+                    ->default(now()->year)
+                    ->visible(fn (Get $get): bool => $get('period') === 'monthly')
+                    ->required(),
+            ])
+            ->action(fn (array $data) => app(BookingReportService::class)->download($data));
     }
 
     public static function getPages(): array

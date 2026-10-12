@@ -14,6 +14,7 @@ class ListBookings extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+            BookingResource::downloadReportAction(),
         ];
     }
 }
