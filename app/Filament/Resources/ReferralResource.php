@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Hash;
 
 class ReferralResource extends Resource
 {
-    use \App\Filament\Concerns\RestrictsFrontDeskAndScanner;
+    use \App\Filament\Concerns\RestrictsManagementAreas;
 
 
     /**

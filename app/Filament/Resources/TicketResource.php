@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Auth;
 
 class TicketResource extends Resource
 {
-    use \App\Filament\Concerns\RestrictsFrontDeskAndScanner;
+    use \App\Filament\Concerns\RestrictsManagementAreas;
 
 
     /**

@@ -15,15 +15,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TicketScanLogResource extends Resource
 {
+    // Ticket scan history is Events data. It had only a web-guard check, so
+    // every floor role could open /admin/ticket-scan-logs.
+    use \App\Filament\Concerns\RestrictsManagementAreas;
 
-    /**
-     * Staff-only. Referral partners use their own guard and panel; this makes
-     * that explicit per resource rather than relying on panel access alone.
-     */
-    public static function canAccess(): bool
-    {
-        return auth()->guard('web')->check();
-    }
+
     protected static ?string $model = TicketScanLog::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

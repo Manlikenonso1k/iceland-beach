@@ -41,7 +41,9 @@ class ScanTicket extends Page
     {
         $user = Filament::auth()->user();
 
+        // Scanner KEEPS this — gate entry is the role's entire job. Front
+        // Desk, Space Host/Host and Waiter have no reason to admit guests.
         return $user instanceof User
-            && ! $user->hasAnyRole(['Front Desk', 'frontdesk']);
+            && ! $user->hasAnyRole(['Front Desk', 'frontdesk', 'Space Host', 'Host', 'Waiter']);
     }
 }

@@ -12,7 +12,7 @@ use Filament\Tables\Table;
 
 class RoleResource extends Resource
 {
-    use \App\Filament\Concerns\RestrictsFrontDeskAndScanner;
+    use \App\Filament\Concerns\RestrictsManagementAreas;
 
 
     /**
