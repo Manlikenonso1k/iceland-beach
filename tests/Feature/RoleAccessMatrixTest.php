@@ -136,6 +136,75 @@ class RoleAccessMatrixTest extends TestCase
         $this->actingAs($scanner)->get('/admin/ticket-scan-logs')->assertForbidden();
     }
 
+    /**
+     * 'Host' and 'Space Host' must behave IDENTICALLY everywhere.
+     *
+     * This test exists because the alias leaked twice. It was propagated to the
+     * gates that GRANT access (User::PANEL_ROLES,
+     * RestrictsSpaceBookingWrites::SPACE_WRITERS) but not to the one that
+     * WITHHOLDS it (RestrictsRoomBookingWrites::ROOM_READ_ONLY_ROLES), so a
+     * user with the role named plainly 'Host' got room-booking WRITE while
+     * 'Space Host' got 403.
+     *
+     * Checking view access alone would not have caught it — both roles could
+     * VIEW rooms. The divergence was only on writing.
+     */
+    public function test_the_host_alias_behaves_identically_to_space_host(): void
+    {
+        $writeUrls = [
+            '/admin/bookings/create',
+            '/admin/space-bookings/create',
+        ];
+
+        $statuses = [];
+
+        foreach (['Space Host', 'Host'] as $roleName) {
+            $user = $this->userWithRole($roleName);
+
+            foreach (array_merge(array_values(self::AREAS), $writeUrls) as $url) {
+                $statuses[$roleName][$url] = $this->actingAs($user)->get($url)->getStatusCode();
+            }
+        }
+
+        $this->assertSame(
+            $statuses['Space Host'],
+            $statuses['Host'],
+            "'Host' and 'Space Host' are aliases and must resolve identically on every URL, "
+            . 'including write URLs. A difference means an alias was added to some gates but not all.',
+        );
+
+        // And specifically: neither may write a ROOM booking.
+        $this->assertSame(403, $statuses['Space Host']['/admin/bookings/create']);
+        $this->assertSame(403, $statuses['Host']['/admin/bookings/create']);
+
+        // But both must write a SPACE booking — that is the role's job.
+        $this->assertSame(200, $statuses['Space Host']['/admin/space-bookings/create']);
+        $this->assertSame(200, $statuses['Host']['/admin/space-bookings/create']);
+    }
+
+    /**
+     * Write access, not just viewing. The escalation bug and the alias bug were
+     * both invisible to a view-only matrix.
+     */
+    public function test_floor_roles_cannot_write_where_they_may_only_look(): void
+    {
+        foreach (['Space Host', 'Host', 'Front Desk', 'Scanner'] as $roleName) {
+            $user = $this->userWithRole($roleName);
+
+            foreach ([
+                '/admin/users/create',
+                '/admin/roles/create',
+                '/admin/tickets/create',
+            ] as $url) {
+                $this->assertNotSame(
+                    200,
+                    $this->actingAs($user)->get($url)->getStatusCode(),
+                    "SECURITY: {$roleName} must not reach {$url}",
+                );
+            }
+        }
+    }
+
     public function test_super_admin_still_reaches_everything(): void
     {
         // The restriction must not have cost the admin anything.

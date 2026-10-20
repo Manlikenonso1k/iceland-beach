@@ -23,8 +23,16 @@ use Illuminate\Database\Eloquent\Model;
  */
 trait RestrictsRoomBookingWrites
 {
-    /** Roles that may see room bookings but not touch them. */
-    public const ROOM_READ_ONLY_ROLES = ['Space Host'];
+    /**
+     * Roles that may see room bookings but not touch them.
+     *
+     * BOTH names, always. 'Host' is an accepted alias of 'Space Host'
+     * (User::PANEL_ROLES), and listing only one meant a user with the role
+     * named plainly 'Host' got room-booking WRITE while 'Space Host' got
+     * 403 — the alias propagated to the gates that GRANT access and not to
+     * the one that WITHHOLDS it. Any alias must be added to every gate.
+     */
+    public const ROOM_READ_ONLY_ROLES = ['Space Host', 'Host'];
 
     public static function canWriteRoomBooking(): bool
     {
