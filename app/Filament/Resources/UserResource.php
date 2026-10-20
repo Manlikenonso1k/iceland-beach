@@ -42,7 +42,18 @@ class UserResource extends Resource
                     ->email()
                     ->required()
                     ->maxLength(255)
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    // Normalised as the field is left, BEFORE validation runs.
+                    // A pasted address carrying a trailing space otherwise fails
+                    // the email rule outright, and one differing only in case
+                    // creates a second account nobody expects. User also has a
+                    // setEmailAttribute() mutator, which covers writes that do
+                    // not come through this form (seeders, API, tinker).
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn (?string $state, callable $set) => $set(
+                        'email',
+                        $state === null ? null : strtolower(trim($state)),
+                    )),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->revealable()

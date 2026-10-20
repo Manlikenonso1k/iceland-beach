@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\RestrictsSpaceBookingWrites;
 use App\Filament\Resources\SpaceBookingResource\Pages;
+use App\Http\Controllers\SpaceReceiptController;
 use App\Models\ServiceBooking;
 use App\Models\SpaceBooking;
 use App\Services\SpaceBookingReportService;
@@ -11,6 +12,8 @@ use App\Services\SpaceBookingWorkflowService;
 use Filament\Actions\Action as PageAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -24,6 +27,8 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 /**
  * Space (venue) bookings — the counterpart of BookingResource for rooms.
@@ -129,6 +134,64 @@ class SpaceBookingResource extends Resource
                 ->label('Rejection reason')
                 ->rows(3)
                 ->maxLength(1000),
+
+            // Receipt evidence for a booking taken in the backend. Required
+            // before it can be CONFIRMED, not before it can be saved, so a Host
+            // can record the booking immediately and attach the receipt once
+            // they have it. The hard gate lives in
+            // SpaceBookingWorkflowService::confirmBooking().
+            FileUpload::make('receipt_path')
+                ->label('Receipt')
+                ->helperText('Required before a manual booking can be confirmed. PDF, JPG, PNG or HEIC, max 10 MB. On a phone this offers Camera or Files.')
+                // The PRIVATE disk: receipts carry payment details and must
+                // never be web-served from public/. They are streamed through
+                // the signed space.receipt route instead.
+                ->disk(SpaceReceiptController::DISK)
+                ->directory('space-receipts')
+                ->visibility('private')
+                // Unguessable stored name; the original is kept in its own
+                // column so a download is still recognisable.
+                ->getUploadedFileNameForStorageUsing(
+                    fn (TemporaryUploadedFile $file): string => Str::random(40) . '.' . $file->getClientOriginalExtension(),
+                )
+                ->acceptedFileTypes([
+                    'application/pdf',
+                    'image/jpeg',
+                    'image/png',
+                    // HEIC is what an iPhone produces by default. Accepted and
+                    // stored as-is — no converter is installed, so conversion
+                    // to JPG is deliberately out of scope. Browsers cannot
+                    // preview it, but it downloads and opens natively on the
+                    // phone that produced it.
+                    'image/heic',
+                    'image/heif',
+                ])
+                ->maxSize(10240)
+                ->downloadable()
+                ->openable()
+                // Mobile browsers show Camera / Files when the underlying input
+                // advertises both. Without this an iPhone offers Files only.
+                ->extraInputAttributes(['accept' => 'image/*,application/pdf', 'capture' => 'environment'])
+                ->afterStateUpdated(function (?TemporaryUploadedFile $state, callable $set): void {
+                    if (! $state) {
+                        return;
+                    }
+
+                    $set('receipt_original_name', $state->getClientOriginalName());
+                    $set('receipt_mime', $state->getMimeType());
+                    $set('receipt_uploaded_at', now());
+                })
+                // Front Desk is view-only here: it can see and open a receipt
+                // but never upload, replace or delete one. The server gate is
+                // canCreate()/canEdit() from RestrictsSpaceBookingWrites.
+                ->disabled(fn (): bool => ! static::canWrite())
+                ->dehydrated(fn (): bool => static::canWrite()),
+
+            // Carried alongside the file so a download keeps a recognisable
+            // name while the stored filename stays random.
+            Hidden::make('receipt_original_name'),
+            Hidden::make('receipt_mime'),
+            Hidden::make('receipt_uploaded_at'),
         ]);
     }
 
@@ -167,6 +230,25 @@ class SpaceBookingResource extends Resource
                         'failed' => 'danger',
                         default => 'gray',
                     })
+                    ->toggleable(),
+                TextColumn::make('receipt_path')
+                    ->label('Receipt')
+                    ->formatStateUsing(fn (?string $state, SpaceBooking $record): string => $record->receiptLabel())
+                    ->url(fn (SpaceBooking $record): ?string => $record->receiptUrl())
+                    ->openUrlInNewTab()
+                    ->icon(fn (SpaceBooking $record): ?string => $record->hasReceipt() ? 'heroicon-o-paper-clip' : null)
+                    ->color(fn (SpaceBooking $record): string => match (true) {
+                        ! $record->isManual() => 'gray',
+                        $record->hasReceipt() => 'success',
+                        // A manual booking with no receipt cannot be confirmed,
+                        // so flag it rather than leaving a quiet blank.
+                        default => 'danger',
+                    }),
+                TextColumn::make('source')
+                    ->label('Source')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => ucfirst((string) $state))
+                    ->color(fn (?string $state): string => $state === 'manual' ? 'warning' : 'gray')
                     ->toggleable(),
                 TextColumn::make('status')
                     ->label('Status')

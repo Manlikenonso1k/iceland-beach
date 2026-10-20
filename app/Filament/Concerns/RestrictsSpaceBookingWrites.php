@@ -26,7 +26,13 @@ use Illuminate\Database\Eloquent\Model;
  */
 trait RestrictsSpaceBookingWrites
 {
-    /** Roles permitted to change space bookings. */
+    /**
+     * Roles permitted to change space bookings.
+     *
+     * 'Host' is an accepted alias of 'Space Host' — same reasoning as
+     * User::PANEL_ROLES. 'Space Host' remains the canonical name, but a user
+     * given a role named plainly 'Host' must not silently end up read-only.
+     */
     public const SPACE_WRITERS = [
         'Super Admin',
         'super_admin',
@@ -34,6 +40,7 @@ trait RestrictsSpaceBookingWrites
         'admin',
         'Manager',
         'Space Host',
+        'Host',
     ];
 
     public static function canWrite(): bool

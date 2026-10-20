@@ -8,6 +8,7 @@ use App\Models\SpaceBooking;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Every space-booking status change goes through here, exactly as every room
@@ -30,6 +31,18 @@ class SpaceBookingWorkflowService
      */
     public function confirmBooking(SpaceBooking $booking): void
     {
+        // Enforced HERE and not only in the form, so the Filament action, the
+        // pending widget and any future caller are all covered by one rule.
+        // A manual booking took money off-system, and the receipt is the only
+        // record that it happened. Paid bookings are exempt — Paystack already
+        // is the receipt, and requiring a second document would block the
+        // automatic confirmation that payment triggers.
+        if ($booking->requiresReceiptBeforeConfirming()) {
+            throw ValidationException::withMessages([
+                'receipt' => 'Upload a receipt before confirming a manual space booking.',
+            ]);
+        }
+
         $previousStatus = $booking->status;
 
         $booking->update([

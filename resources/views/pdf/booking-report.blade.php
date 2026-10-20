@@ -382,10 +382,13 @@
         <table class="items">
             <thead>
                 <tr>
-                    <th style="width: 6%;">#</th>
-                    <th style="width: 30%;">{{ $unitLabel ?? 'Room' }}</th>
-                    <th style="width: 30%;">Occupant Name</th>
-                    <th style="width: 14%;">Check-in</th>
+                    <th style="width: {{ ($showReceipts ?? false) ? 5 : 6 }}%;">#</th>
+                    <th style="width: {{ ($showReceipts ?? false) ? 25 : 30 }}%;">{{ $unitLabel ?? 'Room' }}</th>
+                    <th style="width: {{ ($showReceipts ?? false) ? 25 : 30 }}%;">Occupant Name</th>
+                    <th style="width: {{ ($showReceipts ?? false) ? 13 : 14 }}%;">Check-in</th>
+                    @if ($showReceipts ?? false)
+                        <th style="width: 15%;">Receipt</th>
+                    @endif
                     <th class="num" style="width: 20%;">Amount (₦)</th>
                 </tr>
             </thead>
@@ -396,17 +399,29 @@
                         <td>{{ $row['room'] }}</td>
                         <td>{{ $row['occupant'] }}</td>
                         <td>{{ optional($row['check_in'])->format('d M, Y') }}</td>
+                        @if ($showReceipts ?? false)
+                            {{-- A permanent SIGNED link, so it still opens
+                                 when this PDF is read months later on a
+                                 device with no panel session. --}}
+                            <td>
+                                @if (! empty($row['receipt_url']))
+                                    <a href="{{ $row['receipt_url'] }}">{{ $row['receipt'] }}</a>
+                                @else
+                                    {{ $row['receipt'] ?? '—' }}
+                                @endif
+                            </td>
+                        @endif
                         <td class="num">{{ number_format((float) $row['amount'], 2) }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="empty">No bookings in this period.</td>
+                        <td colspan="{{ ($showReceipts ?? false) ? 6 : 5 }}" class="empty">No bookings in this period.</td>
                     </tr>
                 @endforelse
             </tbody>
             <tfoot>
                 <tr class="grand-total">
-                    <td colspan="4">TOTAL</td>
+                    <td colspan="{{ ($showReceipts ?? false) ? 5 : 4 }}">TOTAL</td>
                     <td class="num">₦ {{ number_format((float) $total, 2) }}</td>
                 </tr>
             </tfoot>

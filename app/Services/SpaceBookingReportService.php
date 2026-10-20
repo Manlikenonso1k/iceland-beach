@@ -56,7 +56,11 @@ class SpaceBookingReportService
      * never became a booking, so they are left out of the figures — same rule
      * as the room report.
      *
-     * @return Collection<int, array{room: string, occupant: string, check_in: ?Carbon, amount: float}>
+     * Each row also carries the receipt label and a PERMANENT signed URL, so
+     * the link still resolves when the exported PDF is opened months later on a
+     * device with no panel session.
+     *
+     * @return Collection<int, array{room: string, occupant: string, check_in: ?Carbon, amount: float, receipt: string, receipt_url: ?string}>
      */
     public function rows(Carbon $start, Carbon $end): Collection
     {
@@ -72,6 +76,8 @@ class SpaceBookingReportService
                 'occupant' => $booking->guest_name ?: '—',
                 'check_in' => $booking->check_in,
                 'amount' => $this->amount($booking),
+                'receipt' => $booking->receiptLabel(),
+                'receipt_url' => $booking->receiptUrl(),
             ]);
     }
 
@@ -103,6 +109,9 @@ class SpaceBookingReportService
             'generatedAt' => now(),
             'unitLabel' => 'Space',
             'reportTitle' => 'Space Booking Report',
+            // Turns on the Receipt column in the shared template. Absent for
+            // the room report, which has no receipts.
+            'showReceipts' => true,
         ])
             ->setOption('enable_font_subsetting', true)
             ->setPaper('a4', 'portrait');

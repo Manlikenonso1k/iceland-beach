@@ -78,6 +78,15 @@ Route::post('/webhooks/tgi', [PaymentController::class, 'tgiPayWebhook'])
 Route::get('/booking/payment/callback', [\App\Http\Controllers\BookingPaymentController::class, 'callback'])
     ->name('booking.payment.callback');
 
+// Space booking receipt. `signed` and NOT login-protected on purpose: these
+// links are embedded in exported report PDFs, which a manager may open on a
+// device that is not signed into the panel. Signed rather than public because a
+// receipt carries payment details and the id is a small sequential integer.
+// No expiry — an archived report read months later must still resolve.
+Route::get('/space-receipts/{spaceBooking}', [\App\Http\Controllers\SpaceReceiptController::class, 'show'])
+    ->name('space.receipt')
+    ->middleware('signed');
+
 // Paystack: SPACE BOOKING payments. Separate callback from the room flow, but
 // the webhook is shared (Paystack allows one URL per mode) and dispatches on the
 // "SPACE-" reference prefix inside PaystackWebhookController.

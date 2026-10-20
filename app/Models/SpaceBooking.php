@@ -54,14 +54,80 @@ class SpaceBooking extends Model
         'payment_reference',
         'payment_status',
         'rejection_reason',
+        'source',
+        'receipt_path',
+        'receipt_original_name',
+        'receipt_mime',
+        'receipt_uploaded_at',
     ];
 
     protected $casts = [
         'check_in' => 'datetime',
         'check_out' => 'datetime',
+        'receipt_uploaded_at' => 'datetime',
         'email_opt_in' => 'boolean',
         'guests' => 'integer',
     ];
+
+    /** Taken in the backend by staff — money changed hands off-system. */
+    public const SOURCE_MANUAL = 'manual';
+
+    /** Came from the public website, where Paystack is already the receipt. */
+    public const SOURCE_WEBSITE = 'website';
+
+    public function isManual(): bool
+    {
+        return $this->source === self::SOURCE_MANUAL;
+    }
+
+    public function hasReceipt(): bool
+    {
+        return filled($this->receipt_path);
+    }
+
+    /**
+     * Whether this booking is allowed to reach 'confirmed'.
+     *
+     * A manual booking needs receipt evidence first. A paid booking does not:
+     * Paystack has already recorded the money, so requiring a second document
+     * would block the automatic confirmation that payment triggers.
+     */
+    public function requiresReceiptBeforeConfirming(): bool
+    {
+        return $this->isManual()
+            && $this->payment_status !== 'paid'
+            && ! $this->hasReceipt();
+    }
+
+    /**
+     * Permanent signed URL to the receipt, or null when there is none.
+     *
+     * Signed rather than login-protected because these links are embedded in
+     * exported report PDFs that may be opened on a device with no panel
+     * session. No expiry: an archived report read months later must still
+     * resolve. See SpaceReceiptController.
+     */
+    public function receiptUrl(): ?string
+    {
+        if (! $this->hasReceipt()) {
+            return null;
+        }
+
+        return \Illuminate\Support\Facades\URL::signedRoute('space.receipt', ['spaceBooking' => $this->id]);
+    }
+
+    /**
+     * What the Receipt column shows. Website bookings are exempt from the
+     * requirement — Paystack is already the receipt there.
+     */
+    public function receiptLabel(): string
+    {
+        if (! $this->isManual()) {
+            return 'Online';
+        }
+
+        return $this->hasReceipt() ? 'View receipt' : '—';
+    }
 
     /**
      * The space catalogue row. `services` is the legacy table behind the
