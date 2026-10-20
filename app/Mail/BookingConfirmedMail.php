@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\Booking;
 use App\Models\Room;
+use App\Models\SpaceBooking;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -15,11 +16,14 @@ use Illuminate\Support\Facades\URL;
 /**
  * Sent when a stay is confirmed.
  *
- * Accepts either model because two paths confirm a booking:
+ * Accepts any of three models because three paths confirm a booking:
  *   - BookingResource (Filament list actions) works on a Booking
  *   - BookingWorkflowService (PendingBookingsWidget) works on a Room
- * The two schemas name the same facts differently, so they are normalised to
- * plain scalars here and the view stays free of null-safe chains.
+ *   - SpaceBookingWorkflowService works on a SpaceBooking
+ * The schemas name the same facts differently, so they are normalised to plain
+ * scalars here and the view stays free of null-safe chains. Reusing one
+ * mailable and one Blade template keeps spaces visually identical to rooms
+ * instead of forking the email design.
  */
 class BookingConfirmedMail extends Mailable
 {
@@ -28,11 +32,15 @@ class BookingConfirmedMail extends Mailable
     // NB: not $subject — Illuminate\Mail\Mailable already declares an
     // untyped $subject property (the email subject line), and a typed
     // promoted property of that name is a fatal redeclaration.
-    public function __construct(public Room|Booking $record) {}
+    public function __construct(public Room|Booking|SpaceBooking $record) {}
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Booking Confirmed - Iceland Beach Resort');
+        return new Envelope(
+            subject: $this->record instanceof SpaceBooking
+                ? 'Space Booking Confirmed - Iceland Beach Resort'
+                : 'Booking Confirmed - Iceland Beach Resort',
+        );
     }
 
     public function content(): Content
@@ -46,21 +54,24 @@ class BookingConfirmedMail extends Mailable
     /** @return array<string, mixed> */
     private function viewData(): array
     {
+        $isSpace = $this->record instanceof SpaceBooking;
         $isBooking = $this->record instanceof Booking;
 
-        $checkIn = $isBooking ? $this->record->check_in : $this->record->start_date;
-        $checkOut = $isBooking ? $this->record->check_out : $this->record->end_date;
+        $checkIn = ($isBooking || $isSpace) ? $this->record->check_in : $this->record->start_date;
+        $checkOut = ($isBooking || $isSpace) ? $this->record->check_out : $this->record->end_date;
 
-        $roomName = $isBooking
-            ? ($this->record->room?->room_name ?: $this->record->room_type)
-            : $this->record->room_name;
+        $roomName = match (true) {
+            $isSpace => $this->record->space?->service_name ?: $this->record->space_name,
+            $isBooking => $this->record->room?->room_name ?: $this->record->room_type,
+            default => $this->record->room_name,
+        };
 
         return [
             // Kept so any existing override can still reach the model.
             'record' => $this->record,
-            'guestName' => ($isBooking ? $this->record->guest_name : $this->record->customer_name) ?: 'Guest',
+            'guestName' => (($isBooking || $isSpace) ? $this->record->guest_name : $this->record->customer_name) ?: 'Guest',
             'reference' => str_pad((string) $this->record->id, 6, '0', STR_PAD_LEFT),
-            'roomName' => $roomName ?: 'Your room',
+            'roomName' => $roomName ?: ($isSpace ? 'Your space' : 'Your room'),
             'checkIn' => $checkIn ? Carbon::parse($checkIn) : null,
             'checkOut' => $checkOut ? Carbon::parse($checkOut) : null,
             'nights' => ($checkIn && $checkOut)

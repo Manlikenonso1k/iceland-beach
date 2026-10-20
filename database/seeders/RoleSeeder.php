@@ -15,6 +15,12 @@ class RoleSeeder extends Seeder
             'Admin',
             'Manager',
             'Front Desk',
+            // Manages SPACE (venue) bookings, with the same powers Front Desk
+            // has over rooms. Named 'Space Host', not 'Host', because the
+            // planned Hospi Sales mobile app defines a separate restaurant
+            // Host role (tables/beds/cabins) — see HOSPI_SALES_BRIEF.md. Two
+            // unrelated jobs must not share one role name.
+            'Space Host',
             'Waiter',
             'Scanner',
             // Referral partners: read-only access to their own code and sales.

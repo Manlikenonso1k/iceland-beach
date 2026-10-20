@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Booking Report — {{ $label }}</title>
+    <title>{{ $reportTitle ?? 'Booking Report' }} — {{ $label }}</title>
     <style>
         @page {
             margin: 14px 16px;
@@ -363,7 +363,7 @@
         <div class="invoice-meta">
             <div class="invoice-details">
                 <div class="detail-box">
-                    <h3>Booking Report</h3>
+                    <h3>{{ $reportTitle ?? 'Booking Report' }}</h3>
                     <p><strong>Period:</strong> {{ $label }}</p>
                     <p><strong>Generated:</strong> {{ $generatedAt->format('d M, Y H:i') }}</p>
                 </div>
@@ -383,7 +383,7 @@
             <thead>
                 <tr>
                     <th style="width: 6%;">#</th>
-                    <th style="width: 30%;">Room</th>
+                    <th style="width: 30%;">{{ $unitLabel ?? 'Room' }}</th>
                     <th style="width: 30%;">Occupant Name</th>
                     <th style="width: 14%;">Check-in</th>
                     <th class="num" style="width: 20%;">Amount (₦)</th>

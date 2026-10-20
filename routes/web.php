@@ -78,6 +78,12 @@ Route::post('/webhooks/tgi', [PaymentController::class, 'tgiPayWebhook'])
 Route::get('/booking/payment/callback', [\App\Http\Controllers\BookingPaymentController::class, 'callback'])
     ->name('booking.payment.callback');
 
+// Paystack: SPACE BOOKING payments. Separate callback from the room flow, but
+// the webhook is shared (Paystack allows one URL per mode) and dispatches on the
+// "SPACE-" reference prefix inside PaystackWebhookController.
+Route::get('/space-booking/payment/callback', [\App\Http\Controllers\SpaceBookingPaymentController::class, 'callback'])
+    ->name('space.payment.callback');
+
 // Post-payment success page and its PDF receipt.
 //
 // Both are `signed`. A booking id is a small sequential integer, so an unsigned

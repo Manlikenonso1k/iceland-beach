@@ -155,6 +155,18 @@ class BookingCalendarWidget extends FullCalendarWidget
             ]);
     }
 
+    /** Legend heading. Overridden by the space calendar, which shares the view. */
+    public function getLegendLabel(): string
+    {
+        return 'Room legend (confirmed)';
+    }
+
+    /** Noun used in the "Pending (any …)" legend entry. */
+    public function getLegendUnit(): string
+    {
+        return 'room';
+    }
+
     public function config(): array
     {
         return [

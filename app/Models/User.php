@@ -75,7 +75,7 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->email === 'victorynonso9@gmail.com'
-            || $this->hasAnyRole(['Super Admin', 'super_admin', 'admin', 'Manager', 'Front Desk', 'frontdesk', 'Scanner']);
+            || $this->hasAnyRole(['Super Admin', 'super_admin', 'admin', 'Manager', 'Front Desk', 'frontdesk', 'Space Host', 'Scanner']);
         // 'Referral' is deliberately absent: partners sign in at /referral
         // against their own guard and must never reach staff data.
     }

@@ -30,6 +30,10 @@ use Filament\Tables\Table;
 
 class BookingResource extends Resource
 {
+    // Space Host may VIEW rooms but never change them. Viewing stays open,
+    // so the cross-view is read-only rather than invisible.
+    use \App\Filament\Concerns\RestrictsRoomBookingWrites;
+
 
     /**
      * Staff-only. Referral partners use their own guard and panel; this makes
@@ -189,7 +193,8 @@ class BookingResource extends Resource
                     ->label('Confirm')
                     ->icon('heroicon-o-check-circle')
                     ->requiresConfirmation()
-                    ->visible(fn (Booking $record): bool => $record->status === 'pending')
+                    ->visible(fn (Booking $record): bool => $record->status === 'pending'
+                        && static::canWriteRoomBooking())
                     ->action(function (Booking $record, BookingWorkflowService $bookingWorkflow): void {
                         $bookingWorkflow->confirmBooking($record);
 
@@ -204,7 +209,8 @@ class BookingResource extends Resource
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->requiresConfirmation()
-                    ->visible(fn (Booking $record): bool => $record->status === 'pending')
+                    ->visible(fn (Booking $record): bool => $record->status === 'pending'
+                        && static::canWriteRoomBooking())
                     ->form([
                         Textarea::make('rejection_reason')->label('Reason')->required(),
                     ])
