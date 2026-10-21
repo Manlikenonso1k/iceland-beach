@@ -42,7 +42,9 @@ Route::get('/health', HealthController::class)->middleware('throttle:60,1');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
 Route::middleware('auth:sanctum')->group(function (): void {
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    // Throttled like every other write route. It was the only unthrottled one.
+    Route::post('/auth/logout', [AuthController::class, 'logout'])
+        ->middleware('throttle:30,1');
     Route::get('/me', MeController::class);
     Route::patch('/tenant', [TenantController::class, 'update'])
         ->middleware(['throttle:30,1', 'hospi.role:Manager,Super Admin,Admin']);
@@ -138,13 +140,21 @@ Route::middleware('auth:sanctum')->group(function (): void {
         // from/to are REQUIRED and the window is capped in the controller, so
         // there is no way to ask for the whole ledger.
         Route::get('/bookings/calendar', [BookingViewController::class, 'calendar'])
-            ->middleware('throttle:60,1');
+            ->middleware(['throttle:60,1', 'hospi.resort']);
 
+        // `hospi.resort` on the three routes below, and not on the inventory
+        // ones, is deliberate. These carry a named guest's email and phone and
+        // a signed receipt URL, and `bookings`/`space_bookings` have no
+        // tenant_id for BelongsToTenant to scope — so without it a Manager of
+        // ANOTHER business on Hospi Sales reads resort guests' contact details
+        // by walking a sequential id. The inventory routes return only the room
+        // and space catalogue, which /api/rooms and /api/services already serve
+        // to the public, so gating them would buy nothing.
         Route::get('/bookings/rooms/{booking}', [BookingViewController::class, 'roomBooking'])
-            ->middleware('throttle:60,1');
+            ->middleware(['throttle:60,1', 'hospi.resort']);
 
         Route::get('/bookings/spaces/{spaceBooking}', [BookingViewController::class, 'spaceBooking'])
-            ->middleware('throttle:60,1');
+            ->middleware(['throttle:60,1', 'hospi.resort']);
 
         Route::get('/inventory/rooms', [InventoryController::class, 'rooms'])
             ->middleware('throttle:60,1');
