@@ -13,6 +13,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -68,6 +69,16 @@ class SpaceResource extends Resource
         return static::canAccess();
     }
 
+    /**
+     * Whether the category currently typed into the form is the complimentary
+     * one. Delegates to the model so the rule has a single definition — the
+     * form is reading unsaved state, so there is no record to ask yet.
+     */
+    protected static function categoryIsComplimentary(mixed $category): bool
+    {
+        return (new ServiceBooking(['service_category' => (string) $category]))->isComplimentary();
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -80,10 +91,18 @@ class SpaceResource extends Resource
                     TextInput::make('service_category')
                         ->label('Category')
                         ->maxLength(255)
+                        ->live(onBlur: true)
+                        ->helperText('Use "' . ServiceBooking::COMPLIMENTARY_CATEGORY . '" for spaces offered at no charge — they show as Free instead of a price.')
+                        // Complimentary is unioned in so it is offered before
+                        // any space uses it; the rest come from live data.
                         ->datalist(fn () => ServiceBooking::query()
                             ->whereNotNull('service_category')
                             ->distinct()
                             ->pluck('service_category')
+                            ->push(ServiceBooking::COMPLIMENTARY_CATEGORY)
+                            ->unique()
+                            ->sort()
+                            ->values()
                             ->all()),
                     Textarea::make('description')
                         ->rows(3)
@@ -99,11 +118,21 @@ class SpaceResource extends Resource
             Section::make('Pricing')
                 ->schema([
                     TextInput::make('service_price')
-                        ->label('Price from')
+                        ->label(fn (Get $get): string => static::categoryIsComplimentary($get('service_category'))
+                            ? 'Price (not charged)'
+                            : 'Price from')
                         ->numeric()
                         ->prefix('₦')
                         ->minValue(0)
-                        ->required(),
+                        // Required for a priced category, because a 0.00 there
+                        // is a space nobody filled in rather than a free one.
+                        // A Complimentary space may be left blank and stores 0,
+                        // so the legacy non-null column stays satisfied.
+                        ->required(fn (Get $get): bool => ! static::categoryIsComplimentary($get('service_category')))
+                        ->dehydrateStateUsing(fn ($state) => $state === null || $state === '' ? 0 : $state)
+                        ->helperText(fn (Get $get): ?string => static::categoryIsComplimentary($get('service_category'))
+                            ? 'Complimentary spaces are never charged. Leave this blank.'
+                            : null),
                 ]),
 
             Section::make('Images')
@@ -166,7 +195,15 @@ class SpaceResource extends Resource
                 TextColumn::make('service_name')->label('Space')->searchable()->sortable(),
                 TextColumn::make('service_category')->label('Category')->searchable()->sortable()->toggleable(),
                 TextColumn::make('capacity')->label('Capacity')->placeholder('—')->sortable()->toggleable(),
-                TextColumn::make('service_price')->label('From')->money('NGN')->sortable(),
+                TextColumn::make('service_price')
+                    ->label('From')
+                    // priceLabel() lives on the model so the admin table,
+                    // the public grid, the booking form and the report all
+                    // render the same thing.
+                    ->formatStateUsing(fn ($state, ServiceBooking $record): string => $record->priceLabel())
+                    ->badge(fn (ServiceBooking $record): bool => $record->isFree())
+                    ->color(fn (ServiceBooking $record): ?string => $record->isFree() ? 'success' : null)
+                    ->sortable(),
                 TextColumn::make('is_booked')
                     ->label('Status')
                     ->badge()
@@ -183,6 +220,8 @@ class SpaceResource extends Resource
                         ->whereNotNull('service_category')
                         ->distinct()
                         ->pluck('service_category', 'service_category')
+                        ->put(ServiceBooking::COMPLIMENTARY_CATEGORY, ServiceBooking::COMPLIMENTARY_CATEGORY)
+                        ->sort()
                         ->all()),
             ])
             ->defaultSort('service_name');

@@ -77,8 +77,14 @@ class ServiceBookingController extends Controller
 
         // Toggled by Super Admin at /admin/manage-settings. Default OFF, so the
         // email-confirmation flow below is byte-for-byte what it always was.
+        //
+        // A Complimentary space is excluded even when the toggle is ON: there
+        // is nothing to charge, and Paystack rejects a zero amount, so sending
+        // one there would 422 a booking that is perfectly valid. It falls
+        // through to the email-confirmation flow instead.
         $paymentRequired = Setting::get('space_payment_required', false)
-            && $paystack->isConfigured();
+            && $paystack->isConfigured()
+            && ! $space->isComplimentary();
 
         $booking = SpaceBooking::create([
             'space_id' => $space->id,
@@ -121,6 +127,11 @@ class ServiceBookingController extends Controller
         $nightly = (float) ($space->service_price ?? 0);
 
         // Paystack rejects a zero amount, which would surface as an opaque 500.
+        //
+        // Reached only by a PRICED category sitting at 0.00 — i.e. a space
+        // whose price nobody filled in. Complimentary spaces never get here
+        // (see $paymentRequired above), so a deliberately free space books
+        // through while a misconfigured one is still refused.
         if ($nightly <= 0) {
             $booking->delete();
 

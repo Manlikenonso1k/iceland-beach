@@ -411,7 +411,10 @@
                                 @endif
                             </td>
                         @endif
-                        <td class="num">{{ number_format((float) $row['amount'], 2) }}</td>
+                        {{-- amount_label lets the space report print "Free"
+                             for a complimentary booking. The room report
+                             supplies no label and renders the number. --}}
+                        <td class="num">{{ $row['amount_label'] ?? number_format((float) $row['amount'], 2) }}</td>
                     </tr>
                 @empty
                     <tr>

@@ -76,6 +76,13 @@ class SpaceBookingReportService
                 'occupant' => $booking->guest_name ?: '—',
                 'check_in' => $booking->check_in,
                 'amount' => $this->amount($booking),
+                // Display label only. 'amount' stays numeric because the
+                // TOTAL row sums it — a complimentary booking contributes 0,
+                // which is correct, but printing "0.00" against it reads as a
+                // missing price rather than a free space.
+                'amount_label' => $booking->space && $booking->space->isFree()
+                    ? 'Free'
+                    : number_format($this->amount($booking), 2),
                 'receipt' => $booking->receiptLabel(),
                 'receipt_url' => $booking->receiptUrl(),
             ]);
