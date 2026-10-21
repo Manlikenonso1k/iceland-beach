@@ -9,7 +9,7 @@
     "isEntry": true
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-B3P83YOj.js",
+    "file": "assets/app-BLXoJtDF.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
@@ -18,7 +18,7 @@
     ]
   },
   "resources/js/components/AuroraCanvas.jsx": {
-    "file": "assets/AuroraCanvas-DN9APu81.js",
+    "file": "assets/AuroraCanvas-ewdoxIUT.js",
     "name": "AuroraCanvas",
     "src": "resources/js/components/AuroraCanvas.jsx",
     "isDynamicEntry": true,
