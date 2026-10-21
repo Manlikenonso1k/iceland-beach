@@ -17,7 +17,8 @@ class EditInvoice extends EditRecord
             Actions\Action::make('viewInvoice')
                 ->label('View Invoice')
                 ->icon('heroicon-o-eye')
-                ->url(route('invoices.view', $this->record->id))
+                // Signed: the route now requires a signature (sequential id, customer PII).
+                ->url(\Illuminate\Support\Facades\URL::signedRoute('invoices.view', ['id' => $this->record->id]))
                 ->openUrlInNewTab(),
             Actions\Action::make('downloadPdf')
                 ->label('Download PDF')

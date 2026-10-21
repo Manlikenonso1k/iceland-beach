@@ -184,7 +184,9 @@ class InvoiceResource extends Resource
                 Action::make('viewInvoice')
                     ->label('View Invoice')
                     ->icon('heroicon-o-eye')
-                    ->url(fn (Invoice $record) => route('invoices.view', $record->id))
+                    // Signed: see routes/web.php. Unsigned, anyone could walk the id
+                    // range and read every customer's details.
+                    ->url(fn (Invoice $record) => \Illuminate\Support\Facades\URL::signedRoute('invoices.view', ['id' => $record->id]))
                     ->openUrlInNewTab(),
                 Action::make('downloadPdf')
                     ->label('Download PDF')

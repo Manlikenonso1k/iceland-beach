@@ -14,3 +14,11 @@ Artisan::command('inspire', function () {
 Schedule::command('orders:flag-overdue')
     ->everyMinute()
     ->withoutOverlapping();
+
+// Sanctum tokens now expire after 30 days (config/sanctum.php). Expiry alone
+// only stops a token working — the rows stay in personal_access_tokens
+// forever. This clears out anything expired for a further 7 days, so the table
+// does not grow without bound on a fleet of staff phones.
+Schedule::command('sanctum:prune-expired --hours=168')
+    ->daily()
+    ->withoutOverlapping();

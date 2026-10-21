@@ -7,11 +7,22 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Public invoice view for print-to-PDF (no DOMPDF needed)
+// Invoice view for print-to-PDF (no DOMPDF needed).
+//
+// `signed`, not public. It was unauthenticated and unsigned on a SEQUENTIAL
+// integer id, so anyone could count upward from /invoices/1/view and harvest
+// every customer's name, address, phone and total. Same reasoning as
+// booking.receipt and space.receipt, which were signed from the start.
+//
+// Signed rather than login-protected because the page exists to be printed and
+// shared, and the signature has no expiry so a link stays usable. The only two
+// places that generate it are the Filament admin invoice actions, which now
+// mint signed URLs — a link copied before this change stops working, and is
+// recovered by reopening the invoice.
 Route::get('/invoices/{id}/view', function ($id) {
     $invoice = \App\Models\Invoice::with('items')->findOrFail($id);
     return view('pdf.invoice', ['invoice' => $invoice]);
-})->name('invoices.view');
+})->name('invoices.view')->middleware('signed');
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // VENDOR SPOT BOOKING

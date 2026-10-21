@@ -50,7 +50,12 @@ return [
     |
     */
 
-    'expiration' => null,
+    // 30 days. Was null — tokens never expired, so a lost or stolen phone
+    // kept role-level API access forever. The app clears its stored token on
+    // any 401 and falls back to Welcome, so expiry surfaces as a re-login
+    // rather than a broken session. Pruned by sanctum:prune-expired,
+    // scheduled in routes/console.php.
+    'expiration' => 60 * 24 * 30,
 
     /*
     |--------------------------------------------------------------------------

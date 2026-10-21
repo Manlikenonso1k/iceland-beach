@@ -162,3 +162,37 @@ row that asserts a control, is backed by a test in `tests/Feature/ApiSecurityAud
 - `PROGRESS.md` — this section.
 
 Nothing in the APP repo was changed.
+
+## Security audit — remaining three findings closed (2026-10-21)
+
+All three items previously marked "Needs decision" are now fixed. Nothing is
+outstanding from the audit.
+
+| Sev | Finding | Fix | Test |
+|---|---|---|---|
+| Medium | `/invoices/{id}/view` unauthenticated + unsigned on a sequential id, leaking customer name, address, phone, total | `signed` middleware on the route; both Filament generators now mint `URL::signedRoute` | `SecurityHardeningTest` ×5 |
+| Medium | CORS allowed every origin (no `config/cors.php`, so the framework `*` default applied) | Created `config/cors.php` with the real origins; dev origins excluded in production; `supports_credentials` stays false | `test_cors_is_no_longer_a_wildcard`, `test_development_origins_are_excluded_in_production` |
+| Medium | Sanctum tokens never expired — a lost phone kept role-level API access forever | `expiration => 60*24*30` (30 days) + `sanctum:prune-expired --hours=168` scheduled daily | `test_sanctum_tokens_now_expire`, `test_a_token_older_than_the_expiry_is_refused`, `test_a_token_inside_the_window_still_works`, `test_expired_tokens_are_prunable` |
+
+### Decided, with the trade-off taken deliberately
+
+**Invoices are signed for ALL ids, not grandfathered.** Grandfathering existing
+ids would have left every current customer's details exposed, which is the
+actual leak — it only protected future invoices. The two generators are both
+inside the Filament admin, so a "saved link" is one a staff member copied out
+of the admin, and recovery is reopening the invoice. Signatures carry no
+expiry, so a freshly copied link keeps working indefinitely.
+
+**Token expiry logs every device out once, on deploy.** Accepted: the app
+clears its stored token on any 401 and falls back to Welcome, so staff see a
+re-login rather than a broken session.
+
+### Production verified (owner ran these)
+
+- `tenants.slug` matches `config('resort.tenant_slug')` → id `1`. **The
+  `hospi.resort` gate is ACTIVE**, so the High cross-tenant finding is genuinely
+  closed in production, not just in code.
+- `config('app.debug')` is `bool(false)`.
+- No `EnsureResortTenant` fail-open warnings in `storage/logs/laravel.log`.
+
+**WEB suite: 228 passed, 1061 assertions.**
