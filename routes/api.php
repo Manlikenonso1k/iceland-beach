@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\BookingViewController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\NotificationController;
@@ -117,4 +119,37 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::post('/device-tokens', [DeviceTokenController::class, 'store'])
         ->middleware('throttle:30,1');
+
+    /*
+    |----------------------------------------------------------------------
+    | Booking visibility — READ ONLY
+    |----------------------------------------------------------------------
+    | Mirrors what the website's calendar widgets show. CEO and Manager see
+    | everything; Space Host/Host sees both but, as on the web, may not change
+    | room bookings — and no write route exists here at all, so that holds by
+    | construction. Every other role (Chef, Waiter, Scanner, Front Desk) is
+    | refused by the role gate, and no token is refused by auth:sanctum.
+    |
+    | 'Host' is listed alongside 'Space Host' because the two are aliases — see
+    | User::PANEL_ROLES. Omitting one is a bug this project has already had
+    | twice.
+    */
+    Route::middleware('hospi.role:CEO,Manager,Super Admin,Admin,Space Host,Host')->group(function (): void {
+        // from/to are REQUIRED and the window is capped in the controller, so
+        // there is no way to ask for the whole ledger.
+        Route::get('/bookings/calendar', [BookingViewController::class, 'calendar'])
+            ->middleware('throttle:60,1');
+
+        Route::get('/bookings/rooms/{booking}', [BookingViewController::class, 'roomBooking'])
+            ->middleware('throttle:60,1');
+
+        Route::get('/bookings/spaces/{spaceBooking}', [BookingViewController::class, 'spaceBooking'])
+            ->middleware('throttle:60,1');
+
+        Route::get('/inventory/rooms', [InventoryController::class, 'rooms'])
+            ->middleware('throttle:60,1');
+
+        Route::get('/inventory/spaces', [InventoryController::class, 'spaces'])
+            ->middleware('throttle:60,1');
+    });
 });
