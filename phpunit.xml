@@ -18,6 +18,12 @@
         </include>
     </source>
     <php>
+        <!-- The suite peaks around 132 MB because DomPDF loads font cmap
+             tables for the booking and space report PDFs. PHP's 128 MB
+             default made `php artisan test` die mid-run with an opaque
+             "Allowed memory size exhausted in cmap.php" that looks like a
+             code failure and is not. -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
